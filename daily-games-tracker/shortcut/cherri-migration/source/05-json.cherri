@@ -4,15 +4,16 @@
 #question deviceQuestion "Paste a disposable mock code. Never use your private WHT device code in this probe." ""
 
 const deviceCode = text(deviceQuestion)
-const capture = getDictionary('{"kind":"synthetic","nested":{"value":7},"items":[1,2]}')
+const captureJson = text('{"kind":"synthetic","nested":{"value":7},"items":[1,2]}')
+const capture = getDictionary(captureJson)
 
-// Deliberately tests standard interpolated dictionary serialization. This is a
+// Deliberately tests dynamic nested-dictionary serialization. This is a
 // compatibility probe, not a claim that capture will remain an object.
 // Only an explicitly started local mock receiver may receive this request.
 // On iPhone, loopback refers to the phone; do not replace with a WHT endpoint.
 const response = jsonRequest("http://127.0.0.1:8765/probe", "POST", {
   "shortcut_version": 1,
-  "capture": "{capture}"
+  "capture": capture
 }, {
   "Content-Type": "application/json",
   "Authorization": "Device {deviceCode}"

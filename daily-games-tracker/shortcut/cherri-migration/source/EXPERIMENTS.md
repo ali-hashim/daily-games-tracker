@@ -1,6 +1,6 @@
 # Credential-free experiment sources
 
-These files are proposed Cherri v2.3.0 inputs. Probes 01–04 have compiled and passed their current structural checks in GitHub Actions. The two alert builds differed in the ordering of default input-content metadata. No probe has been signed, installed, or executed on iPhone. Probe 05 remains an independent compile/serialization gate.
+These files are proposed Cherri v2.3.0 inputs. Probes 01–04 have compiled and passed their current structural checks in GitHub Actions. The two alert builds differed in the ordering of default input-content metadata. No probe has been signed, installed, or executed on iPhone. Probe 05's first attempt established that `getDictionary` rejects a raw source literal and requires a Shortcut variable. The source now supplies JSON through a Text action before parsing; that corrected compile and structural inspection remain pending.
 
 | Source                        | Purpose                                                                  | Evidence still required                                                             |
 | ----------------------------- | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
@@ -8,9 +8,9 @@ These files are proposed Cherri v2.3.0 inputs. Probes 01–04 have compiled and 
 | `02-input.cherri`             | Safari/Text Share Sheet metadata, saved input and type detection         | CI structure passed; native Safari and text runs remain                             |
 | `03-safari.cherri`             | Narrow custom JavaScript action with explicit saved webpage binding      | CI structure passed; correct behavior on iPhone remains                            |
 | Generated `04-capture.cherri` | Embed the maintained capture source as a rawtext literal                 | CI confirms exact source bytes; native capture remains                             |
-| `05-json.cherri`              | Numeric version, interpolated runtime dictionary, Import Question header | Static structure pending; disposable receiver must confirm runtime JSON types       |
+| `05-json.cherri`              | Numeric version, runtime nested dictionary, Import Question header         | Corrected compile and static structure pending; disposable receiver must confirm runtime JSON types |
 
-The JSON probe intentionally exercises a suspected limitation: a dynamic dictionary reference may serialize as text. Successful compilation does not pass this experiment. Loopback on an iPhone addresses the iPhone itself. This source does not provide a phone-reachable receiver; any later local-network receiver/address needs explicit setup, no WHT credentials, and no score endpoint. Never enter a real device code into the mock-code question.
+The JSON probe intentionally exercises a suspected limitation: a dynamic nested dictionary reference may not serialize as a JSON object. It creates a Text action containing synthetic JSON, parses the action result with `getDictionary`, and supplies that dictionary directly to the JSON request body. Successful compilation or static plist inspection does not prove the runtime JSON type. Loopback on an iPhone addresses the iPhone itself. This source does not provide a phone-reachable receiver; any later local-network receiver/address needs explicit setup, no WHT credentials, and no score endpoint. Never enter a real device code into the mock-code question.
 
 The build script has no download/install/sign/network request implementation. Prepare local generated source with:
 
