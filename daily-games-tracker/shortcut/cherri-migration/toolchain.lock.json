@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "status": "candidate; CI execution not yet approved",
+  "status": "candidate; manual unsigned alert CI experiment approved, first run pending",
   "compiler": {
     "name": "Cherri",
     "version": "v2.3.0",

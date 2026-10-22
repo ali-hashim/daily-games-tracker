@@ -24,6 +24,11 @@ identifiers = [a['WFWorkflowActionIdentifier'] for a in actions]
 assert identifiers[-1] == 'is.workflow.actions.exit', 'Probe must explicitly stop.'
 requests = [a for a in actions if a['WFWorkflowActionIdentifier'] == 'is.workflow.actions.downloadurl']
 assert len(requests) == (1 if args.experiment == '05' else 0), 'Unexpected network action count.'
+if args.experiment == '01':
+    assert identifiers == ['is.workflow.actions.alert', 'is.workflow.actions.exit'], 'Alert probe must contain only the alert and explicit stop.'
+    alert_parameters = actions[0].get('WFWorkflowActionParameters', {})
+    assert alert_parameters.get('WFAlertActionTitle') == 'WHT build probe', 'Unexpected alert title.'
+    assert alert_parameters.get('WFAlertActionMessage') == 'Credential-free compiler experiment.', 'Unexpected alert message.'
 dictionary_item_types = {}
 if args.experiment in ('02', '03', '04'):
     assert shortcut.get('WFWorkflowInputContentItemClasses') == ['WFSafariWebPageContentItem', 'WFStringContentItem'], 'Wrong Share Sheet input classes/order.'
