@@ -1,4 +1,3 @@
-#include 'actions/basic'
 #define name WHT Input Probe
 #define mac false
 #define inputs webpage, text

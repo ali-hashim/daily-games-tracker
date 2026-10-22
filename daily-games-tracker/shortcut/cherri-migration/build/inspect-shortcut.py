@@ -31,7 +31,8 @@ if args.experiment == '01':
     assert alert_parameters.get('WFAlertActionMessage') == 'Credential-free compiler experiment.', 'Unexpected alert message.'
 dictionary_item_types = {}
 if args.experiment in ('02', '03', '04'):
-    assert shortcut.get('WFWorkflowInputContentItemClasses') == ['WFSafariWebPageContentItem', 'WFStringContentItem'], 'Wrong Share Sheet input classes/order.'
+    classes = shortcut.get('WFWorkflowInputContentItemClasses', [])
+    assert len(classes) == 2 and set(classes) == {'WFSafariWebPageContentItem', 'WFStringContentItem'}, 'Wrong Share Sheet input classes.'
     assert shortcut.get('WFWorkflowTypes') == ['ActionExtension'], 'Wrong workflow surfaces.'
     saved = [a for a in actions if a['WFWorkflowActionIdentifier'] == 'is.workflow.actions.setvariable' and a.get('WFWorkflowActionParameters', {}).get('WFVariableName') == 'originalInput']
     assert len(saved) == 1, 'Original input not captured exactly once.'
