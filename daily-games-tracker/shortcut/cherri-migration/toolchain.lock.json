@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "status": "candidate; Cherri built and probes 01-05 compiled and structurally inspected in CI; native execution unproven",
+  "status": "candidate; Cherri built and probes 01-07 compiled and structurally inspected in GitHub Actions run 17; native execution unproven",
   "compiler": {
     "name": "Cherri",
     "version": "v2.3.0",
@@ -37,7 +37,22 @@
   },
   "capture": {
     "source": "daily-games-tracker/shortcut/capture-safari.js",
-    "sha256": null,
-    "verifiedEmbeddedByteEquality": false
+    "sha256": "fb50c544f795a5db5102c6e936b3bea723eca7fd92f4c6677d2780bfdf0ba2fb",
+    "bytes": 5250,
+    "verifiedEmbeddedByteEquality": true
+  },
+  "latestUnsignedExperiment": {
+    "runNumber": 17,
+    "runId": 39805988409,
+    "applicationCommit": "e82c5b2b60546d743db344a65deb51663e8b1aba",
+    "artifact": "cherri-unsigned-probes-01-07",
+    "artifactId": 12436853411,
+    "artifactBytes": 18298,
+    "artifactSha256": "6f1d014bbe269125470745eea9109d92dc1b10e6c80ee84ab3f4749f9477d518",
+    "expiresAt": "2026-10-23T15:34:27Z",
+    "alertSampleFile": "Cherri-alert-probe_unsigned.shortcut",
+    "alertSampleSha256": "cbd15b5930b42120bec49b7cf363952d1a87f04f12eacd3b25f5a5584b9f070c",
+    "secondAlertSampleSha256": "72797d02917f6dd0a89405c6b6bbfd9a45242e5b4f9ffc35b68681ef4e42a8b0",
+    "byteReproducibility": "not established; alert byte checksums differ and plist comparison detects input-content-class ordering differences"
   }
 }
