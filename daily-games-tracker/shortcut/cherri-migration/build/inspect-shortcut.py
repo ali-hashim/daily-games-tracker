@@ -151,7 +151,7 @@ if args.experiment == '06':
     assert any(a.get('WFWorkflowActionIdentifier') == 'is.workflow.actions.setvariable' and a.get('WFWorkflowActionParameters', {}).get('WFVariableName') == 'submitMarker' for a in submit_actions), 'Submission marker must be within Submit Results.'
     assert identifiers[-2] == 'is.workflow.actions.alert' and identifiers[-1] == 'is.workflow.actions.exit', 'Only the shared completion marker may follow routing.'
     assignments = [a for a in actions if a.get('WFWorkflowActionIdentifier') == 'is.workflow.actions.setvariable' and a.get('WFWorkflowActionParameters', {}).get('WFVariableName') == 'completionResponse']
-    assert len(assignments) == 3, f'Expected validation duplicate plus two submit success assignments; found {len(assignments)}.'
+    assert len(assignments) == 4, f'Expected one harmless initial value plus three accepted-response assignments; found {len(assignments)}.'
     sources = [variable_name(a.get('WFWorkflowActionParameters', {}).get('WFInput', {})) for a in assignments]
     assert sources.count('validationResponse') == 1 and sources.count('submitResponse') == 2, f'Completion assignments must use the accepted response directly: {sources}.'
     conditionals = [actions[g['start']].get('WFWorkflowActionParameters', {}) for g in all_groups if g['type'] == 'conditional']

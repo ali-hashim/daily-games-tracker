@@ -7,7 +7,8 @@
 @submitStatus = "submitted"
 @validationResponse = "synthetic validation response"
 @submitResponse = "synthetic submit response"
-@completionResponse = nil
+// Cherri requires a text-typed value at the shared alert even though failure paths stop.
+@completionResponse = "No synthetic route selected"
 
 if @validationStatus == "already_submitted" {
     @completionResponse = @validationResponse
