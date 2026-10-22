@@ -16,8 +16,8 @@
   "inventoryExcludes": [
     "PUBLIC_MANIFEST.json (self-reference)"
   ],
-  "fileCount": 127,
-  "totalBytes": 527476,
+  "fileCount": 129,
+  "totalBytes": 538251,
   "files": [
     {
       "path": ".gitattributes",
@@ -26,8 +26,8 @@
     },
     {
       "path": ".github/workflows/cherri-alert-experiment.yml",
-      "bytes": 9486,
-      "sha256": "9c22ec585555553b55298da6277a6e2edfe70edf3b955da10ff64cbb2830c27f"
+      "bytes": 9864,
+      "sha256": "e705f160ca2f3e59b508f625da5315a8b0bcfafd8863131577d7b619fef2f9d6"
     },
     {
       "path": ".gitignore",
@@ -361,8 +361,8 @@
     },
     {
       "path": "daily-games-tracker/shortcut/cherri-migration/README.md",
-      "bytes": 1512,
-      "sha256": "ec80e512c297cc1f0a033e425eb158b5b54ebf7cd99522f80bc66c9c18ef0fc6"
+      "bytes": 1571,
+      "sha256": "380298f17a6343ef1f10968371cdc3084f6e9c5a08498506048c4c59bb7c0073"
     },
     {
       "path": "daily-games-tracker/shortcut/cherri-migration/build/build.mjs",
@@ -371,8 +371,8 @@
     },
     {
       "path": "daily-games-tracker/shortcut/cherri-migration/build/inspect-shortcut.py",
-      "bytes": 6275,
-      "sha256": "af16b42a519eeaa2bc40c87273936b0a2fdcf1d2e4a30cd11649806b5eb5caa5"
+      "bytes": 12852,
+      "sha256": "d64c0315d371ac7927d9fe1364a817f7632ef2dfcf5f252feff1bb4296f1fdfe"
     },
     {
       "path": "daily-games-tracker/shortcut/cherri-migration/source/01-alert.cherri",
@@ -395,9 +395,19 @@
       "sha256": "ef991a069d2a759a81fa45c25486105818d6ed57dd57dd93f2e52c5e3107dbb8"
     },
     {
+      "path": "daily-games-tracker/shortcut/cherri-migration/source/06-routing.cherri",
+      "bytes": 1151,
+      "sha256": "6c12c09f57f3b6212276076d2148de7c162f4efbbb41ae1364ea1e5b86bf889e"
+    },
+    {
+      "path": "daily-games-tracker/shortcut/cherri-migration/source/07-completion.cherri",
+      "bytes": 1643,
+      "sha256": "7f25d5952df8968e63f0fd088a87ecaf5d211dc387ad3a6be32be9a820b31b84"
+    },
+    {
       "path": "daily-games-tracker/shortcut/cherri-migration/source/EXPERIMENTS.md",
-      "bytes": 4415,
-      "sha256": "b09621ec85b087040a78be51b0b23b49deee7392aec7ccddb5d1eeea728e02bc"
+      "bytes": 5382,
+      "sha256": "f7b237efcd0a636b9bbc37e9dd190c714f7ae7b8da393d38c9a5899f5b0bf4d4"
     },
     {
       "path": "daily-games-tracker/shortcut/cherri-migration/toolchain.lock.json",

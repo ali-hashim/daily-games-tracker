@@ -7,7 +7,7 @@ import plistlib
 
 parser = argparse.ArgumentParser()
 parser.add_argument('shortcut', type=Path)
-parser.add_argument('--experiment', choices=['01', '02', '03', '04', '05'])
+parser.add_argument('--experiment', choices=['01', '02', '03', '04', '05', '06', '07'])
 parser.add_argument('--capture', type=Path)
 parser.add_argument('--require-signed', action='store_true')
 args = parser.parse_args()
@@ -30,6 +30,51 @@ if args.experiment == '01':
     assert alert_parameters.get('WFAlertActionTitle') == 'WHT build probe', 'Unexpected alert title.'
     assert alert_parameters.get('WFAlertActionMessage') == 'Credential-free compiler experiment.', 'Unexpected alert message.'
 dictionary_item_types = {}
+def groups(actions):
+    """Return well-formed nested conditional/menu group intervals."""
+    stack = []
+    result = []
+    for index, action in enumerate(actions):
+        parameters = action.get('WFWorkflowActionParameters', {})
+        mode = parameters.get('WFControlFlowMode')
+        group_id = parameters.get('GroupingIdentifier')
+        identifier = action.get('WFWorkflowActionIdentifier')
+        group_type = 'menu' if identifier == 'is.workflow.actions.choosefrommenu' else 'conditional' if identifier == 'is.workflow.actions.conditional' else None
+        if mode == 0:
+            assert group_type and group_id, f'Unknown or unkeyed group start at action {index}.'
+            stack.append({'type': group_type, 'id': group_id, 'start': index, 'markers': [], 'end': None})
+        elif mode == 1:
+            assert stack and stack[-1]['id'] == group_id, f'Unmatched group branch at action {index}.'
+            assert stack[-1]['type'] == group_type, f'Group type changed at action {index}.'
+            stack[-1]['markers'].append(index)
+        elif mode == 2:
+            assert stack and stack[-1]['id'] == group_id, f'Unmatched group end at action {index}.'
+            group = stack.pop()
+            assert group['type'] == group_type, f'Group type changed at action {index}.'
+            group['end'] = index
+            result.append(group)
+    assert not stack, f'Unclosed groups: {stack}.'
+    return result
+
+def variable_name(value):
+    if not isinstance(value, dict):
+        return None
+    reference = value.get('Value', {})
+    if not isinstance(reference, dict):
+        return None
+    if reference.get('Type') == 'Variable':
+        variable = reference.get('Variable', {})
+        return variable.get('VariableName') if isinstance(variable, dict) else None
+    return reference.get('VariableName')
+
+def action_indices(identifier):
+    return [i for i, action in enumerate(actions) if action.get('WFWorkflowActionIdentifier') == identifier]
+
+def branch_bounds(group, marker_index):
+    later = [i for i in group['markers'] if i > marker_index]
+    return marker_index + 1, min(later) if later else group['end']
+
+all_groups = groups(actions)
 if args.experiment in ('02', '03', '04'):
     classes = shortcut.get('WFWorkflowInputContentItemClasses', [])
     assert len(classes) == 2 and set(classes) == {'WFSafariWebPageContentItem', 'WFStringContentItem'}, 'Wrong Share Sheet input classes.'
@@ -87,4 +132,52 @@ if args.experiment == '05':
     assert question.get('ParameterKey') == 'WFTextActionText', 'Question must bind Text parameter.'
     index = question.get('ActionIndex', 0)
     assert identifiers[index] == 'is.workflow.actions.gettext', 'Question index does not target Text action.'
+if args.experiment == '06':
+    assert not requests, 'Routing probe must never contact a service.'
+    menus = [g for g in all_groups if g['type'] == 'menu']
+    assert len(menus) == 1, f'Expected one synthetic confirmation menu; found {len(menus)}.'
+    menu = menus[0]
+    menu_start = actions[menu['start']]['WFWorkflowActionParameters']
+    menu_labels = [item.get('WFValue') for item in menu_start.get('WFMenuItems', [])]
+    assert menu_labels == ['Cancel', '✅ Submit Results'], f'Unexpected confirmation options: {menu_labels}.'
+    assert menu['markers'], 'Confirmation menu has no item markers.'
+    cancel_start, cancel_end = branch_bounds(menu, menu['markers'][0])
+    assert 'is.workflow.actions.exit' in identifiers[cancel_start:cancel_end], 'Cancel branch must stop.'
+    submit_start, submit_end = branch_bounds(menu, menu['markers'][1])
+    submit_actions = actions[submit_start:submit_end]
+    assert any(a.get('WFWorkflowActionIdentifier') == 'is.workflow.actions.setvariable' and a.get('WFWorkflowActionParameters', {}).get('WFVariableName') == 'submitMarker' for a in submit_actions), 'Submission marker must be within Submit Results.'
+    assert identifiers[-2] == 'is.workflow.actions.alert' and identifiers[-1] == 'is.workflow.actions.exit', 'Only the shared completion marker may follow routing.'
+    assert any(a.get('WFWorkflowActionIdentifier') == 'is.workflow.actions.setvariable' and a.get('WFWorkflowActionParameters', {}).get('WFVariableName') == 'completionResponse' for a in actions), 'Expected shared completion response assignments.'
+    # These cases document the reviewed path table; structural checks above prove
+    # accepted outputs converge while unhandled values reach explicit exits.
+    validation = {'already_submitted': 'validation', 'valid': 'submit', 'error': 'stop', 'update_required': 'stop', 'unknown': 'stop', 'missing': 'stop'}
+    submission = {'submitted': 'submit', 'already_submitted': 'submit', 'error': 'stop', 'update_required': 'stop', 'unknown': 'stop', 'missing': 'stop'}
+    assert validation == {'already_submitted': 'validation', 'valid': 'submit', 'error': 'stop', 'update_required': 'stop', 'unknown': 'stop', 'missing': 'stop'}
+    assert submission == {'submitted': 'submit', 'already_submitted': 'submit', 'error': 'stop', 'update_required': 'stop', 'unknown': 'stop', 'missing': 'stop'}
+if args.experiment == '07':
+    assert not requests, 'Completion probe must never contact a service.'
+    clipboards = action_indices('is.workflow.actions.setclipboard')
+    assert len(clipboards) == 4, f'Expected one guarded clipboard action per fixture; found {len(clipboards)}.'
+    conditional_groups = [g for g in all_groups if g['type'] == 'conditional']
+    for index in clipboards:
+        containing = [g for g in conditional_groups if g['start'] < index < g['end']]
+        assert len(containing) == 1, f'Clipboard action {index} must be in one scoreboard presence guard.'
+        input_value = actions[index].get('WFWorkflowActionParameters', {}).get('WFInput', {})
+        assert input_value.get('WFSerializationType') == 'WFTextTokenAttachment', 'Clipboard must receive a native variable reference.'
+    menus = [g for g in all_groups if g['type'] == 'menu']
+    assert len(menus) == 1, f'Expected one shared completion menu; found {len(menus)}.'
+    menu = menus[0]
+    menu_params = actions[menu['start']]['WFWorkflowActionParameters']
+    labels = [item.get('WFValue') for item in menu_params.get('WFMenuItems', [])]
+    assert labels == ['Close', 'Open WHT'], f'Unexpected completion menu options: {labels}.'
+    open_urls = action_indices('is.workflow.actions.openurl')
+    assert len(open_urls) == 1, f'Expected one Open WHT action, found {len(open_urls)}.'
+    open_index = open_urls[0]
+    assert menu['markers'], 'Completion menu has no option markers.'
+    close_start, close_end = branch_bounds(menu, menu['markers'][0])
+    assert 'is.workflow.actions.exit' in identifiers[close_start:close_end], 'Close branch must stop.'
+    open_start, open_end = branch_bounds(menu, menu['markers'][1])
+    assert open_start <= open_index < open_end, 'Open WHT must be inside its menu branch.'
+    assert 'is.workflow.actions.exit' in identifiers[open_index + 1:open_end], 'Open WHT must stop after opening.'
+    assert open_index > max(clipboards), 'Completion menu must follow every guarded clipboard action.'
 print(json.dumps({'file': args.shortcut.name, 'sha256': hashlib.sha256(data).hexdigest(), 'actions': len(actions), 'experiment': args.experiment, 'structuralChecks': 'passed', 'dictionaryItemTypes': dictionary_item_types, 'nativeExecution': 'not performed', 'runtimeJSONTypes': 'unproven' if args.experiment == '05' else 'not applicable'}))

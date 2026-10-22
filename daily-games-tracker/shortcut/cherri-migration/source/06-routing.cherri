@@ -1,0 +1,37 @@
+#include 'actions/web'
+#define name WHT Routing Probe
+#define mac false
+
+// Static synthetic response values only. This compile-only probe never sends requests.
+@validationStatus = "already_submitted"
+@submitStatus = "submitted"
+@validationResponse = "synthetic validation response"
+@submitResponse = "synthetic submit response"
+@completionResponse = nil
+
+if @validationStatus == "already_submitted" {
+    @completionResponse = @validationResponse
+} else {
+    if @validationStatus == "valid" {
+        menu "Submit synthetic result?" {
+            item "Cancel":
+                stop()
+            item "✅ Submit Results":
+                @submitMarker = "synthetic submit only"
+                if @submitStatus == "submitted" {
+                    @completionResponse = @submitResponse
+                } else {
+                    if @submitStatus == "already_submitted" {
+                        @completionResponse = @submitResponse
+                    } else {
+                        stop()
+                    }
+                }
+        }
+    } else {
+        stop()
+    }
+}
+
+alert(@completionResponse, "Shared synthetic completion")
+stop()
