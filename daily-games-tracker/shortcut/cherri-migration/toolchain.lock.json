@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "status": "candidate; Cherri built and probes 01-04 compiled and structurally inspected in CI; native execution unproven",
+  "status": "candidate; Cherri built and probes 01-05 compiled and structurally inspected in CI; native execution unproven",
   "compiler": {
     "name": "Cherri",
     "version": "v2.3.0",
