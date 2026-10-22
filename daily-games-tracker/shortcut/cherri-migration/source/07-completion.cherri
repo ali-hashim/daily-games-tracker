@@ -8,35 +8,35 @@ const presentJson = text('{"scoreboard_text":"Synthetic scoreboard","completion_
 const emptyJson = text('{"scoreboard_text":"","completion_message":"Synthetic empty fixture","wht_url":"https://example.invalid/wht"}')
 const nullJson = text('{"scoreboard_text":null,"completion_message":"Synthetic null fixture","wht_url":"https://example.invalid/wht"}')
 const missingJson = text('{"completion_message":"Synthetic missing fixture","wht_url":"https://example.invalid/wht"}')
-const presentResponse = getDictionary(presentJson)
-const emptyResponse = getDictionary(emptyJson)
-const nullResponse = getDictionary(nullJson)
-const missingResponse = getDictionary(missingJson)
-const presentScoreboard = presentResponse['scoreboard_text']
-const emptyScoreboard = emptyResponse['scoreboard_text']
-const nullScoreboard = nullResponse['scoreboard_text']
-const missingScoreboard = missingResponse['scoreboard_text']
-const completionMessage = presentResponse['completion_message']
-const whtURL = presentResponse['wht_url']
+@presentResponse = getDictionary(presentJson)
+@emptyResponse = getDictionary(emptyJson)
+@nullResponse = getDictionary(nullJson)
+@missingResponse = getDictionary(missingJson)
+@presentScoreboard = @presentResponse['scoreboard_text']
+@emptyScoreboard = @emptyResponse['scoreboard_text']
+@nullScoreboard = @nullResponse['scoreboard_text']
+@missingScoreboard = @missingResponse['scoreboard_text']
+@completionMessage = @presentResponse['completion_message']
+@whtURL = @presentResponse['wht_url']
 
-if presentScoreboard {
-    setClipboard(presentScoreboard)
+if @presentScoreboard {
+    setClipboard(@presentScoreboard)
 }
-if emptyScoreboard {
-    setClipboard(emptyScoreboard)
+if @emptyScoreboard {
+    setClipboard(@emptyScoreboard)
 }
-if nullScoreboard {
-    setClipboard(nullScoreboard)
+if @nullScoreboard {
+    setClipboard(@nullScoreboard)
 }
-if missingScoreboard {
-    setClipboard(missingScoreboard)
+if @missingScoreboard {
+    setClipboard(@missingScoreboard)
 }
 
-menu completionMessage {
+menu @completionMessage {
     item "Close":
         stop()
     item "Open WHT":
-        openURL(whtURL)
+        openURL(@whtURL)
         stop()
 }
 stop()
