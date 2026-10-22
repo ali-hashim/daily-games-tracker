@@ -52,6 +52,7 @@ jobs:
           go build -mod=readonly -trimpath -o "$RUNNER_TEMP/cherri" .
 
       - name: Compile and inspect the alert twice
+        id: probe
         shell: bash
         run: |
           set -euo pipefail
@@ -71,24 +72,64 @@ jobs:
             if [[ "$attempt" == 1 ]]; then
               cp "${shortcuts[0]}" "$out/Cherri-alert-probe_unsigned.shortcut"
             else
-              cmp "$out/Cherri-alert-probe_unsigned.shortcut" "${shortcuts[0]}"
+              cp "${shortcuts[0]}" "$out/Cherri-alert-probe-second_unsigned.shortcut"
             fi
           done
           sha256sum "$out/Cherri-alert-probe_unsigned.shortcut" > "$out/SHA256SUMS"
-          python3 - "$out" "$GITHUB_SHA" <<'PY'
-          import hashlib, json, pathlib, sys
+          sha256sum "$out/Cherri-alert-probe-second_unsigned.shortcut" >> "$out/SHA256SUMS"
+          python3 - "$out" "$GITHUB_OUTPUT" <<'PY'
+          import hashlib, json, pathlib, plistlib, sys
           out = pathlib.Path(sys.argv[1])
-          artifact = out / "Cherri-alert-probe_unsigned.shortcut"
-          data = artifact.read_bytes()
+          first = out / "Cherri-alert-probe_unsigned.shortcut"
+          second = out / "Cherri-alert-probe-second_unsigned.shortcut"
+          first_data, second_data = first.read_bytes(), second.read_bytes()
+          first_plist, second_plist = plistlib.loads(first_data), plistlib.loads(second_data)
+          def differences(a, b, path="$", found=None):
+              found = [] if found is None else found
+              if type(a) is not type(b):
+                  found.append(path)
+              elif isinstance(a, dict):
+                  for key in sorted(set(a) | set(b), key=str):
+                      if key not in a or key not in b:
+                          found.append(f"{path}.{key}")
+                      else:
+                          differences(a[key], b[key], f"{path}.{key}", found)
+              elif isinstance(a, list):
+                  if len(a) != len(b):
+                      found.append(path + ".length")
+                  for index, (left, right) in enumerate(zip(a, b)):
+                      differences(left, right, f"{path}[{index}]", found)
+              elif a != b:
+                  found.append(path)
+              return found
+          paths = differences(first_plist, second_plist)
+          report = {
+              "firstSha256": hashlib.sha256(first_data).hexdigest(),
+              "secondSha256": hashlib.sha256(second_data).hexdigest(),
+              "byteIdentical": first_data == second_data,
+              "propertyListsSemanticallyEqual": not paths,
+              "differingPaths": paths[:50],
+          }
+          (out / "reproducibility.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+          with open(sys.argv[2], "a", encoding="utf-8") as output:
+              output.write(f"semantic_equal={str(not paths).lower()}\n")
+          print(json.dumps(report))
+          PY
+          python3 - "$out" "$GITHUB_SHA" <<'PY'
+          import json, pathlib, sys
+          out = pathlib.Path(sys.argv[1])
+          reproducibility = json.loads((out / "reproducibility.json").read_text(encoding="utf-8"))
           manifest = {
               "applicationCommit": sys.argv[2],
               "compiler": "Cherri v2.3.0",
               "compilerCommit": "d2072c62ea708e7727099fab94fa28b0bcec747b",
               "goVersion": "1.24.0",
               "buildFlags": ["--skip-sign", "--derive-uuids"],
-              "artifact": artifact.name,
-              "artifactSha256": hashlib.sha256(data).hexdigest(),
-              "reproducibility": "two clean unsigned builds byte-identical",
+              "artifacts": [
+                  {"name": "Cherri-alert-probe_unsigned.shortcut", "sha256": reproducibility["firstSha256"]},
+                  {"name": "Cherri-alert-probe-second_unsigned.shortcut", "sha256": reproducibility["secondSha256"]},
+              ],
+              "reproducibility": reproducibility,
               "signing": "not performed",
               "nativeExecution": "not performed",
           }
@@ -102,3 +143,7 @@ jobs:
           path: ${{ runner.temp }}/alert-output/
           if-no-files-found: error
           retention-days: 1
+
+      - name: Require equivalent Shortcut property lists
+        if: steps.probe.outputs.semantic_equal != 'true'
+        run: exit 1

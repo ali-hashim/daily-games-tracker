@@ -17,7 +17,7 @@
     "PUBLIC_MANIFEST.json (self-reference)"
   ],
   "fileCount": 127,
-  "totalBytes": 519431,
+  "totalBytes": 521817,
   "files": [
     {
       "path": ".gitattributes",
@@ -26,8 +26,8 @@
     },
     {
       "path": ".github/workflows/cherri-alert-experiment.yml",
-      "bytes": 4197,
-      "sha256": "10c2aa2208737653b4d1e25926008e540d5ce764bf065b5b9770bcd5932e228d"
+      "bytes": 6583,
+      "sha256": "f02d908c236f5a63970d38fc354962020d879828e58a575fee8c68ddfa02d2bb"
     },
     {
       "path": ".gitignore",
