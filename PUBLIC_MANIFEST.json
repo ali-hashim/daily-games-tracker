@@ -17,7 +17,7 @@
     "PUBLIC_MANIFEST.json (self-reference)"
   ],
   "fileCount": 129,
-  "totalBytes": 539873,
+  "totalBytes": 541813,
   "files": [
     {
       "path": ".gitattributes",
@@ -41,13 +41,13 @@
     },
     {
       "path": "PUBLIC_REVIEW.md",
-      "bytes": 5108,
-      "sha256": "32459da90e3edce3263c72d50499f412cde41450055ee35d80d009adb2b1a25e"
+      "bytes": 5372,
+      "sha256": "08509973ca4c361943197e86e887a98ec8fdc15ceff8ad57807d03461d3fcb91"
     },
     {
       "path": "README.md",
-      "bytes": 2643,
-      "sha256": "4536425a939633ea0217b063484dbdb0208d1addbebece5ea9768427b5882b56"
+      "bytes": 2683,
+      "sha256": "d6ac00ae53f7cd770152a35ea295cf9c88d5d817f1f0e6d9fad9fa9229e4a049"
     },
     {
       "path": "daily-games-tracker/.env.example",
@@ -361,8 +361,8 @@
     },
     {
       "path": "daily-games-tracker/shortcut/cherri-migration/README.md",
-      "bytes": 1571,
-      "sha256": "380298f17a6343ef1f10968371cdc3084f6e9c5a08498506048c4c59bb7c0073"
+      "bytes": 1660,
+      "sha256": "6c1c6ee9743aa271ddde9c01122228ea27c57128d9900b69496013a57bf90fc6"
     },
     {
       "path": "daily-games-tracker/shortcut/cherri-migration/build/build.mjs",
@@ -406,13 +406,13 @@
     },
     {
       "path": "daily-games-tracker/shortcut/cherri-migration/source/EXPERIMENTS.md",
-      "bytes": 5382,
-      "sha256": "f7b237efcd0a636b9bbc37e9dd190c714f7ae7b8da393d38c9a5899f5b0bf4d4"
+      "bytes": 6040,
+      "sha256": "5b8b7fec4c8eca2404d52c92e638dd60484538fb1dbf31174793c5af84a22648"
     },
     {
       "path": "daily-games-tracker/shortcut/cherri-migration/toolchain.lock.json",
-      "bytes": 1331,
-      "sha256": "8f81d8614cd38a6be241c52d7432682733ce482102deb92a486285179967760c"
+      "bytes": 2220,
+      "sha256": "3fd6ad3875005809acb88348a1f2d63a72fef02c273c87e6da6c6715f75417f6"
     },
     {
       "path": "daily-games-tracker/src/App.tsx",
