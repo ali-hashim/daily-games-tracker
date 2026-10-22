@@ -1,6 +1,12 @@
 name: Cherri alert experiment
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/cherri-alert-experiment.yml
+      - daily-games-tracker/shortcut/cherri-migration/source/01-alert.cherri
+      - daily-games-tracker/shortcut/cherri-migration/build/inspect-shortcut.py
   workflow_dispatch:
 
 permissions:
