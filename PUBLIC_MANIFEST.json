@@ -17,7 +17,7 @@
     "PUBLIC_MANIFEST.json (self-reference)"
   ],
   "fileCount": 129,
-  "totalBytes": 539656,
+  "totalBytes": 539622,
   "files": [
     {
       "path": ".gitattributes",
@@ -401,8 +401,8 @@
     },
     {
       "path": "daily-games-tracker/shortcut/cherri-migration/source/07-completion.cherri",
-      "bytes": 1643,
-      "sha256": "7f25d5952df8968e63f0fd088a87ecaf5d211dc387ad3a6be32be9a820b31b84"
+      "bytes": 1609,
+      "sha256": "2bd83fbbf9e320a606fc06f6dfd13fd542d9348f9645ac68274e4b2fcd3a1ba7"
     },
     {
       "path": "daily-games-tracker/shortcut/cherri-migration/source/EXPERIMENTS.md",
