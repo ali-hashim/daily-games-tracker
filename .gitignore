@@ -1,0 +1,12 @@
+**/node_modules/
+**/.cache/
+**/dist/
+**/.wrangler/
+**/.dev.vars*
+**/.env*
+!**/.env.example
+**/*.shortcut
+**/__pycache__/
+**/*.py[cod]
+**/shortcut/cherri-migration/out/
+.validation/

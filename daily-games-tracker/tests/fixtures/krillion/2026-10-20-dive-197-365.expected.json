@@ -1,0 +1,52 @@
+{
+  "game": "krillion",
+  "input_kind": "safari_webpage",
+  "game_day": "2026-10-20",
+  "puzzle_number": 197,
+  "rounds": [
+    {
+      "round_number": 1,
+      "prompt": "NAME A SYNTHETIC CURRENT ITEM 1",
+      "answer": "Synthetic current answer 1",
+      "raw_score": 85
+    },
+    {
+      "round_number": 2,
+      "prompt": "NAME A SYNTHETIC CURRENT ITEM 2",
+      "answer": "Synthetic current answer 2",
+      "raw_score": 60
+    },
+    {
+      "round_number": 3,
+      "prompt": "NAME A SYNTHETIC CURRENT ITEM 3",
+      "answer": "Synthetic current answer 3",
+      "raw_score": 60
+    },
+    {
+      "round_number": 4,
+      "prompt": "NAME A SYNTHETIC CURRENT ITEM 4",
+      "answer": "Synthetic current answer 4",
+      "raw_score": 30
+    },
+    {
+      "round_number": 5,
+      "prompt": "NAME A SYNTHETIC CURRENT ITEM 5",
+      "answer": "Synthetic current answer 5",
+      "raw_score": 10
+    },
+    {
+      "round_number": 6,
+      "prompt": "NAME A SYNTHETIC CURRENT ITEM 6",
+      "answer": "Synthetic current answer 6",
+      "raw_score": 60
+    },
+    {
+      "round_number": 7,
+      "prompt": "NAME A SYNTHETIC CURRENT ITEM 7",
+      "answer": "Synthetic current answer 7",
+      "raw_score": 60
+    }
+  ],
+  "reported_total": 365,
+  "calculated_total": 365
+}

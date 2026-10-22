@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "status": "candidate; CI execution not yet approved",
+  "compiler": {
+    "name": "Cherri",
+    "version": "v2.3.0",
+    "repository": "https://github.com/electrikmilk/cherri.git",
+    "commit": "d2072c62ea708e7727099fab94fa28b0bcec747b",
+    "sourceArchiveSha256": null,
+    "verifiedBuild": false
+  },
+  "go": {
+    "version": "1.24.0",
+    "verifiedBuild": false
+  },
+  "build": {
+    "runner": "ubuntu-24.04",
+    "flags": ["--skip-sign", "--derive-uuids"],
+    "byteReproducibility": "unproven; Cherri emits some map-derived ordered arrays"
+  },
+  "actions": {
+    "checkout": {
+      "repository": "actions/checkout",
+      "version": "v4.2.2",
+      "commit": "11bd71901bbe5b1630ceea73d27597364c9af683"
+    },
+    "setupGo": {
+      "repository": "actions/setup-go",
+      "version": "v6.5.0",
+      "commit": "924ae3a1cded613372ab5595356fb5720e22ba16"
+    },
+    "uploadArtifact": {
+      "repository": "actions/upload-artifact",
+      "version": "v6.0.0",
+      "commit": "615b319bd27bb32c3d64dca6b6ed6974d5fbe653"
+    }
+  },
+  "capture": {
+    "source": "daily-games-tracker/shortcut/capture-safari.js",
+    "sha256": null,
+    "verifiedEmbeddedByteEquality": false
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "example-project",
+  "compatibility_date": "2026-10-20",
+  "pages_build_output_dir": "./dist",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "example-database",
+      "database_id": "00000000000000000000000000000000",
+      "preview_database_id": "00000000000000000000000000000000",
+      "migrations_dir": "migrations",
+    },
+  ],
+  "vars": {
+    "APP_ENV": "local",
+    "ADMIN_EMAIL": "admin@example.test",
+  },
+}

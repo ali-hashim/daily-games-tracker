@@ -1,0 +1,321 @@
+{
+  "capture_schema": "dgt.capture.v1",
+  "source_kind": "safari_webpage",
+  "source_url": "https://krillion.io/",
+  "page_title": "Synthetic Krillion fixture",
+  "visible_text": "KRILLION\nTHE DAILY DIVE\nSYNTHETIC FIXTURE; NO PLAYER DATA\nDive #198 complete\n285\nbetter than 50% of today's players\nthe catch\ntap a round for every answer\n\n1\n\nName a synthetic fixture item 1\nSynthetic native answer 1\n101 other players chose this\n60\n+\n\n2\n\nName a synthetic fixture item 2\nSynthetic native answer 2\n102 other players chose this\n60\n+\n\n3\n\nName a synthetic fixture item 3\nSynthetic native answer 3\n103 other players chose this\n60\n+\n\n4\n\nName a synthetic fixture item 4\nSynthetic native answer 4\n104 other players chose this\n15\n+\n\n5\n\nName a synthetic fixture item 5\nSynthetic native answer 5\n105 other players chose this\n60\n+\n\n6\n\nName a synthetic fixture item 6\nSynthetic native answer 6\n106 other players chose this\n15\n+\n\n7\n\nName a synthetic fixture item 7\nSynthetic native answer 7\n107 other players chose this\n15\n+\nlogbook\nSYNTHETIC END\n(opens in a new tab)\nYOU\n\n",
+  "visible_nodes": [
+    {
+      "tag": "DIV",
+      "id": "",
+      "class": "",
+      "text": "the catch"
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "class": "",
+      "text": "tap a round for every answer"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "class": "",
+      "text": "1"
+    },
+    {
+      "tag": "P",
+      "id": "",
+      "class": "uppercase",
+      "text": "Name a synthetic fixture item 1"
+    },
+    {
+      "tag": "P",
+      "id": "",
+      "class": "truncate",
+      "text": "Synthetic native answer 1"
+    },
+    {
+      "tag": "P",
+      "id": "",
+      "class": "",
+      "text": "other players chose this"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "class": "",
+      "text": "101"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "class": "",
+      "text": "60"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "class": "",
+      "text": "+"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "class": "",
+      "text": "2"
+    },
+    {
+      "tag": "P",
+      "id": "",
+      "class": "uppercase",
+      "text": "Name a synthetic fixture item 2"
+    },
+    {
+      "tag": "P",
+      "id": "",
+      "class": "truncate",
+      "text": "Synthetic native answer 2"
+    },
+    {
+      "tag": "P",
+      "id": "",
+      "class": "",
+      "text": "other players chose this"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "class": "",
+      "text": "102"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "class": "",
+      "text": "60"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "class": "",
+      "text": "+"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "class": "",
+      "text": "3"
+    },
+    {
+      "tag": "P",
+      "id": "",
+      "class": "uppercase",
+      "text": "Name a synthetic fixture item 3"
+    },
+    {
+      "tag": "P",
+      "id": "",
+      "class": "truncate",
+      "text": "Synthetic native answer 3"
+    },
+    {
+      "tag": "P",
+      "id": "",
+      "class": "",
+      "text": "other players chose this"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "class": "",
+      "text": "103"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "class": "",
+      "text": "60"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "class": "",
+      "text": "+"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "class": "",
+      "text": "4"
+    },
+    {
+      "tag": "P",
+      "id": "",
+      "class": "uppercase",
+      "text": "Name a synthetic fixture item 4"
+    },
+    {
+      "tag": "P",
+      "id": "",
+      "class": "truncate",
+      "text": "Synthetic native answer 4"
+    },
+    {
+      "tag": "P",
+      "id": "",
+      "class": "",
+      "text": "other players chose this"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "class": "",
+      "text": "104"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "class": "",
+      "text": "15"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "class": "",
+      "text": "+"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "class": "",
+      "text": "5"
+    },
+    {
+      "tag": "P",
+      "id": "",
+      "class": "uppercase",
+      "text": "Name a synthetic fixture item 5"
+    },
+    {
+      "tag": "P",
+      "id": "",
+      "class": "truncate",
+      "text": "Synthetic native answer 5"
+    },
+    {
+      "tag": "P",
+      "id": "",
+      "class": "",
+      "text": "other players chose this"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "class": "",
+      "text": "105"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "class": "",
+      "text": "60"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "class": "",
+      "text": "+"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "class": "",
+      "text": "6"
+    },
+    {
+      "tag": "P",
+      "id": "",
+      "class": "uppercase",
+      "text": "Name a synthetic fixture item 6"
+    },
+    {
+      "tag": "P",
+      "id": "",
+      "class": "truncate",
+      "text": "Synthetic native answer 6"
+    },
+    {
+      "tag": "P",
+      "id": "",
+      "class": "",
+      "text": "other players chose this"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "class": "",
+      "text": "106"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "class": "",
+      "text": "15"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "class": "",
+      "text": "+"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "class": "",
+      "text": "7"
+    },
+    {
+      "tag": "P",
+      "id": "",
+      "class": "uppercase",
+      "text": "Name a synthetic fixture item 7"
+    },
+    {
+      "tag": "P",
+      "id": "",
+      "class": "truncate",
+      "text": "Synthetic native answer 7"
+    },
+    {
+      "tag": "P",
+      "id": "",
+      "class": "",
+      "text": "other players chose this"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "class": "",
+      "text": "107"
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "class": "",
+      "text": "15"
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "class": "",
+      "text": "+"
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "class": "",
+      "text": "logbook"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+#include 'actions/basic'
+#define name WHT Compiler Alert Probe
+#define mac false
+
+alert("Credential-free compiler experiment.", "WHT build probe")
+stop()

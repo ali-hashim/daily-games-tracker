@@ -1,0 +1,17 @@
+#include 'actions/basic'
+#define name WHT Safari Binding Probe
+#define mac false
+#define inputs webpage, text
+#define from sharesheet
+#define noinput stopwith "Share a Safari webpage to this probe."
+
+// Custom definition makes the page reference explicit after type detection.
+// The native identifier/parameters still require iPhone acceptance.
+action 'runjavascriptonwebpage' whtSafariProbe(variable webpage: 'WFInput', rawtext javascript: 'WFJavaScript')
+
+@originalInput = ShortcutInput
+const inputType = typeOf(@originalInput)
+alert(inputType, "Original input type")
+const probeResult = whtSafariProbe(@originalInput, 'completion({title: document.title, href: location.href});')
+quicklook(probeResult)
+stop()

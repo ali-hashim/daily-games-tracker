@@ -1,0 +1,8 @@
+{
+  "capture_schema": "dgt.capture.v1",
+  "source_kind": "safari_webpage",
+  "source_url": "https://krillion.io/",
+  "page_title": "Synthetic empty result",
+  "visible_text": "KRILLION\nSYNTHETIC EMPTY FIXTURE\n",
+  "visible_nodes": []
+}

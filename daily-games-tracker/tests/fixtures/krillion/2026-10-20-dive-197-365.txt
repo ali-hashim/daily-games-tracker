@@ -1,0 +1,66 @@
+KRILLION
+THE DAILY DIVE
+SYNTHETIC FIXTURE; NO PLAYER DATA
+DIVE #197 COMPLETE
+365
+BETTER THAN 50% OF TODAY'S PLAYERS
+THE CATCH
+TAP A ROUND FOR EVERY ANSWER
+
+1
+
+NAME A SYNTHETIC CURRENT ITEM 1
+Synthetic current answer 1
+101 other players chose this
+85
++
+
+2
+
+NAME A SYNTHETIC CURRENT ITEM 2
+Synthetic current answer 2
+102 other players chose this
+60
++
+
+3
+
+NAME A SYNTHETIC CURRENT ITEM 3
+Synthetic current answer 3
+103 other players chose this
+60
++
+
+4
+
+NAME A SYNTHETIC CURRENT ITEM 4
+Synthetic current answer 4
+104 other players chose this
+30
++
+
+5
+
+NAME A SYNTHETIC CURRENT ITEM 5
+Synthetic current answer 5
+105 other players chose this
+10
++
+
+6
+
+NAME A SYNTHETIC CURRENT ITEM 6
+Synthetic current answer 6
+106 other players chose this
+60
++
+
+7
+
+NAME A SYNTHETIC CURRENT ITEM 7
+Synthetic current answer 7
+107 other players chose this
+60
++
+LOGBOOK
+SYNTHETIC END

@@ -1,0 +1,12 @@
+#include 'actions/basic'
+#define name WHT Input Probe
+#define mac false
+#define inputs webpage, text
+#define from sharesheet
+#define noinput stopwith "Share a Safari webpage or text to this probe."
+
+@originalInput = ShortcutInput
+const inputType = typeOf(@originalInput)
+alert(inputType, "Original input type")
+quicklook(@originalInput)
+stop()
