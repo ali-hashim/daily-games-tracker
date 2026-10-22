@@ -17,7 +17,7 @@
     "PUBLIC_MANIFEST.json (self-reference)"
   ],
   "fileCount": 129,
-  "totalBytes": 539511,
+  "totalBytes": 539514,
   "files": [
     {
       "path": ".gitattributes",
@@ -371,8 +371,8 @@
     },
     {
       "path": "daily-games-tracker/shortcut/cherri-migration/build/inspect-shortcut.py",
-      "bytes": 13996,
-      "sha256": "abf99c3d4772b520f16caae270f3c7729ed45a8e41659400be3d7c770f1d3fa4"
+      "bytes": 13999,
+      "sha256": "83a17229e3d0cc8791fb3e6832bafddf3f5278706da93f94531dcd54849aba37"
     },
     {
       "path": "daily-games-tracker/shortcut/cherri-migration/source/01-alert.cherri",

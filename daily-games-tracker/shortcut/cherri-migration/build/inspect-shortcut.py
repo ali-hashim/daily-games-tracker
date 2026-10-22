@@ -59,7 +59,7 @@ def groups(actions):
 def variable_name(value):
     if not isinstance(value, dict):
         return None
-    reference = value.get('Value', {})
+    reference = value.get('Value', value)
     if not isinstance(reference, dict):
         return None
     if reference.get('Type') == 'Variable':
