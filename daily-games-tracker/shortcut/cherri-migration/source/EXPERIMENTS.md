@@ -1,14 +1,14 @@
 # Credential-free experiment sources
 
-These files are proposed Cherri v2.3.0 inputs. The alert probe has compiled and passed structural inspection in GitHub Actions, but its two clean builds differed in the ordering of default input-content metadata. It has not been signed, installed, or executed on iPhone. The Share Sheet, Safari binding, exact capture, and JSON probes remain separate gates.
+These files are proposed Cherri v2.3.0 inputs. Probes 01–04 have compiled and passed their current structural checks in GitHub Actions. The two alert builds differed in the ordering of default input-content metadata. No probe has been signed, installed, or executed on iPhone. Probe 05 remains an independent compile/serialization gate.
 
 | Source                        | Purpose                                                                  | Evidence still required                                                             |
 | ----------------------------- | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
 | `01-alert.cherri`             | Harmless compiler/signer sample; no input, credential, or network        | CI compile and structural checks passed; byte reproducibility unresolved; signing/import separate |
-| `02-input.cherri`             | Safari/Text Share Sheet metadata, saved input and type detection         | Inspect references; native Safari and text runs                                     |
-| `03-safari.cherri`            | Narrow custom JavaScript action with explicit saved webpage binding      | Correct native parameter; harmless page title/URL on iPhone                         |
-| Generated `04-capture.cherri` | Embed the maintained capture source as a rawtext literal                 | Exact emitted JavaScript bytes; native capture                                      |
-| `05-json.cherri`              | Numeric version, interpolated runtime dictionary, Import Question header | Inspect question; disposable receiver must observe JSON number/object and mock code |
+| `02-input.cherri`             | Safari/Text Share Sheet metadata, saved input and type detection         | CI structure passed; native Safari and text runs remain                             |
+| `03-safari.cherri`             | Narrow custom JavaScript action with explicit saved webpage binding      | CI structure passed; correct behavior on iPhone remains                            |
+| Generated `04-capture.cherri` | Embed the maintained capture source as a rawtext literal                 | CI confirms exact source bytes; native capture remains                             |
+| `05-json.cherri`              | Numeric version, interpolated runtime dictionary, Import Question header | Static structure pending; disposable receiver must confirm runtime JSON types       |
 
 The JSON probe intentionally exercises a suspected limitation: a dynamic dictionary reference may serialize as text. Successful compilation does not pass this experiment. Loopback on an iPhone addresses the iPhone itself. This source does not provide a phone-reachable receiver; any later local-network receiver/address needs explicit setup, no WHT credentials, and no score endpoint. Never enter a real device code into the mock-code question.
 
