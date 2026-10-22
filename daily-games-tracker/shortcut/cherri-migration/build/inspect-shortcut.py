@@ -64,8 +64,11 @@ def variable_name(value):
         return None
     if reference.get('Type') == 'Variable':
         variable = reference.get('Variable', {})
-        return variable.get('VariableName') if isinstance(variable, dict) else None
-    return reference.get('VariableName')
+        return (variable.get('VariableName') or variable.get('OutputName')) if isinstance(variable, dict) else None
+    return reference.get('VariableName') or reference.get('OutputName')
+
+def contains_text(value, expected):
+    return expected in json.dumps(value, ensure_ascii=False, sort_keys=True)
 
 def action_indices(identifier):
     return [i for i, action in enumerate(actions) if action.get('WFWorkflowActionIdentifier') == identifier]
@@ -147,23 +150,28 @@ if args.experiment == '06':
     submit_actions = actions[submit_start:submit_end]
     assert any(a.get('WFWorkflowActionIdentifier') == 'is.workflow.actions.setvariable' and a.get('WFWorkflowActionParameters', {}).get('WFVariableName') == 'submitMarker' for a in submit_actions), 'Submission marker must be within Submit Results.'
     assert identifiers[-2] == 'is.workflow.actions.alert' and identifiers[-1] == 'is.workflow.actions.exit', 'Only the shared completion marker may follow routing.'
-    assert any(a.get('WFWorkflowActionIdentifier') == 'is.workflow.actions.setvariable' and a.get('WFWorkflowActionParameters', {}).get('WFVariableName') == 'completionResponse' for a in actions), 'Expected shared completion response assignments.'
-    # These cases document the reviewed path table; structural checks above prove
-    # accepted outputs converge while unhandled values reach explicit exits.
-    validation = {'already_submitted': 'validation', 'valid': 'submit', 'error': 'stop', 'update_required': 'stop', 'unknown': 'stop', 'missing': 'stop'}
-    submission = {'submitted': 'submit', 'already_submitted': 'submit', 'error': 'stop', 'update_required': 'stop', 'unknown': 'stop', 'missing': 'stop'}
-    assert validation == {'already_submitted': 'validation', 'valid': 'submit', 'error': 'stop', 'update_required': 'stop', 'unknown': 'stop', 'missing': 'stop'}
-    assert submission == {'submitted': 'submit', 'already_submitted': 'submit', 'error': 'stop', 'update_required': 'stop', 'unknown': 'stop', 'missing': 'stop'}
+    assignments = [a for a in actions if a.get('WFWorkflowActionIdentifier') == 'is.workflow.actions.setvariable' and a.get('WFWorkflowActionParameters', {}).get('WFVariableName') == 'completionResponse']
+    assert len(assignments) == 3, f'Expected validation duplicate plus two submit success assignments; found {len(assignments)}.'
+    sources = [variable_name(a.get('WFWorkflowActionParameters', {}).get('WFInput', {})) for a in assignments]
+    assert sources.count('validationResponse') == 1 and sources.count('submitResponse') == 2, f'Completion assignments must use the accepted response directly: {sources}.'
+    conditionals = [actions[g['start']].get('WFWorkflowActionParameters', {}) for g in all_groups if g['type'] == 'conditional']
+    for status in ('already_submitted', 'valid', 'submitted'):
+        assert any(contains_text(params, status) for params in conditionals), f'Missing explicit status comparison for {status}.'
+    assert any(contains_text(a.get('WFWorkflowActionParameters', {}), 'Shared synthetic completion') for a in actions if a.get('WFWorkflowActionIdentifier') == 'is.workflow.actions.alert'), 'Expected one shared completion marker.'
 if args.experiment == '07':
     assert not requests, 'Completion probe must never contact a service.'
     clipboards = action_indices('is.workflow.actions.setclipboard')
     assert len(clipboards) == 4, f'Expected one guarded clipboard action per fixture; found {len(clipboards)}.'
     conditional_groups = [g for g in all_groups if g['type'] == 'conditional']
+    expected_scoreboards = {'presentScoreboard', 'emptyScoreboard', 'nullScoreboard', 'missingScoreboard'}
+    clipboard_sources = []
     for index in clipboards:
         containing = [g for g in conditional_groups if g['start'] < index < g['end']]
         assert len(containing) == 1, f'Clipboard action {index} must be in one scoreboard presence guard.'
         input_value = actions[index].get('WFWorkflowActionParameters', {}).get('WFInput', {})
         assert input_value.get('WFSerializationType') == 'WFTextTokenAttachment', 'Clipboard must receive a native variable reference.'
+        clipboard_sources.append(variable_name(input_value))
+    assert set(clipboard_sources) == expected_scoreboards and len(clipboard_sources) == len(expected_scoreboards), f'Each fixture must guard copying its own extracted scoreboard: {clipboard_sources}.'
     menus = [g for g in all_groups if g['type'] == 'menu']
     assert len(menus) == 1, f'Expected one shared completion menu; found {len(menus)}.'
     menu = menus[0]
@@ -180,4 +188,8 @@ if args.experiment == '07':
     assert open_start <= open_index < open_end, 'Open WHT must be inside its menu branch.'
     assert 'is.workflow.actions.exit' in identifiers[open_index + 1:open_end], 'Open WHT must stop after opening.'
     assert open_index > max(clipboards), 'Completion menu must follow every guarded clipboard action.'
+    open_params = actions[open_index].get('WFWorkflowActionParameters', {})
+    assert open_params.get('Show-WFInput') is True, 'Open WHT must show the URL input.'
+    assert contains_text(open_params.get('WFInput', {}), 'whtURL'), 'Open WHT must reference the extracted synthetic URL.'
+    assert contains_text(menu_params.get('WFMenuPrompt', {}), 'completionMessage'), 'Completion prompt must reference the response message.'
 print(json.dumps({'file': args.shortcut.name, 'sha256': hashlib.sha256(data).hexdigest(), 'actions': len(actions), 'experiment': args.experiment, 'structuralChecks': 'passed', 'dictionaryItemTypes': dictionary_item_types, 'nativeExecution': 'not performed', 'runtimeJSONTypes': 'unproven' if args.experiment == '05' else 'not applicable'}))
