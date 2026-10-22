@@ -1,0 +1,39 @@
+{
+  "game": "maptap",
+  "input_kind": "shared_text",
+  "game_day": "2026-10-20",
+  "rounds": [
+    {
+      "round_number": 1,
+      "raw_score": 90,
+      "emoji": "👑",
+      "weight": 1
+    },
+    {
+      "round_number": 2,
+      "raw_score": 77,
+      "emoji": "😁",
+      "weight": 1
+    },
+    {
+      "round_number": 3,
+      "raw_score": 68,
+      "emoji": "😁",
+      "weight": 2
+    },
+    {
+      "round_number": 4,
+      "raw_score": 91,
+      "emoji": "🏆",
+      "weight": 3
+    },
+    {
+      "round_number": 5,
+      "raw_score": 86,
+      "emoji": "🎓",
+      "weight": 3
+    }
+  ],
+  "reported_total": 834,
+  "calculated_total": 834
+}

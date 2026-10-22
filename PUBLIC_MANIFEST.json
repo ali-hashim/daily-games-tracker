@@ -1,0 +1,653 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Curated public source candidate for review before publication",
+  "repository": "ali-hashim/daily-game-tracker",
+  "license": "MIT",
+  "history": "No Git metadata included",
+  "validation": {
+    "unitIntegration": "202 tests passed in 14 files",
+    "typecheck": "All four checks passed",
+    "lint": "Passed",
+    "format": "Passed",
+    "build": "Passed",
+    "database": "Unverified: sandbox workerd native path restriction",
+    "smoke": "Not run: same workerd restriction"
+  },
+  "inventoryExcludes": [
+    "PUBLIC_MANIFEST.json (self-reference)"
+  ],
+  "fileCount": 126,
+  "totalBytes": 514567.0,
+  "files": [
+    {
+      "path": ".gitattributes",
+      "bytes": 19,
+      "sha256": "d60f352d0db1404c70afb4bb8b2ca3fd1c610572aa40720e8a0b7baa7885418c"
+    },
+    {
+      "path": ".gitignore",
+      "bytes": 193,
+      "sha256": "5435715bfd249505f571cb5b63e75a05f5bebf42a0a99d9f531b36b2c4dffee5"
+    },
+    {
+      "path": "daily-games-tracker\\.env.example",
+      "bytes": 273,
+      "sha256": "bf8c6dd5d623e57c6a66072f6d4cf35db8ab94d7bca18eb58016693836495781"
+    },
+    {
+      "path": "daily-games-tracker\\.gitignore",
+      "bytes": 147,
+      "sha256": "f30078625c90e825ab404a4775cc73c5225c5af95f88c56f2ac51dc26516fd05"
+    },
+    {
+      "path": "daily-games-tracker\\.prettierignore",
+      "bytes": 72,
+      "sha256": "d9d370dffd0f9e8f1ec22e61f8d779dc42cb68ee5ddb18fac3d8daf00f79de0b"
+    },
+    {
+      "path": "daily-games-tracker\\eslint.config.js",
+      "bytes": 739,
+      "sha256": "02dc543830c278f0dbe77bb099c08eb2522bac8169f0b9af765f5c1fcb496f34"
+    },
+    {
+      "path": "daily-games-tracker\\functions\\_lib\\access.ts",
+      "bytes": 2157,
+      "sha256": "ffcf5164486d5eb2b9904c3f6525ad306c508e38a28744ad5087b9f4a1fca4c3"
+    },
+    {
+      "path": "daily-games-tracker\\functions\\_lib\\device-login.ts",
+      "bytes": 6131,
+      "sha256": "557d878952004b508b5bdb86706283648e34ede806981a7e133c7f913b9a1c83"
+    },
+    {
+      "path": "daily-games-tracker\\functions\\_lib\\devices.ts",
+      "bytes": 2431,
+      "sha256": "65628393a827134957d291a537932f2514d9fc84747f2e711a343273a240698a"
+    },
+    {
+      "path": "daily-games-tracker\\functions\\_lib\\http.ts",
+      "bytes": 3499,
+      "sha256": "ff9bdc4d5b459bf275504c1534b008ab39d7fea357f4e1e082eb1204901d590d"
+    },
+    {
+      "path": "daily-games-tracker\\functions\\_lib\\import.ts",
+      "bytes": 14178,
+      "sha256": "92b4ef14c9a6924f5583adb76635118910a49e0fe63b396853dd9cb17ae01772"
+    },
+    {
+      "path": "daily-games-tracker\\functions\\_lib\\limits.ts",
+      "bytes": 46,
+      "sha256": "3a8edf369dab2b57288c483d1d049ffb9bb05b4a86557ac6d6a93e51d0d57d3b"
+    },
+    {
+      "path": "daily-games-tracker\\functions\\_lib\\logging.ts",
+      "bytes": 649,
+      "sha256": "d1919f4d7dc336dc725166ea36159f25ea2554a53582628606702d9808466af0"
+    },
+    {
+      "path": "daily-games-tracker\\functions\\_lib\\onboarding.ts",
+      "bytes": 8603,
+      "sha256": "1036c51571050131f3a855f2efa7a694c277d32dacac5f0015f2f5c6e37aa5e7"
+    },
+    {
+      "path": "daily-games-tracker\\functions\\_lib\\policy.ts",
+      "bytes": 1050,
+      "sha256": "66808dd90ca66194737b60854225d5a9f0992d0eadf956b4862afd99051c9256"
+    },
+    {
+      "path": "daily-games-tracker\\functions\\_lib\\runtime.ts",
+      "bytes": 493,
+      "sha256": "52bf953daa913acad4bd931fc08d67d39fa9057f639b8a7b5db14427153b1914"
+    },
+    {
+      "path": "daily-games-tracker\\functions\\_lib\\scoreboard.ts",
+      "bytes": 6163,
+      "sha256": "1da475832a2e06641b57d47f4d6672ba2881cb1eaff74fd21f6e186973d6f1f5"
+    },
+    {
+      "path": "daily-games-tracker\\functions\\_lib\\sessions.ts",
+      "bytes": 2879,
+      "sha256": "ac043e7e6d122c1ff0a99a9d05ac5d06f9cdfd841e65df9d756236f477d95943"
+    },
+    {
+      "path": "daily-games-tracker\\functions\\_lib\\tokens.ts",
+      "bytes": 1804,
+      "sha256": "fc989bb3bf6e489e58a685f259f7ccaad74f2b637a257a27e1001ed3a484d17a"
+    },
+    {
+      "path": "daily-games-tracker\\functions\\_middleware.ts",
+      "bytes": 2531,
+      "sha256": "fe6747c8e61b3eef3ae38995268f50968cc0ccde65f7d5106b9dd4d0f516ea60"
+    },
+    {
+      "path": "daily-games-tracker\\functions\\admin.ts",
+      "bytes": 390,
+      "sha256": "10f798a78fece0fc576bf92e52d70b5e74f48c03a3fa60f872978968419dfc19"
+    },
+    {
+      "path": "daily-games-tracker\\functions\\api\\[[path]].ts",
+      "bytes": 266,
+      "sha256": "698a9ce9591f203e2a6fe3e328484ddd00537eb562c9b1a10a3528b64c5ccc9a"
+    },
+    {
+      "path": "daily-games-tracker\\functions\\api\\admin\\[[path]].ts",
+      "bytes": 3269,
+      "sha256": "bea4420b3951f7d9ff984c0861e5f4331d830d1ea31c2345e8edfa5115e42841"
+    },
+    {
+      "path": "daily-games-tracker\\functions\\api\\auth\\device\\approve.ts",
+      "bytes": 284,
+      "sha256": "bee30f1cc78716c927d220620fff5ee0d0f596e1751fca288672bd281dca8f55"
+    },
+    {
+      "path": "daily-games-tracker\\functions\\api\\auth\\device\\complete.ts",
+      "bytes": 285,
+      "sha256": "9f840db7b7b4b6f3ad75cfdf78e5917cff4220a53ee7a5a76557e4d466e24561"
+    },
+    {
+      "path": "daily-games-tracker\\functions\\api\\auth\\device\\start.ts",
+      "bytes": 282,
+      "sha256": "368bbd8d73f1c0af48a5fa24f0a3ec71c0be5a18f950a1a670d22ad48097b0b0"
+    },
+    {
+      "path": "daily-games-tracker\\functions\\api\\auth\\device\\status.ts",
+      "bytes": 585,
+      "sha256": "46fb88788373bd0f9082516932ca1946f285d76c339c04404b42ff6a38c0480e"
+    },
+    {
+      "path": "daily-games-tracker\\functions\\api\\auth\\logout.ts",
+      "bytes": 894,
+      "sha256": "703a324e30bc0270b385093e15149c83eb520fc31f4c91575638120f25e6e276"
+    },
+    {
+      "path": "daily-games-tracker\\functions\\api\\auth\\me.ts",
+      "bytes": 660,
+      "sha256": "d15342d8a3ea811528599475dfdbcf696debd2b0c69d4e4310de409d66884419"
+    },
+    {
+      "path": "daily-games-tracker\\functions\\api\\games.ts",
+      "bytes": 1063,
+      "sha256": "291f076d8486c02904409086de4582fcaebe536bb73097eed8ac96d30b64e114"
+    },
+    {
+      "path": "daily-games-tracker\\functions\\api\\health.ts",
+      "bytes": 976,
+      "sha256": "0c2618ca9a8df6f77ae314cd9525de2089918cad153eb9ddf31738f346fb99cc"
+    },
+    {
+      "path": "daily-games-tracker\\functions\\api\\import\\submit.ts",
+      "bytes": 260,
+      "sha256": "521271b457814a2c2ce469de06fccc941d8a207a26ae66cb7649e34aa6f45a5c"
+    },
+    {
+      "path": "daily-games-tracker\\functions\\api\\import\\validate.ts",
+      "bytes": 262,
+      "sha256": "ef5080025285dc627dc90944365366f4d7ef4599a291bdd46cc5750af929ad2c"
+    },
+    {
+      "path": "daily-games-tracker\\functions\\api\\register\\[inviteToken]\\index.ts",
+      "bytes": 535,
+      "sha256": "db5d93b6084f7f2523587657d8ae68b40c66ba9109f81f6cf06c3b344537965f"
+    },
+    {
+      "path": "daily-games-tracker\\functions\\api\\register\\[inviteToken]\\redeem.ts",
+      "bytes": 1203,
+      "sha256": "c18d2e46d1e3752eb9bcafc99fde00380ced09aafec54737f47ff326aaaa613c"
+    },
+    {
+      "path": "daily-games-tracker\\functions\\register\\[inviteToken].ts",
+      "bytes": 814,
+      "sha256": "9e2e93061be655f9f479b7eafb02acc04a4be6cfe9983d595157b1dfceae1175"
+    },
+    {
+      "path": "daily-games-tracker\\index.html",
+      "bytes": 910,
+      "sha256": "5a9597c4323e063d6f7cbf915e24a150c08b398adc87db226b1018af5bdccb7e"
+    },
+    {
+      "path": "daily-games-tracker\\migrations\\0001_initial.sql",
+      "bytes": 6595,
+      "sha256": "f037644f2b07a08a4ebc4443a2f98f2d443090860913082ac768321fe2c3121c"
+    },
+    {
+      "path": "daily-games-tracker\\migrations\\0002_remove_result_hash.sql",
+      "bytes": 419,
+      "sha256": "895f168fd2bca1631d0ac2666d7648322c5981b30da2b167b1cd97abaae8518b"
+    },
+    {
+      "path": "daily-games-tracker\\package-lock.json",
+      "bytes": 172280,
+      "sha256": "f481c044c043228b62d33aa0c0ea2c7231c63c47dcd13e87a915d006400a48df"
+    },
+    {
+      "path": "daily-games-tracker\\package.json",
+      "bytes": 1754,
+      "sha256": "bb0f090d40e6335534f3f71a97ec2f5190084d8788eebcfbadaecb76177132bb"
+    },
+    {
+      "path": "daily-games-tracker\\parsers\\errors.ts",
+      "bytes": 1594,
+      "sha256": "f261853e742a890ed7cc22ded21159fa74be646792783330cfcb7932d798c504"
+    },
+    {
+      "path": "daily-games-tracker\\parsers\\index.ts",
+      "bytes": 1334,
+      "sha256": "37f5e3821e436fb48b416a74b3c9ce3575f5ed33cf370d3480e504884fdbd5b1"
+    },
+    {
+      "path": "daily-games-tracker\\parsers\\krillion.ts",
+      "bytes": 7144,
+      "sha256": "c05c012507142a6e6d119ee68316341d7ee114a7b559c72611c6ebd81bbb894a"
+    },
+    {
+      "path": "daily-games-tracker\\parsers\\maptap.ts",
+      "bytes": 2871,
+      "sha256": "302b227caecddca4eacf85b3a2e821f323d54e40c5762405e110dc771f0e3ea4"
+    },
+    {
+      "path": "daily-games-tracker\\prettier.config.mjs",
+      "bytes": 63,
+      "sha256": "f6445cf5d55bcb1ae01629ca965347a5e7723fea57071260cf288f9b35db27e0"
+    },
+    {
+      "path": "daily-games-tracker\\public\\_headers",
+      "bytes": 870,
+      "sha256": "0b3ce0ef24729a3dfd649c6aa29858d7a01e87e77a577fcba7f66650bda8cd83"
+    },
+    {
+      "path": "daily-games-tracker\\public\\_redirects",
+      "bytes": 88,
+      "sha256": "f4b1743d54349ef6b6dc6186583b6f5aeacb464a7e5b3265e55f6d8c5a046e6d"
+    },
+    {
+      "path": "daily-games-tracker\\public\\apple-touch-icon.png",
+      "bytes": 1188,
+      "sha256": "22004ffad89d34107010b95274f4c2f75619c287205f58ee1f032b1773abe9a1"
+    },
+    {
+      "path": "daily-games-tracker\\public\\icon-192.png",
+      "bytes": 1277,
+      "sha256": "adf75835420174298d969ef4752df4f575b5f6dc0c8a2cef28609dd391146acb"
+    },
+    {
+      "path": "daily-games-tracker\\public\\icon-512.png",
+      "bytes": 4003,
+      "sha256": "7911deb781c2e1b10ef7c57f34244a707291c352605b641aa4c3efef4099a5c3"
+    },
+    {
+      "path": "daily-games-tracker\\public\\icon.svg",
+      "bytes": 315,
+      "sha256": "ae1eb121713ec49189e2077def140c8515b166db2fc5178920a0fec6cb11e6e2"
+    },
+    {
+      "path": "daily-games-tracker\\public\\manifest.webmanifest",
+      "bytes": 443,
+      "sha256": "54a6d7402a80228c844289dffc05308de74a439ecc60d4e62efb5e99a39db702"
+    },
+    {
+      "path": "daily-games-tracker\\README.md",
+      "bytes": 417,
+      "sha256": "347756aca97bbc73335db8db7ed7bc32d70899a5738f66fdcbea240bac642744"
+    },
+    {
+      "path": "daily-games-tracker\\scripts\\smoke_pages.mjs",
+      "bytes": 12384,
+      "sha256": "c6627e5486fc6e8688c7ebb9722d98a84a1e2e35b4d043ce19b8614a25586316"
+    },
+    {
+      "path": "daily-games-tracker\\scripts\\test_schema.mjs",
+      "bytes": 3557,
+      "sha256": "95199b26bc4cad8a0abcc1d084eaa2d4cd4dd0b15aea55274600204055b02e87"
+    },
+    {
+      "path": "daily-games-tracker\\service-worker\\worker.ts",
+      "bytes": 2356,
+      "sha256": "5ee668795f6f0901274b9bcbc7a22df9091df606249fc2bf452b37b603a01298"
+    },
+    {
+      "path": "daily-games-tracker\\shared\\cache-policy.ts",
+      "bytes": 719,
+      "sha256": "d7cef5e3d3b7b46d624704d716d43c706bbfe93a3feb516dd4060aa0880f299d"
+    },
+    {
+      "path": "daily-games-tracker\\shared\\capture.ts",
+      "bytes": 5939,
+      "sha256": "281198f686e02659c3663f9bac327ce634251ddb90ff4766ae26164ecf90d941"
+    },
+    {
+      "path": "daily-games-tracker\\shared\\day.ts",
+      "bytes": 836,
+      "sha256": "8946b74932824d0b37790293b51f6b131caee170aa822ab3adc46903566c1142"
+    },
+    {
+      "path": "daily-games-tracker\\shared\\game-config.ts",
+      "bytes": 1190,
+      "sha256": "f051c2806b586edba539ce7eb1f33191a2bbce65830c9e77abb088b4c8e0d969"
+    },
+    {
+      "path": "daily-games-tracker\\shared\\rank.ts",
+      "bytes": 1407,
+      "sha256": "f9e171870b3da0af976b25eb3c2d9b616a58fdb3bc2e470971de0eeaba1ddaf3"
+    },
+    {
+      "path": "daily-games-tracker\\shared\\types.ts",
+      "bytes": 964,
+      "sha256": "92b913a1ecf15b98325fed401ca2721a43002f0d60840c1c7e73de9c6ebd3134"
+    },
+    {
+      "path": "daily-games-tracker\\shortcut\\capture-safari.js",
+      "bytes": 5250,
+      "sha256": "fb50c544f795a5db5102c6e936b3bea723eca7fd92f4c6677d2780bfdf0ba2fb"
+    },
+    {
+      "path": "daily-games-tracker\\shortcut\\cherri-migration\\build\\build.mjs",
+      "bytes": 5773,
+      "sha256": "1b7ca31351305ba508e03a804abb78c3dbeb04d33937bea15f868807ff799c7d"
+    },
+    {
+      "path": "daily-games-tracker\\shortcut\\cherri-migration\\build\\inspect-shortcut.py",
+      "bytes": 4806,
+      "sha256": "58680e0d8a352f0d1315d8194757273013f8de388a16ee283179919d9cc5b71d"
+    },
+    {
+      "path": "daily-games-tracker\\shortcut\\cherri-migration\\README.md",
+      "bytes": 915,
+      "sha256": "ff1d9a28068e378c15bf225197d29e73510c1a0b12285d45fe3e6977a980ccc3"
+    },
+    {
+      "path": "daily-games-tracker\\shortcut\\cherri-migration\\source\\01-alert.cherri",
+      "bytes": 154,
+      "sha256": "1fa153343733c46a1ba6cb255b695019acc5d4a5aabef4fc04b7ddad0123d223"
+    },
+    {
+      "path": "daily-games-tracker\\shortcut\\cherri-migration\\source\\02-input.cherri",
+      "bytes": 344,
+      "sha256": "be98a25ed78b2ea452062c83c4ca9946594dc23ed1834314b9e5bb9ae2ee17e8"
+    },
+    {
+      "path": "daily-games-tracker\\shortcut\\cherri-migration\\source\\03-safari.cherri",
+      "bytes": 713,
+      "sha256": "ceb18b84f01457718482c8a3ce4b7be8d14599dd89ec948e5a416650ce0834aa"
+    },
+    {
+      "path": "daily-games-tracker\\shortcut\\cherri-migration\\source\\05-json.cherri",
+      "bytes": 881,
+      "sha256": "75f4c5c992bdd7c845d30363f33465980af03fac969110bdf4217dd7f2c7833f"
+    },
+    {
+      "path": "daily-games-tracker\\shortcut\\cherri-migration\\source\\EXPERIMENTS.md",
+      "bytes": 3604,
+      "sha256": "917f58db514b689acc191043cd24a03c995739fc5065696c45a41228bee39a89"
+    },
+    {
+      "path": "daily-games-tracker\\shortcut\\cherri-migration\\toolchain.lock.json",
+      "bytes": 1208,
+      "sha256": "8ff421d9c718cd1a23b822c59d841a412f5290b36225e0ff2e98108a8497118f"
+    },
+    {
+      "path": "daily-games-tracker\\src\\App.tsx",
+      "bytes": 12549,
+      "sha256": "f3a49d61fd3c26f7a932ad1ec939b7c9ed2c893f4833c103ce28ea802a0e586f"
+    },
+    {
+      "path": "daily-games-tracker\\src\\lib\\api.ts",
+      "bytes": 1042,
+      "sha256": "58a75865403eb69dbd32e4ff2c83e2fa2d31f5f5cfb121a112eba6f5eba022db"
+    },
+    {
+      "path": "daily-games-tracker\\src\\main.tsx",
+      "bytes": 520,
+      "sha256": "3db8cabced0e3344233e4153ee8f4556e01b42352b931601206617614fc4edae"
+    },
+    {
+      "path": "daily-games-tracker\\src\\pages\\AdminPage.tsx",
+      "bytes": 6626,
+      "sha256": "152f92082fe2eaf1346d76f2b4e3be2189779c4353fbd5182ff77f7cbda00843"
+    },
+    {
+      "path": "daily-games-tracker\\src\\pages\\DeviceLogin.tsx",
+      "bytes": 6847,
+      "sha256": "98cbcaf1de0c565febc9735890966abe4b8c487b1c938464bccd6b1eec421ce4"
+    },
+    {
+      "path": "daily-games-tracker\\src\\pages\\RegistrationPage.tsx",
+      "bytes": 4808,
+      "sha256": "e45b468641c6c6cfea76897080ed2449b555127f84492eb652e3fb5de0db09f4"
+    },
+    {
+      "path": "daily-games-tracker\\src\\styles.css",
+      "bytes": 10138,
+      "sha256": "69631ec8eac6132bbae69a487aafbd2abbbb16a04b3146c4b6737ab33ff29d9d"
+    },
+    {
+      "path": "daily-games-tracker\\src\\vite-env.d.ts",
+      "bytes": 38,
+      "sha256": "65996936fbb042915f7b74a200fcdde7e410f32a669b1ab9597cfaa4b0faddb5"
+    },
+    {
+      "path": "daily-games-tracker\\tests\\fixtures\\capture\\2026-10-21-dive-198-285.iphone.json",
+      "bytes": 6345,
+      "sha256": "73e3a2cd88495aa5b5c3b24d6a442270c4898dfa02a6b3c1e9c944f29f128209"
+    },
+    {
+      "path": "daily-games-tracker\\tests\\fixtures\\capture\\2026-10-21-dive-198-285.normalized.json",
+      "bytes": 1237,
+      "sha256": "6b514b58233aeffb53f6c2971b62950880c91d3794cd8d2d590e948b8def3f41"
+    },
+    {
+      "path": "daily-games-tracker\\tests\\fixtures\\capture\\2026-10-21-dive-198-285.refreshed.iphone.json",
+      "bytes": 6316,
+      "sha256": "3c78f045ad019df1b228b1bfcab763c0056febacdd55e2678cda7e5100b738b4"
+    },
+    {
+      "path": "daily-games-tracker\\tests\\fixtures\\capture\\2026-10-21-maptap-810.iphone.json",
+      "bytes": 172,
+      "sha256": "916a8d26f3ec840a92e09c7a407cc6400c710b81e9abdfed73e40c08bd773cfd"
+    },
+    {
+      "path": "daily-games-tracker\\tests\\fixtures\\capture\\krillion-iphone-empty.json",
+      "bytes": 238,
+      "sha256": "3dacdf688ee0f7a087fb93d80f53306de27ba5fba149e7094d1ebe3f74c9859b"
+    },
+    {
+      "path": "daily-games-tracker\\tests\\fixtures\\krillion\\2026-10-15-day-192-360.expected.json",
+      "bytes": 1267,
+      "sha256": "0d88d399347cb0909d0183e3b1b6741166f615512e8083ef5c7490f86b48d29d"
+    },
+    {
+      "path": "daily-games-tracker\\tests\\fixtures\\krillion\\2026-10-15-day-192-360.txt",
+      "bytes": 612,
+      "sha256": "b6f4dda6182fd35199784e14dece8295798e3a2eeab4fc6287fa082dfad6f203"
+    },
+    {
+      "path": "daily-games-tracker\\tests\\fixtures\\krillion\\2026-10-20-dive-197-365.expected.json",
+      "bytes": 1280,
+      "sha256": "d1478dabcf43c206ed6c4a8a548f86f416511c31a5623d3ec7857538ba4bb4a6"
+    },
+    {
+      "path": "daily-games-tracker\\tests\\fixtures\\krillion\\2026-10-20-dive-197-365.txt",
+      "bytes": 856,
+      "sha256": "a3647960aac6d82583801b2aca858c0e646ec0778a02d70fa0a116e8364e17a4"
+    },
+    {
+      "path": "daily-games-tracker\\tests\\fixtures\\maptap\\2026-10-20-780.expected.json",
+      "bytes": 661,
+      "sha256": "05000ec1e0de77e17b959fdbfc9ce9cd4a8ef068d1c1d897dcdea96944207ca1"
+    },
+    {
+      "path": "daily-games-tracker\\tests\\fixtures\\maptap\\2026-10-20-780.txt",
+      "bytes": 76,
+      "sha256": "8d71540cdafb20b80f65773186663ac452b5149b3e8f87144cece6b31d966130"
+    },
+    {
+      "path": "daily-games-tracker\\tests\\fixtures\\maptap\\2026-10-20-834.expected.json",
+      "bytes": 662,
+      "sha256": "149acb73c69eb07af6d30c3d7b2261060a4483c62596449962021d927bba0e0c"
+    },
+    {
+      "path": "daily-games-tracker\\tests\\fixtures\\maptap\\2026-10-20-834.txt",
+      "bytes": 77,
+      "sha256": "e03f60b91dafb3a52a825def36c01e751c3321c355223a155d664808c2a17c0c"
+    },
+    {
+      "path": "daily-games-tracker\\tests\\fixtures\\maptap\\2026-10-20-835.expected.json",
+      "bytes": 662,
+      "sha256": "79e71335c2973d53a96b714b7c406394b7475d107d964ce0474bd1a4b57497f0"
+    },
+    {
+      "path": "daily-games-tracker\\tests\\fixtures\\maptap\\2026-10-20-835.txt",
+      "bytes": 77,
+      "sha256": "bb99c8f4a2414e59cad08cb75b37121e83e4b2b97535b8302165e309817ab7df"
+    },
+    {
+      "path": "daily-games-tracker\\tests\\fixtures\\maptap\\2026-10-20-858.expected.json",
+      "bytes": 661,
+      "sha256": "bc6d056230758fc41b738fbb013a4e5a7930b10dbac966b05651fe196b217c4d"
+    },
+    {
+      "path": "daily-games-tracker\\tests\\fixtures\\maptap\\2026-10-20-858.txt",
+      "bytes": 76,
+      "sha256": "c1f9e7d719d4cf4f7e9b9097335330e769f65710e1e2594c2b1a9a2da5c3b1a9"
+    },
+    {
+      "path": "daily-games-tracker\\tests\\fixtures\\maptap\\2026-10-20-894.expected.json",
+      "bytes": 662,
+      "sha256": "460861bfbc2116859badb1e2c75e1eae4adc9c613f2cf7efe57f927f1b25e2ff"
+    },
+    {
+      "path": "daily-games-tracker\\tests\\fixtures\\maptap\\2026-10-20-894.txt",
+      "bytes": 77,
+      "sha256": "9a39e016a8a747ffa1d0978f28142b9834cb201765f50c8f180dd6c37c93e3dc"
+    },
+    {
+      "path": "daily-games-tracker\\tests\\fixtures\\maptap\\2026-10-21-810.expected.json",
+      "bytes": 662,
+      "sha256": "96d98425c33d1e005515f000106d51b15ae838b6c8a3f0142a1ac7ace21c778e"
+    },
+    {
+      "path": "daily-games-tracker\\tests\\fixtures\\maptap\\2026-10-21-810.txt",
+      "bytes": 77,
+      "sha256": "d8aae7934f7ebbab77a01ee331cf172a1237528806702a719d57a80faabc2774"
+    },
+    {
+      "path": "daily-games-tracker\\tests\\integration\\device-login.test.ts",
+      "bytes": 12493,
+      "sha256": "64b34215f8efe0b3cb3dbcdc572e0c277f8cc618fa92221e573e2b026845b5aa"
+    },
+    {
+      "path": "daily-games-tracker\\tests\\integration\\import.test.ts",
+      "bytes": 35451,
+      "sha256": "db168175fff71840121108927b6814c8e6fe2f5d11f6b7bb550d68e2cfb642e5"
+    },
+    {
+      "path": "daily-games-tracker\\tests\\integration\\migrations.test.ts",
+      "bytes": 3759,
+      "sha256": "cf55dbb9df17b40e45e9bb8ceac924afb5a3f4e57523dbb01141d2404c60c5ee"
+    },
+    {
+      "path": "daily-games-tracker\\tests\\integration\\onboarding.test.ts",
+      "bytes": 14389,
+      "sha256": "43bdd8be37a2d1bbcb506d0a6935c19b1af98cd95c9c45df649bb5952c08a3c1"
+    },
+    {
+      "path": "daily-games-tracker\\tests\\integration\\scoreboard.test.ts",
+      "bytes": 6407,
+      "sha256": "0ad69440ccf5b76aa8fc52a15f646e48fbb0b1c1d54709d1ad6fa45867384618"
+    },
+    {
+      "path": "daily-games-tracker\\tests\\unit\\access.test.ts",
+      "bytes": 3708,
+      "sha256": "aaeb3ff8c64f3b9562819429045f519a0cbf2e534d0110d88f468bc74a1f16e9"
+    },
+    {
+      "path": "daily-games-tracker\\tests\\unit\\cache-policy.test.ts",
+      "bytes": 1670,
+      "sha256": "b84bc426bb2226e04907a4dc8ee8f1d38c57548f185de85f601de5b8d6883877"
+    },
+    {
+      "path": "daily-games-tracker\\tests\\unit\\day.test.ts",
+      "bytes": 1418,
+      "sha256": "cde30dfd0bbd3d01e710cbd2e0ba5dc6c71d90365e8c5fab227afef767fb0d37"
+    },
+    {
+      "path": "daily-games-tracker\\tests\\unit\\fixtures.test.ts",
+      "bytes": 3307,
+      "sha256": "5c1cf02278d81b391ba44aea9523a9ce9529be45767898c5dc0caae7f842169e"
+    },
+    {
+      "path": "daily-games-tracker\\tests\\unit\\http.test.ts",
+      "bytes": 3143,
+      "sha256": "6e4dd067340d2ed2cdf3ddb73e9643936c72c62872759497289ac04c289e0698"
+    },
+    {
+      "path": "daily-games-tracker\\tests\\unit\\logging.test.ts",
+      "bytes": 1720,
+      "sha256": "1e19912e812f7104a0f8dd3713bed63acb305ae8db7da5b65d9ce49652e69a64"
+    },
+    {
+      "path": "daily-games-tracker\\tests\\unit\\parsers.test.ts",
+      "bytes": 17764,
+      "sha256": "66e153412769915bc941e272cf66c97af6a7692fe23f011c9f21124d9101a209"
+    },
+    {
+      "path": "daily-games-tracker\\tests\\unit\\rank.test.ts",
+      "bytes": 1543,
+      "sha256": "652bd3baf05a9d59b8285b7ee4ad2728b0ccef54ff187b930164e3ccf81946d0"
+    },
+    {
+      "path": "daily-games-tracker\\tests\\unit\\safari-capture.test.ts",
+      "bytes": 8095,
+      "sha256": "679f927ffb871ca3208df6562be4bff2a8411218aa53e41a2705c8c7ff8a0971"
+    },
+    {
+      "path": "daily-games-tracker\\tsconfig.app.json",
+      "bytes": 518,
+      "sha256": "2abc631c019b90ce8d09fbac1740a1af1c826c4dc216d7e62d43d0382ffca972"
+    },
+    {
+      "path": "daily-games-tracker\\tsconfig.functions.json",
+      "bytes": 397,
+      "sha256": "ad8b452dcba0af3a0dd20c879e3fca63e076bdbbdf6a4f471218e46d23f068da"
+    },
+    {
+      "path": "daily-games-tracker\\tsconfig.sw.json",
+      "bytes": 282,
+      "sha256": "2341fa8b5c812f012fc85d0fbec1ed5ed2f493179497c1256e9b7fc535a7298a"
+    },
+    {
+      "path": "daily-games-tracker\\tsconfig.tests.json",
+      "bytes": 419,
+      "sha256": "0ed2c9dbee74a72c16c4be0a34cdee6387d239741f029df0388db9f060b30c5d"
+    },
+    {
+      "path": "daily-games-tracker\\vite.config.ts",
+      "bytes": 627,
+      "sha256": "5fcf983c7876c25efbc35cb60f2d5a105f83b9310118dcde4c0fe7590d9334d2"
+    },
+    {
+      "path": "daily-games-tracker\\vitest.config.ts",
+      "bytes": 185,
+      "sha256": "f256effa1ec30c495039a80cbd64ae334cdb4e627ed05da764dd325d147f0bc5"
+    },
+    {
+      "path": "daily-games-tracker\\wrangler.jsonc",
+      "bytes": 484,
+      "sha256": "27fb64edc6615bce3b6237db168a49d6e450de41f3e2ee2363615deadef9a6ae"
+    },
+    {
+      "path": "LICENSE",
+      "bytes": 1068,
+      "sha256": "536d9b83832f11593dde98ece5d23ad0d83bd2fab738b3955c322d07a8364a6f"
+    },
+    {
+      "path": "PUBLIC_REVIEW.md",
+      "bytes": 5107,
+      "sha256": "c438c7c3ffb15819292d77ccfe455afc00d82d4b8cbbbb08eb1a1083667be7b6"
+    },
+    {
+      "path": "README.md",
+      "bytes": 2642,
+      "sha256": "73a1fb40b29eddce68d9b5b75219ad6711514b2cabfd0a5a5ae2b5bca7ccfbc0"
+    }
+  ]
+}

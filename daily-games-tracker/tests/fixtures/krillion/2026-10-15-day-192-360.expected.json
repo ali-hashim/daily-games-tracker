@@ -1,0 +1,53 @@
+{
+  "game": "krillion",
+  "input_kind": "safari_webpage",
+  "capture_context": "archive",
+  "game_day": "2026-10-15",
+  "puzzle_number": 192,
+  "rounds": [
+    {
+      "round_number": 1,
+      "prompt": "NAME A SYNTHETIC ARCHIVE ITEM 1",
+      "answer": "Synthetic archive answer 1",
+      "raw_score": 100
+    },
+    {
+      "round_number": 2,
+      "prompt": "NAME A SYNTHETIC ARCHIVE ITEM 2",
+      "answer": "Synthetic archive answer 2",
+      "raw_score": 100
+    },
+    {
+      "round_number": 3,
+      "prompt": "NAME A SYNTHETIC ARCHIVE ITEM 3",
+      "answer": "Synthetic archive answer 3",
+      "raw_score": 15
+    },
+    {
+      "round_number": 4,
+      "prompt": "NAME A SYNTHETIC ARCHIVE ITEM 4",
+      "answer": null,
+      "raw_score": 0
+    },
+    {
+      "round_number": 5,
+      "prompt": "NAME A SYNTHETIC ARCHIVE ITEM 5",
+      "answer": "Synthetic archive answer 5",
+      "raw_score": 60
+    },
+    {
+      "round_number": 6,
+      "prompt": "NAME A SYNTHETIC ARCHIVE ITEM 6",
+      "answer": "Synthetic archive answer 6",
+      "raw_score": 85
+    },
+    {
+      "round_number": 7,
+      "prompt": "NAME A SYNTHETIC ARCHIVE ITEM 7",
+      "answer": "\"e\"",
+      "raw_score": 0
+    }
+  ],
+  "reported_total": 360,
+  "calculated_total": 360
+}

@@ -1,0 +1,51 @@
+{
+  "gameKey": "krillion",
+  "gameDate": "2026-10-21",
+  "externalPuzzleKey": "198",
+  "finalScore": 285,
+  "rounds": [
+    {
+      "roundNumber": 1,
+      "prompt": "Name a synthetic fixture item 1",
+      "answer": "Synthetic native answer 1",
+      "rawScore": 60
+    },
+    {
+      "roundNumber": 2,
+      "prompt": "Name a synthetic fixture item 2",
+      "answer": "Synthetic native answer 2",
+      "rawScore": 60
+    },
+    {
+      "roundNumber": 3,
+      "prompt": "Name a synthetic fixture item 3",
+      "answer": "Synthetic native answer 3",
+      "rawScore": 60
+    },
+    {
+      "roundNumber": 4,
+      "prompt": "Name a synthetic fixture item 4",
+      "answer": "Synthetic native answer 4",
+      "rawScore": 15
+    },
+    {
+      "roundNumber": 5,
+      "prompt": "Name a synthetic fixture item 5",
+      "answer": "Synthetic native answer 5",
+      "rawScore": 60
+    },
+    {
+      "roundNumber": 6,
+      "prompt": "Name a synthetic fixture item 6",
+      "answer": "Synthetic native answer 6",
+      "rawScore": 15
+    },
+    {
+      "roundNumber": 7,
+      "prompt": "Name a synthetic fixture item 7",
+      "answer": "Synthetic native answer 7",
+      "rawScore": 15
+    }
+  ],
+  "parserVersion": "krillion.v1"
+}
