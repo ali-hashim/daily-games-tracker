@@ -7,14 +7,31 @@ const deviceCode = text(deviceQuestion)
 const captureJson = text('{"kind":"synthetic","nested":{"value":7},"items":[1,2]}')
 const capture = getDictionary(captureJson)
 
+// The built-in helpers accept only literal dictionaries or text values here.
+// These narrow action definitions retain native Shortcut variable attachments.
+action 'setvalueforkey' whtSetObject(
+  variable dictionary: 'WFDictionary',
+  text key: 'WFDictionaryKey',
+  variable value: 'WFDictionaryValue'
+): dictionary
+
+action 'downloadurl' whtPostObject(
+  text url: 'WFURL',
+  variable body: 'WFJSONValues',
+  dictionary! ?headers: 'WFHTTPHeaders'
+) {
+  "WFHTTPMethod": "POST",
+  "WFHTTPBodyType": "JSON"
+}
+
+@body = {"shortcut_version": 1}
+@body = whtSetObject(@body, "capture", capture)
+
 // Deliberately tests dynamic nested-dictionary serialization. This is a
 // compatibility probe, not a claim that capture will remain an object.
 // Only an explicitly started local mock receiver may receive this request.
 // On iPhone, loopback refers to the phone; do not replace with a WHT endpoint.
-const response = jsonRequest("http://127.0.0.1:8765/probe", "POST", {
-  "shortcut_version": 1,
-  "capture": capture
-}, {
+const response = whtPostObject("http://127.0.0.1:8765/probe", @body, {
   "Content-Type": "application/json",
   "Authorization": "Device {deviceCode}"
 })
