@@ -71,7 +71,14 @@ if args.experiment == '05':
     find_fields(actions)
     assert dictionary_item_types.get('shortcut_version') == 3, 'Version must be a native numeric dictionary item.'
     set_values = [a for a in actions if a['WFWorkflowActionIdentifier'] == 'is.workflow.actions.setvalueforkey']
-    capture_assignments = [a for a in set_values if a.get('WFWorkflowActionParameters', {}).get('WFDictionaryValue', {}).get('Value', {}).get('VariableName') == 'capture']
+    def references_capture(action):
+        value = action.get('WFWorkflowActionParameters', {}).get('WFDictionaryValue', {})
+        reference = value.get('Value', {})
+        return value.get('WFSerializationType') == 'WFTextTokenAttachment' and (
+            reference.get('VariableName') == 'capture' or
+            (reference.get('OutputName') == 'capture' and reference.get('Type') == 'ActionOutput')
+        )
+    capture_assignments = [a for a in set_values if references_capture(a)]
     assert len(capture_assignments) == 1, 'Nested capture must be inserted through one native variable-valued Set Dictionary Value action.'
     questions = shortcut.get('WFWorkflowImportQuestions', [])
     assert len(questions) == 1, 'Expected one mock-code Import Question.'
