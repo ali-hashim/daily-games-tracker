@@ -2,7 +2,7 @@
 
 WHT explores an iPhone-first daily game tracker for Krillion and MapTap. A React interface, TypeScript server functions and a SQLite-compatible schema demonstrate invitation onboarding, device authorization, browser sessions, result validation, atomic submission and scoreboard formatting.
 
-This is a curated source showcase for `ali-hashim/daily-game-tracker`. It includes synthetic test data and local-only configuration. The project is licensed under MIT; publication is pending final owner review.
+This is a curated source showcase for `ali-hashim/daily-games-tracker`. It includes synthetic test data and local-only configuration. The project is licensed under MIT; publication is pending final owner review.
 
 ## Explore the source
 
