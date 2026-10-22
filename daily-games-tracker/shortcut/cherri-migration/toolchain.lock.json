@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "status": "candidate; Cherri built and probes 01-07 compiled and structurally inspected in GitHub Actions run 17; native execution unproven",
+  "status": "candidate; probes 01-07 compiled and structurally inspected; alert-only sample returned from HubSign; Apple signature and native execution unproven",
   "compiler": {
     "name": "Cherri",
     "version": "v2.3.0",
@@ -54,5 +54,27 @@
     "alertSampleSha256": "cbd15b5930b42120bec49b7cf363952d1a87f04f12eacd3b25f5a5584b9f070c",
     "secondAlertSampleSha256": "72797d02917f6dd0a89405c6b6bbfd9a45242e5b4f9ffc35b68681ef4e42a8b0",
     "byteReproducibility": "not established; alert byte checksums differ and plist comparison detects input-content-class ordering differences"
+  },
+  "hubSignSampleExperiment": {
+    "date": "2026-10-22",
+    "approval": "explicit approval for this alert-only sample",
+    "sourceRunId": 39805988409,
+    "sourceArtifactId": 12436853411,
+    "sourceArtifactSha256": "6f1d014bbe269125470745eea9109d92dc1b10e6c80ee84ab3f4749f9477d518",
+    "shortcutName": "Cherri-alert-probe",
+    "inputFile": "Cherri-alert-probe_unsigned.shortcut",
+    "inputBytes": 1878,
+    "inputSha256": "cbd15b5930b42120bec49b7cf363952d1a87f04f12eacd3b25f5a5584b9f070c",
+    "plistSerialization": "Python 3.12.14 plistlib binary-to-XML; parse/serialize/parse equality passed; byte equivalence with Cherri's Go serializer not asserted",
+    "signer": "RoutineHub HubSign",
+    "endpoint": "https://hubsign.routinehub.services/sign",
+    "httpStatus": 200,
+    "responseContentType": "application/octet-stream",
+    "responseBytes": 21954,
+    "responseSha256": "272366791cc5b74ed3799c036dbffee9a615d4192f14f8d635ae7deee2716607",
+    "responseContainerHeader": "AEA1",
+    "appleSignatureValidation": "not performed",
+    "iphoneImport": "not performed",
+    "iphoneExecution": "not performed"
   }
 }
