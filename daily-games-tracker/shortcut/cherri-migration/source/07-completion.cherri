@@ -3,6 +3,12 @@
 #define name WHT Completion Probe
 #define mac false
 
+// Preserve a native dictionary-key variable reference. Cherri's built-in openURL
+// requires a statically text-typed argument, while dictionary values are dynamic.
+action 'openurl' whtOpenURL(variable url: 'WFInput') {
+    "Show-WFInput": true
+}
+
 // JSON text fixtures keep null distinct from an empty string. The only URL target is synthetic.
 const presentJson = text('{"scoreboard_text":"Synthetic scoreboard","completion_message":"Synthetic completion","wht_url":"https://example.invalid/wht"}')
 const emptyJson = text('{"scoreboard_text":"","completion_message":"Synthetic empty fixture","wht_url":"https://example.invalid/wht"}')
@@ -36,7 +42,7 @@ menu @completionMessage {
     item "Close":
         stop()
     item "Open WHT":
-        openURL(@whtURL)
+        whtOpenURL(@whtURL)
         stop()
 }
 stop()
