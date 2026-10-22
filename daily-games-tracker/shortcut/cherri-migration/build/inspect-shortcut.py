@@ -52,6 +52,9 @@ if args.experiment == '05':
     parameters = requests[0]['WFWorkflowActionParameters']
     assert parameters.get('WFURL') == 'http://127.0.0.1:8765/probe', 'Probe must target only disposable loopback receiver.'
     assert parameters.get('WFHTTPMethod') == 'POST' and parameters.get('WFHTTPBodyType') == 'JSON', 'Wrong request type.'
+    body = parameters.get('WFJSONValues', {})
+    assert body.get('WFSerializationType') == 'WFTextTokenAttachment', 'Request body must remain a native variable attachment.'
+    assert body.get('Value', {}).get('VariableName') == 'body', 'Request body must reference the assembled body variable.'
     def find_fields(value):
         if isinstance(value, dict):
             if 'WFKey' in value and 'WFValue' in value:
@@ -65,9 +68,11 @@ if args.experiment == '05':
         elif isinstance(value, list):
             for child in value:
                 find_fields(child)
-    find_fields(parameters.get('WFJSONValues'))
+    find_fields(actions)
     assert dictionary_item_types.get('shortcut_version') == 3, 'Version must be a native numeric dictionary item.'
-    assert 'capture' in dictionary_item_types, 'Missing capture field.'
+    set_values = [a for a in actions if a['WFWorkflowActionIdentifier'] == 'is.workflow.actions.setvalueforkey']
+    capture_assignments = [a for a in set_values if a.get('WFWorkflowActionParameters', {}).get('WFDictionaryValue', {}).get('Value', {}).get('VariableName') == 'capture']
+    assert len(capture_assignments) == 1, 'Nested capture must be inserted through one native variable-valued Set Dictionary Value action.'
     questions = shortcut.get('WFWorkflowImportQuestions', [])
     assert len(questions) == 1, 'Expected one mock-code Import Question.'
     question = questions[0]
