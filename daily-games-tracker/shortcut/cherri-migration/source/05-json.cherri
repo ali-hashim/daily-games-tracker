@@ -1,4 +1,3 @@
-#include 'actions/basic'
 #include 'actions/web'
 #define name WHT JSON Probe
 #define mac false

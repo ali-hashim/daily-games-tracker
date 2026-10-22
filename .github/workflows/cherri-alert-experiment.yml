@@ -8,6 +8,7 @@ on:
       - daily-games-tracker/shortcut/cherri-migration/source/01-alert.cherri
       - daily-games-tracker/shortcut/cherri-migration/source/02-input.cherri
       - daily-games-tracker/shortcut/cherri-migration/source/03-safari.cherri
+      - daily-games-tracker/shortcut/cherri-migration/source/05-json.cherri
       - daily-games-tracker/shortcut/cherri-migration/build/build.mjs
       - daily-games-tracker/shortcut/cherri-migration/build/inspect-shortcut.py
       - daily-games-tracker/shortcut/capture-safari.js
@@ -131,11 +132,12 @@ jobs:
           capture="$GITHUB_WORKSPACE/daily-games-tracker/shortcut/capture-safari.js"
           out="$RUNNER_TEMP/alert-output"
           mkdir -p "$out"
-          for experiment in 02 03 04; do
+          for experiment in 02 03 04 05; do
             case "$experiment" in
               02) source_file="$root/source/02-input.cherri" ;;
               03) source_file="$root/source/03-safari.cherri" ;;
               04) source_file="$root/out/04-capture.cherri" ;;
+              05) source_file="$root/source/05-json.cherri" ;;
             esac
             source_name="$(basename "$source_file")"
             dir="$RUNNER_TEMP/probe-$experiment"
@@ -191,7 +193,7 @@ jobs:
       - name: Upload harmless unsigned sample and reports
         uses: actions/upload-artifact@615b319bd27bb32c3d64dca6b6ed6974d5fbe653 # v6.0.0
         with:
-          name: cherri-unsigned-probes-01-04
+          name: cherri-unsigned-probes-01-05
           path: ${{ runner.temp }}/alert-output/
           if-no-files-found: error
           retention-days: 1
