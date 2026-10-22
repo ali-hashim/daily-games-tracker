@@ -64,7 +64,9 @@ def variable_name(value):
         return None
     if reference.get('Type') == 'Variable':
         variable = reference.get('Variable', {})
-        return (variable.get('VariableName') or variable.get('OutputName')) if isinstance(variable, dict) else None
+        if isinstance(variable, dict) and (variable.get('VariableName') or variable.get('OutputName')):
+            return variable.get('VariableName') or variable.get('OutputName')
+        return reference.get('VariableName') or reference.get('OutputName')
     return reference.get('VariableName') or reference.get('OutputName')
 
 def contains_text(value, expected):
