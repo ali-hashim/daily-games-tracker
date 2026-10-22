@@ -17,7 +17,7 @@
     "PUBLIC_MANIFEST.json (self-reference)"
   ],
   "fileCount": 127,
-  "totalBytes": 521817,
+  "totalBytes": 522009,
   "files": [
     {
       "path": ".gitattributes",
@@ -26,8 +26,8 @@
     },
     {
       "path": ".github/workflows/cherri-alert-experiment.yml",
-      "bytes": 6583,
-      "sha256": "f02d908c236f5a63970d38fc354962020d879828e58a575fee8c68ddfa02d2bb"
+      "bytes": 6449,
+      "sha256": "91739f08527dfdcda167aa27291052262f97d000d0fe42d3aa477d0dc5368c5f"
     },
     {
       "path": ".gitignore",
@@ -361,8 +361,8 @@
     },
     {
       "path": "daily-games-tracker/shortcut/cherri-migration/README.md",
-      "bytes": 1116,
-      "sha256": "dee8adb0b1efb65aa564cd065892057734498c69f878df4284ba4ed1993070c8"
+      "bytes": 1369,
+      "sha256": "5f7884d9ef39743d29899fec2cbbeb70d3ef168f6422625b163c272820238247"
     },
     {
       "path": "daily-games-tracker/shortcut/cherri-migration/build/build.mjs",
@@ -401,8 +401,8 @@
     },
     {
       "path": "daily-games-tracker/shortcut/cherri-migration/toolchain.lock.json",
-      "bytes": 1242,
-      "sha256": "9f309941acc98e71832179f6a0b7ea8d64165fb4e9797355440b261074bd59e1"
+      "bytes": 1315,
+      "sha256": "34f2f0b16f6d893fb095bb2e00c68d23aef4c3587ca732981196a28b98701965"
     },
     {
       "path": "daily-games-tracker/src/App.tsx",
