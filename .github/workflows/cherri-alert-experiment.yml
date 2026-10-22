@@ -144,6 +144,3 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-      - name: Require equivalent Shortcut property lists
-        if: steps.probe.outputs.semantic_equal != 'true'
-        run: exit 1

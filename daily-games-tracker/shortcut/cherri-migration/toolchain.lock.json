@@ -1,22 +1,22 @@
 {
   "schemaVersion": 1,
-  "status": "candidate; manual unsigned alert CI experiment approved, first run pending",
+  "status": "candidate; Cherri built and alert inspected twice in CI; byte reproducibility not established",
   "compiler": {
     "name": "Cherri",
     "version": "v2.3.0",
     "repository": "https://github.com/electrikmilk/cherri.git",
     "commit": "d2072c62ea708e7727099fab94fa28b0bcec747b",
     "sourceArchiveSha256": null,
-    "verifiedBuild": false
+    "verifiedBuild": true
   },
   "go": {
     "version": "1.24.0",
-    "verifiedBuild": false
+    "verifiedBuild": true
   },
   "build": {
     "runner": "ubuntu-24.04",
     "flags": ["--skip-sign", "--derive-uuids"],
-    "byteReproducibility": "unproven; Cherri emits some map-derived ordered arrays"
+    "byteReproducibility": "not reproducible in initial probe; default input-content metadata array ordering differed between clean builds"
   },
   "actions": {
     "checkout": {
