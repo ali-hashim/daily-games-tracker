@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "purpose": "Curated public source candidate for review before publication",
+  "purpose": "Integrity inventory for the published curated MIT source snapshot; not a privacy, security, or rights certification",
   "repository": "ali-hashim/daily-games-tracker",
   "license": "MIT",
   "history": "No Git metadata included",
@@ -16,8 +16,8 @@
   "inventoryExcludes": [
     "PUBLIC_MANIFEST.json (self-reference)"
   ],
-  "fileCount": 126,
-  "totalBytes": 514549,
+  "fileCount": 127,
+  "totalBytes": 519431,
   "files": [
     {
       "path": ".gitattributes",
@@ -25,9 +25,29 @@
       "sha256": "d60f352d0db1404c70afb4bb8b2ca3fd1c610572aa40720e8a0b7baa7885418c"
     },
     {
+      "path": ".github/workflows/cherri-alert-experiment.yml",
+      "bytes": 4197,
+      "sha256": "10c2aa2208737653b4d1e25926008e540d5ce764bf065b5b9770bcd5932e228d"
+    },
+    {
       "path": ".gitignore",
       "bytes": 181,
       "sha256": "9f2da211b9b243c6fe6551d54bc1fdf93f55974abcebf2f6aaef1857540a9f33"
+    },
+    {
+      "path": "LICENSE",
+      "bytes": 1067,
+      "sha256": "8d9c9186789bfda6830d0ada5175cd7241b7e563c31f55ce60abd7c8123e46a7"
+    },
+    {
+      "path": "PUBLIC_REVIEW.md",
+      "bytes": 5108,
+      "sha256": "32459da90e3edce3263c72d50499f412cde41450055ee35d80d009adb2b1a25e"
+    },
+    {
+      "path": "README.md",
+      "bytes": 2643,
+      "sha256": "4536425a939633ea0217b063484dbdb0208d1addbebece5ea9768427b5882b56"
     },
     {
       "path": "daily-games-tracker/.env.example",
@@ -43,6 +63,11 @@
       "path": "daily-games-tracker/.prettierignore",
       "bytes": 72,
       "sha256": "d9d370dffd0f9e8f1ec22e61f8d779dc42cb68ee5ddb18fac3d8daf00f79de0b"
+    },
+    {
+      "path": "daily-games-tracker/README.md",
+      "bytes": 417,
+      "sha256": "347756aca97bbc73335db8db7ed7bc32d70899a5738f66fdcbea240bac642744"
     },
     {
       "path": "daily-games-tracker/eslint.config.js",
@@ -285,11 +310,6 @@
       "sha256": "54a6d7402a80228c844289dffc05308de74a439ecc60d4e62efb5e99a39db702"
     },
     {
-      "path": "daily-games-tracker/README.md",
-      "bytes": 417,
-      "sha256": "347756aca97bbc73335db8db7ed7bc32d70899a5738f66fdcbea240bac642744"
-    },
-    {
       "path": "daily-games-tracker/scripts/smoke_pages.mjs",
       "bytes": 12384,
       "sha256": "c6627e5486fc6e8688c7ebb9722d98a84a1e2e35b4d043ce19b8614a25586316"
@@ -340,24 +360,24 @@
       "sha256": "fb50c544f795a5db5102c6e936b3bea723eca7fd92f4c6677d2780bfdf0ba2fb"
     },
     {
+      "path": "daily-games-tracker/shortcut/cherri-migration/README.md",
+      "bytes": 1116,
+      "sha256": "dee8adb0b1efb65aa564cd065892057734498c69f878df4284ba4ed1993070c8"
+    },
+    {
       "path": "daily-games-tracker/shortcut/cherri-migration/build/build.mjs",
       "bytes": 5773,
       "sha256": "1b7ca31351305ba508e03a804abb78c3dbeb04d33937bea15f868807ff799c7d"
     },
     {
       "path": "daily-games-tracker/shortcut/cherri-migration/build/inspect-shortcut.py",
-      "bytes": 4806,
-      "sha256": "58680e0d8a352f0d1315d8194757273013f8de388a16ee283179919d9cc5b71d"
-    },
-    {
-      "path": "daily-games-tracker/shortcut/cherri-migration/README.md",
-      "bytes": 915,
-      "sha256": "ff1d9a28068e378c15bf225197d29e73510c1a0b12285d45fe3e6977a980ccc3"
+      "bytes": 5281,
+      "sha256": "03f25f2259f2ca96571124eb1b44a2b98af90c76e7ffe2500564eff64757a744"
     },
     {
       "path": "daily-games-tracker/shortcut/cherri-migration/source/01-alert.cherri",
-      "bytes": 154,
-      "sha256": "1fa153343733c46a1ba6cb255b695019acc5d4a5aabef4fc04b7ddad0123d223"
+      "bytes": 129,
+      "sha256": "0aff5251ef871b3975a4e70e01e001ae97324823ddc893348bc4f25749ec2cff"
     },
     {
       "path": "daily-games-tracker/shortcut/cherri-migration/source/02-input.cherri",
@@ -381,8 +401,8 @@
     },
     {
       "path": "daily-games-tracker/shortcut/cherri-migration/toolchain.lock.json",
-      "bytes": 1208,
-      "sha256": "8ff421d9c718cd1a23b822c59d841a412f5290b36225e0ff2e98108a8497118f"
+      "bytes": 1242,
+      "sha256": "9f309941acc98e71832179f6a0b7ea8d64165fb4e9797355440b261074bd59e1"
     },
     {
       "path": "daily-games-tracker/src/App.tsx",
@@ -633,21 +653,6 @@
       "path": "daily-games-tracker/wrangler.jsonc",
       "bytes": 484,
       "sha256": "27fb64edc6615bce3b6237db168a49d6e450de41f3e2ee2363615deadef9a6ae"
-    },
-    {
-      "path": "LICENSE",
-      "bytes": 1067,
-      "sha256": "8d9c9186789bfda6830d0ada5175cd7241b7e563c31f55ce60abd7c8123e46a7"
-    },
-    {
-      "path": "PUBLIC_REVIEW.md",
-      "bytes": 5108,
-      "sha256": "32459da90e3edce3263c72d50499f412cde41450055ee35d80d009adb2b1a25e"
-    },
-    {
-      "path": "README.md",
-      "bytes": 2643,
-      "sha256": "4536425a939633ea0217b063484dbdb0208d1addbebece5ea9768427b5882b56"
     }
   ]
 }
