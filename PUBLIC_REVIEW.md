@@ -35,6 +35,6 @@ Validation temporarily used a separate local copy of existing dependencies. Depe
 1. The owner selected MIT and confirmed that the included app icon artwork may be published.
 2. Review this exact allowlist and synthetic examples for public suitability; game names/domains are retained for parser compatibility and do not imply affiliation.
 3. Re-run the documented checks in a normal development environment, including the currently unverified local database and Pages smoke checks. No fresh dependency installation or Linux/hosted CI execution was tested during this offline preparation.
-4. Review the exact tree and hashes, then create new clean Git history for `ali-hashim/daily-game-tracker`. Do not use the authoritative repository's history or broader refs as the upload unit.
+4. Review the exact tree and hashes, then create new clean Git history for `ali-hashim/daily-games-tracker`. Do not use the authoritative repository's history or broader refs as the upload unit.
 
 The bounded privacy scan checks known original personal/resource markers and common credential patterns. It is not a security certification or publication approval. This candidate remains local and requires the repository owner's publication decision.
