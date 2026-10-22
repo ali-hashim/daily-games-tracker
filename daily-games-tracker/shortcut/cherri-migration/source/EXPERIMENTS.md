@@ -1,10 +1,10 @@
 # Credential-free experiment sources
 
-These files are proposed Cherri v2.3.0 inputs. None has been compiled, signed, installed, or executed on iPhone. Exact spelling and native parameters remain compile/native proof items.
+These files are proposed Cherri v2.3.0 inputs. The alert probe has compiled and passed structural inspection in GitHub Actions, but its two clean builds differed in the ordering of default input-content metadata. It has not been signed, installed, or executed on iPhone. The Share Sheet, Safari binding, exact capture, and JSON probes remain separate gates.
 
 | Source                        | Purpose                                                                  | Evidence still required                                                             |
 | ----------------------------- | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
-| `01-alert.cherri`             | Harmless compiler/signer sample; no input, credential, or network        | Unsigned plist, repeat build, later separately approved signing/import              |
+| `01-alert.cherri`             | Harmless compiler/signer sample; no input, credential, or network        | CI compile and structural checks passed; byte reproducibility unresolved; signing/import separate |
 | `02-input.cherri`             | Safari/Text Share Sheet metadata, saved input and type detection         | Inspect references; native Safari and text runs                                     |
 | `03-safari.cherri`            | Narrow custom JavaScript action with explicit saved webpage binding      | Correct native parameter; harmless page title/URL on iPhone                         |
 | Generated `04-capture.cherri` | Embed the maintained capture source as a rawtext literal                 | Exact emitted JavaScript bytes; native capture                                      |

@@ -6,7 +6,11 @@ on:
     paths:
       - .github/workflows/cherri-alert-experiment.yml
       - daily-games-tracker/shortcut/cherri-migration/source/01-alert.cherri
+      - daily-games-tracker/shortcut/cherri-migration/source/02-input.cherri
+      - daily-games-tracker/shortcut/cherri-migration/source/03-safari.cherri
+      - daily-games-tracker/shortcut/cherri-migration/build/build.mjs
       - daily-games-tracker/shortcut/cherri-migration/build/inspect-shortcut.py
+      - daily-games-tracker/shortcut/capture-safari.js
   workflow_dispatch:
 
 permissions:
@@ -18,7 +22,7 @@ concurrency:
 
 jobs:
   unsigned-alert:
-    name: Build harmless unsigned alert twice
+    name: Compile credential-free Cherri probes
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -115,6 +119,54 @@ jobs:
               output.write(f"semantic_equal={str(not paths).lower()}\n")
           print(json.dumps(report))
           PY
+
+      - name: Generate exact capture probe source
+        run: node daily-games-tracker/shortcut/cherri-migration/build/build.mjs --prepare
+
+      - name: Compile and inspect Share Sheet, Safari, and capture probes
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$GITHUB_WORKSPACE/daily-games-tracker/shortcut/cherri-migration"
+          capture="$GITHUB_WORKSPACE/daily-games-tracker/shortcut/capture-safari.js"
+          out="$RUNNER_TEMP/alert-output"
+          mkdir -p "$out"
+          for experiment in 02 03 04; do
+            case "$experiment" in
+              02) source_file="$root/source/02-input.cherri" ;;
+              03) source_file="$root/source/03-safari.cherri" ;;
+              04) source_file="$root/out/04-capture.cherri" ;;
+            esac
+            source_name="$(basename "$source_file")"
+            dir="$RUNNER_TEMP/probe-$experiment"
+            mkdir -p "$dir"
+            cp "$source_file" "$dir/$source_name"
+            "$RUNNER_TEMP/cherri" "$dir/$source_name" --skip-sign --derive-uuids
+            mapfile -t shortcuts < <(find "$dir" -maxdepth 1 -type f -name '*_unsigned.shortcut' -print)
+            test "${#shortcuts[@]}" -eq 1
+            python3 "$root/build/inspect-shortcut.py" "${shortcuts[0]}" --experiment "$experiment" --capture "$capture" > "$out/inspection-$experiment.json"
+            cp "${shortcuts[0]}" "$out/Cherri-probe-${experiment}_unsigned.shortcut"
+          done
+          cp "$root/out/manifest.json" "$out/prepared-source-manifest.json"
+          sha256sum "$RUNNER_TEMP/cherri" > "$out/compiler-SHA256SUMS"
+          sha256sum "$capture" > "$out/capture-SHA256SUMS"
+          python3 - "$out" "$GITHUB_SHA" <<'PY'
+          import hashlib, json, pathlib, sys
+          out = pathlib.Path(sys.argv[1])
+          reports = [json.loads(p.read_text(encoding="utf-8")) for p in sorted(out.glob("inspection-*.json"))]
+          manifest = {
+              "applicationCommit": sys.argv[2],
+              "compiler": "Cherri v2.3.0",
+              "compilerCommit": "d2072c62ea708e7727099fab94fa28b0bcec747b",
+              "goVersion": "1.24.0",
+              "buildFlags": ["--skip-sign", "--derive-uuids"],
+              "captureSha256": hashlib.sha256(pathlib.Path("daily-games-tracker/shortcut/capture-safari.js").read_bytes()).hexdigest(),
+              "probeInspections": reports,
+              "signing": "not performed",
+              "nativeExecution": "not performed",
+          }
+          (out / "probe-manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+          PY
           python3 - "$out" "$GITHUB_SHA" <<'PY'
           import json, pathlib, sys
           out = pathlib.Path(sys.argv[1])
@@ -139,7 +191,7 @@ jobs:
       - name: Upload harmless unsigned sample and reports
         uses: actions/upload-artifact@615b319bd27bb32c3d64dca6b6ed6974d5fbe653 # v6.0.0
         with:
-          name: cherri-alert-experiment
+          name: cherri-unsigned-probes-01-04
           path: ${{ runner.temp }}/alert-output/
           if-no-files-found: error
           retention-days: 1

@@ -31,7 +31,7 @@ const captureText = new TextDecoder("utf-8", { fatal: true }).decode(captureByte
 if (!Buffer.from(captureText, "utf8").equals(captureBytes))
   throw new Error("Capture must round-trip exactly as UTF-8.");
 const raw = (text) => "'" + text.replaceAll("'", "\\'") + "'";
-const captureSource = `#include 'actions/basic'\n#define name WHT Exact Capture Probe\n#define mac false\n#define inputs webpage, text\n#define from sharesheet\n#define noinput stopwith "Share a Safari webpage to this probe."\n\naction 'runjavascriptonwebpage' whtExactCapture(variable webpage: 'WFInput', rawtext javascript: 'WFJavaScript')\n\n@originalInput = ShortcutInput\nconst inputType = typeOf(@originalInput)\nalert(inputType, "Original input type")\nconst captureResult = whtExactCapture(@originalInput, ${raw(captureText)})\nquicklook(captureResult)\nstop()\n`;
+const captureSource = `#define name WHT Exact Capture Probe\n#define mac false\n#define inputs webpage, text\n#define from sharesheet\n#define noinput stopwith "Share a Safari webpage to this probe."\n\naction 'runjavascriptonwebpage' whtExactCapture(variable webpage: 'WFInput', rawtext javascript: 'WFJavaScript')\n\n@originalInput = ShortcutInput\nconst inputType = typeOf(@originalInput)\nalert(inputType, "Original input type")\nconst captureResult = whtExactCapture(@originalInput, ${raw(captureText)})\nquicklook(captureResult)\nstop()\n`;
 await writeFile(join(out, "04-capture.cherri"), captureSource, "utf8");
 const sourceNames = (await readdir(join(root, "source")))
   .filter((name) => name.endsWith(".cherri"))
