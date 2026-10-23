@@ -2,7 +2,7 @@
   "baselineCommit": "ab0a7f17f83c8ef49684b1d243a69cc2a6aaa972",
   "changes": [
     {
-      "afterSha256": "bf21f725fa3cc473f60c64ee360f11732051f7ac2e152e255193f6838a36af42",
+      "afterSha256": "13befe4533a819283ea064fa737465f175ba4dfbf9cf6c932265fe6603eb07b0",
       "beforeSha256": "e705f160ca2f3e59b508f625da5315a8b0bcfafd8863131577d7b619fef2f9d6",
       "path": ".github/workflows/cherri-alert-experiment.yml",
       "status": "modified"
@@ -56,7 +56,7 @@
       "status": "added"
     },
     {
-      "afterSha256": "7bf742bf9ee1935ed48134b07443b91efcb33abcc4f5a586e948a5006d4d3c29",
+      "afterSha256": "1c623d26e61d8aa4ae44e3ce6f2e9e942e41178a6b286b169a23bc4191993a7a",
       "beforeSha256": null,
       "path": "daily-games-tracker/scripts/phase5a-verify-toolchain.mjs",
       "status": "added"
