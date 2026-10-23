@@ -5,7 +5,7 @@ Updated October 23, 2026 (`America/Los_Angeles`). This handoff records the accep
 ## Accepted baseline
 
 - Public repository: `ali-hashim/daily-games-tracker`
-- Public revision: [`6e77d7a915147387fe37d641cf45537f3aceb49d`](https://github.com/ali-hashim/daily-games-tracker/commit/6e77d7a915147387fe37d641cf45537f3aceb49d)
+- Accepted source revision: [`6e77d7a915147387fe37d641cf45537f3aceb49d`](https://github.com/ali-hashim/daily-games-tracker/commit/6e77d7a915147387fe37d641cf45537f3aceb49d)
 - CI evidence: [unsigned workflow run 22](https://github.com/ali-hashim/daily-games-tracker/actions/runs/40005210168), completed successfully
 - Maintained source: `shortcut/cherri-migration/source/upload-to-wht.cherri`
 - Compiler: Cherri v2.3.0 at `d2072c62ea708e7727099fab94fa28b0bcec747b`
