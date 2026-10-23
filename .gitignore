@@ -10,3 +10,4 @@
 **/*.py[cod]
 **/shortcut/cherri-migration/out/
 .validation/
+tmp/

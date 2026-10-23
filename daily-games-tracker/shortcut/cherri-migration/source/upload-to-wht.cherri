@@ -1,0 +1,151 @@
+#include 'actions/web'
+#include 'actions/text'
+#include 'actions/sharing'
+#define name Upload To WHT
+// Pinned Cherri calls native bright green (0x19BD03FF) teal.
+#define color teal
+#define glyph gameController
+#define mac false
+#define inputs webpage, text
+#define from sharesheet
+#define noinput stopwith "Share a completed game from Safari or as text."
+
+// Preserve the native webpage before any text coercion or setup actions.
+@originalInput = ShortcutInput
+#question deviceQuestion "Paste your private WHT device code." ""
+const deviceCode = text(deviceQuestion)
+if deviceCode == "" {
+    alert("Device code is empty. Open this shortcut in the editor and enter your private WHT device code in the Text action named deviceCode. No request was sent.", "Setup required")
+    stop()
+}
+const authorizationCode = replaceText("^\\s+|\\s+$", "", deviceCode, true, true)
+if authorizationCode == "" {
+    alert("Enter your private WHT device code in the Text action named deviceCode. No request was sent.", "Setup required")
+    stop()
+}
+
+action 'runjavascriptonwebpage' whtExactCapture(variable webpage: 'WFInput', rawtext javascript: 'WFJavaScript')
+
+action 'downloadurl' whtPostJsonText(
+    text url: 'WFURL',
+    variable body: 'WFRequestVariable',
+    dictionary! ?headers: 'WFHTTPHeaders'
+) {
+    "WFHTTPMethod": "POST",
+    "WFHTTPBodyType": "File"
+}
+
+action 'openurl' whtOpenURL(variable url: 'WFInput') {
+    "Show-WFInput": true
+}
+
+const inputType = typeOf(@originalInput)
+// Type labels are deliberately visible in source and require native acceptance.
+// Do not coerce the original webpage into text before this branch.
+@originalCapture = {"capture_schema":"dgt.capture.v1"}
+if inputType == "Safari Web Page" {
+    const safariCapture = whtExactCapture(@originalInput, '__WHT_CAPTURE_SCRIPT__')
+    @originalCapture = getDictionary(safariCapture)
+} else {
+    if inputType == "Text" {
+        const sharedText = getText(@originalInput)
+        if sharedText == "" {
+            alert("Unsupported input. Share a completed game from Safari or as text.", "Upload to WHT")
+            stop()
+        }
+        if sharedText beginsWith "DGT_LOGIN_V1:" {
+            alert("Website login is not available in this shortcut yet.", "Upload to WHT")
+            stop()
+        }
+        @originalCapture = {"capture_schema":"dgt.capture.v1", "source_kind":"shared_text", "shared_text":"{sharedText}"}
+    } else {
+        alert("Unsupported input. Share a completed game from Safari or as text.", "Upload to WHT")
+        stop()
+    }
+}
+// Native Dictionary-to-Text serialization escapes shared text. Never interpolate
+// raw shared text into JSON. Both requests reuse this one original request body.
+const captureJson = getText(@originalCapture)
+const envelopeTemplate = text('{"shortcut_version":1,"capture":__CAPTURE_JSON__}')
+const requestJson = replaceText("__CAPTURE_JSON__", captureJson, envelopeTemplate)
+const validationResult = whtPostJsonText("https://preview.example.invalid/api/import/validate", requestJson, {"Content-Type":"application/json", "Authorization":"Device {authorizationCode}"})
+@validationResponse = getDictionary(validationResult)
+@validationStatusValue = getValue(@validationResponse, "status")
+const validationStatus = getText(@validationStatusValue)
+@completionResponse = @validationResponse
+if validationStatus == "already_submitted" {
+    @completionResponse = @validationResponse
+} else {
+    if validationStatus == "valid" {
+        @confirmationText = getValue(@validationResponse, "confirmation_text")
+        menu @confirmationText {
+            item "Cancel":
+                stop()
+            item "Submit Results":
+                const submissionResult = whtPostJsonText("https://preview.example.invalid/api/import/submit", requestJson, {"Content-Type":"application/json", "Authorization":"Device {authorizationCode}"})
+                @submissionResponse = getDictionary(submissionResult)
+                @submissionStatusValue = getValue(@submissionResponse, "status")
+                const submissionStatus = getText(@submissionStatusValue)
+                if submissionStatus == "submitted" {
+                    @completionResponse = @submissionResponse
+                } else {
+                    if submissionStatus == "already_submitted" {
+                        @completionResponse = @submissionResponse
+                    } else {
+                        if submissionStatus == "error" {
+                            @submitError = getValue(@submissionResponse, "error_message")
+                            alert("{@submitError}", "Upload to WHT")
+                            stop()
+                        } else {
+                            if submissionStatus == "update_required" {
+                                @submitUpdate = getValue(@submissionResponse, "error_message")
+                                alert("{@submitUpdate}", "Update required")
+                                @submitInstallURL = getValue(@submissionResponse, "install_url")
+                                whtOpenURL(@submitInstallURL)
+                                stop()
+                            } else {
+                                alert("WHT did not return a usable response. Try again or contact the administrator.", "Upload to WHT")
+                                stop()
+                            }
+                        }
+                    }
+                }
+        }
+    } else {
+        if validationStatus == "error" {
+            @validationError = getValue(@validationResponse, "error_message")
+            alert("{@validationError}", "Upload to WHT")
+            stop()
+        } else {
+            if validationStatus == "update_required" {
+                @validationUpdate = getValue(@validationResponse, "error_message")
+                alert("{@validationUpdate}", "Update required")
+                @validationInstallURL = getValue(@validationResponse, "install_url")
+                whtOpenURL(@validationInstallURL)
+                stop()
+            } else {
+                alert("WHT did not return a usable response. Try again or contact the administrator.", "Upload to WHT")
+                stop()
+            }
+        }
+    }
+}
+
+// The only clipboard action is behind both native type and nonempty guards.
+@scoreboardText = getValue(@completionResponse, "scoreboard_text")
+if @scoreboardText {
+    const scoreboardType = typeOf(@scoreboardText)
+    if scoreboardType == "Text" {
+        setClipboard(@scoreboardText)
+    }
+}
+@completionMessage = getValue(@completionResponse, "completion_message")
+@whtURL = getValue(@completionResponse, "wht_url")
+menu @completionMessage {
+    item "Close":
+        stop()
+    item "Open WHT":
+        whtOpenURL(@whtURL)
+        stop()
+}
+stop()

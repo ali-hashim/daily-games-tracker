@@ -6,31 +6,58 @@
 @validationStatus = "already_submitted"
 @submitStatus = "submitted"
 @validationResponse = "synthetic validation response"
+@validationErrorResponse = "synthetic validation error response"
+@validationUpdateResponse = "synthetic validation update response"
 @submitResponse = "synthetic submit response"
+@submitErrorResponse = "synthetic submit error response"
+@submitUpdateResponse = "synthetic submit update response"
+@unknownResponse = "synthetic unknown response"
 // Cherri requires a text-typed value at the shared alert even though failure paths stop.
 @completionResponse = "No synthetic route selected"
 
 if @validationStatus == "already_submitted" {
     @completionResponse = @validationResponse
 } else {
-    if @validationStatus == "valid" {
-        menu "Submit synthetic result?" {
-            item "Cancel":
-                stop()
-            item "✅ Submit Results":
-                @submitMarker = "synthetic submit only"
-                if @submitStatus == "submitted" {
-                    @completionResponse = @submitResponse
-                } else {
-                    if @submitStatus == "already_submitted" {
-                        @completionResponse = @submitResponse
-                    } else {
-                        stop()
-                    }
-                }
-        }
-    } else {
+    if @validationStatus == "error" {
+        alert(@validationErrorResponse, "Validation error")
         stop()
+    } else {
+        if @validationStatus == "update_required" {
+            alert(@validationUpdateResponse, "Update required")
+            stop()
+        } else {
+            if @validationStatus == "valid" {
+                menu "Submit synthetic result?" {
+                    item "Cancel":
+                        stop()
+                    item "✅ Submit Results":
+                        @submitMarker = "synthetic submit only"
+                        if @submitStatus == "submitted" {
+                            @completionResponse = @submitResponse
+                        } else {
+                            if @submitStatus == "already_submitted" {
+                                @completionResponse = @submitResponse
+                            } else {
+                                if @submitStatus == "error" {
+                                    alert(@submitErrorResponse, "Submit error")
+                                    stop()
+                                } else {
+                                    if @submitStatus == "update_required" {
+                                        alert(@submitUpdateResponse, "Update required")
+                                        stop()
+                                    } else {
+                                        alert(@unknownResponse, "Unknown submit status")
+                                        stop()
+                                    }
+                                }
+                            }
+                        }
+                }
+            } else {
+                alert(@unknownResponse, "Unknown validation status")
+                stop()
+            }
+        }
     }
 }
 
