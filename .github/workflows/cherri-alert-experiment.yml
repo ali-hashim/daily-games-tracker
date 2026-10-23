@@ -1,4 +1,4 @@
-name: Cherri alert experiment
+name: Cherri unsigned probe check
 
 on:
   push:
@@ -11,21 +11,35 @@ on:
       - daily-games-tracker/shortcut/cherri-migration/source/05-json.cherri
       - daily-games-tracker/shortcut/cherri-migration/source/06-routing.cherri
       - daily-games-tracker/shortcut/cherri-migration/source/07-completion.cherri
+      - daily-games-tracker/shortcut/cherri-migration/source/**
       - daily-games-tracker/shortcut/cherri-migration/source/EXPERIMENTS.md
       - daily-games-tracker/shortcut/cherri-migration/build/build.mjs
       - daily-games-tracker/shortcut/cherri-migration/build/inspect-shortcut.py
+      - daily-games-tracker/shortcut/cherri-migration/build/**
       - daily-games-tracker/shortcut/capture-safari.js
+      - daily-games-tracker/scripts/inspect_phase5a_shortcut.py
+      - daily-games-tracker/scripts/tests/**
+      - daily-games-tracker/shortcut/cherri-migration/toolchain.lock.json
+      - daily-games-tracker/scripts/phase5a-verify-toolchain.mjs
+      - daily-games-tracker/scripts/phase5a-verify-signing-workflow.mjs
+      - daily-games-tracker/scripts/phase5a-verify-manifest.mjs
+      - daily-games-tracker/scripts/phase5a_prepare_signing_package.py
+      - daily-games-tracker/scripts/phase5a-compile-runtime-fixtures.mjs
+      - daily-games-tracker/scripts/phase5a*.py
+      - daily-games-tracker/scripts/PHASE5A_*.md
+      - daily-games-tracker/scripts/PHASE_5A_*.md
+      - daily-games-tracker/scripts/tests/fixtures/**
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: cherri-alert-experiment-${{ github.ref }}
+  group: cherri-unsigned-probes-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  unsigned-alert:
+  unsigned-probes:
     name: Compile credential-free Cherri probes
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -35,10 +49,24 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Verify locked workflow inputs
+        run: node daily-games-tracker/scripts/phase5a-verify-toolchain.mjs --lock daily-games-tracker/shortcut/cherri-migration/toolchain.lock.json --workflow .github/workflows/cherri-alert-experiment.yml
+
+      - name: Run static Phase 5A Python regression tests
+        run: |
+          python3 -m py_compile daily-games-tracker/scripts/phase5a_prepare_signing_package.py
+          python3 -m unittest discover -s daily-games-tracker/scripts/tests -p 'test_phase5a_*.py' -v
+
+      - name: Run Phase 5A workflow and manifest mutation tests
+        run: |
+          node --check daily-games-tracker/scripts/phase5a-compile-runtime-fixtures.mjs
+          node --test daily-games-tracker/scripts/tests/phase5a-verifier.test.mjs daily-games-tracker/scripts/tests/phase5a-signing-workflow.test.mjs
+
       - name: Set up pinned Go
         uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version: 1.24.0
+          check-latest: false
           cache: false
 
       - name: Build Cherri from its pinned source commit
@@ -57,10 +85,10 @@ jobs:
           export GOTOOLCHAIN=local
           go mod download
           go mod verify
-          go build -mod=readonly -trimpath -o "$RUNNER_TEMP/cherri" .
+          go build -mod=readonly -trimpath -buildvcs=false -ldflags='-s -w' -o "$RUNNER_TEMP/cherri" .
+          test -s "$RUNNER_TEMP/cherri"
 
       - name: Compile and inspect the alert twice
-        id: probe
         shell: bash
         run: |
           set -euo pipefail
@@ -85,7 +113,7 @@ jobs:
           done
           sha256sum "$out/Cherri-alert-probe_unsigned.shortcut" > "$out/SHA256SUMS"
           sha256sum "$out/Cherri-alert-probe-second_unsigned.shortcut" >> "$out/SHA256SUMS"
-          python3 - "$out" "$GITHUB_OUTPUT" <<'PY'
+          python3 - "$out" <<'PY'
           import hashlib, json, pathlib, plistlib, sys
           out = pathlib.Path(sys.argv[1])
           first = out / "Cherri-alert-probe_unsigned.shortcut"
@@ -119,8 +147,6 @@ jobs:
               "differingPaths": paths[:50],
           }
           (out / "reproducibility.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
-          with open(sys.argv[2], "a", encoding="utf-8") as output:
-              output.write(f"semantic_equal={str(not paths).lower()}\n")
           print(json.dumps(report))
           PY
 
@@ -151,10 +177,21 @@ jobs:
             "$RUNNER_TEMP/cherri" "$dir/$source_name" --skip-sign --derive-uuids
             mapfile -t shortcuts < <(find "$dir" -maxdepth 1 -type f -name '*_unsigned.shortcut' -print)
             test "${#shortcuts[@]}" -eq 1
-            python3 "$root/build/inspect-shortcut.py" "${shortcuts[0]}" --experiment "$experiment" --capture "$capture" > "$out/inspection-$experiment.json"
+            inspector_flags=(--experiment "$experiment" --capture "$capture")
+            if [[ "$experiment" == "06" || "$experiment" == "07" ]]; then
+              inspector_flags+=(--strict-current)
+            fi
+            python3 "$root/build/inspect-shortcut.py" "${shortcuts[0]}" "${inspector_flags[@]}" > "$out/inspection-$experiment.json"
             cp "${shortcuts[0]}" "$out/Cherri-probe-${experiment}_unsigned.shortcut"
           done
           cp "$root/out/manifest.json" "$out/prepared-source-manifest.json"
+          node daily-games-tracker/scripts/phase5a-compile-runtime-fixtures.mjs \
+            --root "$root" \
+            --compiler "$RUNNER_TEMP/cherri" \
+            --capture "$capture" \
+            --output "$out/runtime-fixtures" \
+            --lock daily-games-tracker/shortcut/cherri-migration/toolchain.lock.json \
+            --python python3
           sha256sum "$RUNNER_TEMP/cherri" > "$out/compiler-SHA256SUMS"
           sha256sum "$capture" > "$out/capture-SHA256SUMS"
           python3 - "$out" "$GITHUB_SHA" <<'PY'
@@ -175,31 +212,60 @@ jobs:
           (out / "probe-manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
           PY
           python3 - "$out" "$GITHUB_SHA" <<'PY'
-          import json, pathlib, sys
+          import hashlib, json, pathlib, sys
           out = pathlib.Path(sys.argv[1])
+          prepared = json.loads((out / "prepared-source-manifest.json").read_text(encoding="utf-8"))
           reproducibility = json.loads((out / "reproducibility.json").read_text(encoding="utf-8"))
+          artifacts = []
+          for path in sorted(out.glob("*.shortcut")):
+              artifacts.append({"name": path.name, "sha256": hashlib.sha256(path.read_bytes()).hexdigest()})
+          lock_path = pathlib.Path("daily-games-tracker/shortcut/cherri-migration/toolchain.lock.json")
           manifest = {
               "applicationCommit": sys.argv[2],
-              "compiler": "Cherri v2.3.0",
-              "compilerCommit": "d2072c62ea708e7727099fab94fa28b0bcec747b",
-              "goVersion": "1.24.0",
-              "buildFlags": ["--skip-sign", "--derive-uuids"],
-              "artifacts": [
-                  {"name": "Cherri-alert-probe_unsigned.shortcut", "sha256": reproducibility["firstSha256"]},
-                  {"name": "Cherri-alert-probe-second_unsigned.shortcut", "sha256": reproducibility["secondSha256"]},
-              ],
+              "toolchainLockSha256": hashlib.sha256(lock_path.read_bytes()).hexdigest(),
+              "compiler": prepared["compiler"],
+              "go": prepared["go"],
+              "buildFlags": prepared["flags"],
+              "capture": prepared["capture"],
+              "sourceHashes": prepared["experiments"],
+              "artifacts": artifacts,
               "reproducibility": reproducibility,
+              "runtimeFixtures": {
+                  "path": "runtime-fixtures/manifest.json",
+                  "sha256": hashlib.sha256((out / "runtime-fixtures/manifest.json").read_bytes()).hexdigest(),
+                  "fixtureCount": json.loads((out / "runtime-fixtures/manifest.json").read_text(encoding="utf-8"))["fixtureCount"],
+              },
               "signing": "not performed",
               "nativeExecution": "not performed",
           }
           (out / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
           PY
+          node daily-games-tracker/scripts/phase5a-verify-manifest.mjs --manifest "$out/manifest.json" --artifacts "$out" --prepared "$out/prepared-source-manifest.json" --lock daily-games-tracker/shortcut/cherri-migration/toolchain.lock.json
 
-      - name: Upload harmless unsigned sample and reports
+      - name: Build and inspect the complete upload client twice
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 daily-games-tracker/scripts/phase5a_build_upload.py --compiler "$RUNNER_TEMP/cherri" --output "$RUNNER_TEMP/upload-first"
+          python3 daily-games-tracker/scripts/phase5a_build_upload.py --compiler "$RUNNER_TEMP/cherri" --output "$RUNNER_TEMP/upload-second"
+          python3 daily-games-tracker/scripts/phase5a_compare_upload.py "$RUNNER_TEMP/upload-first/Upload to WHT_unsigned.shortcut" "$RUNNER_TEMP/upload-second/Upload to WHT_unsigned.shortcut" > "$RUNNER_TEMP/upload-first/reproducibility.json"
+          python3 daily-games-tracker/scripts/phase5a_upload_signing.py prepare --build-directory "$RUNNER_TEMP/upload-first" --output "$RUNNER_TEMP/upload-review-package"
+
+      - name: Upload unsigned complete client and frozen review package
         uses: actions/upload-artifact@615b319bd27bb32c3d64dca6b6ed6974d5fbe653 # v6.0.0
         with:
-          name: cherri-unsigned-probes-01-07
-          path: ${{ runner.temp }}/alert-output/
+          name: cherri-upload-unsigned-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/upload-first/
+            ${{ runner.temp }}/upload-second/
+            ${{ runner.temp }}/upload-review-package/
           if-no-files-found: error
           retention-days: 1
 
+      - name: Upload unsigned probes and verification reports
+        uses: actions/upload-artifact@615b319bd27bb32c3d64dca6b6ed6974d5fbe653 # v6.0.0
+        with:
+          name: cherri-unsigned-probes-01-07-${{ github.sha }}
+          path: ${{ runner.temp }}/alert-output/
+          if-no-files-found: error
+          retention-days: 1

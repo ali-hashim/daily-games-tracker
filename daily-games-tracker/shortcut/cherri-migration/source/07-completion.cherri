@@ -11,31 +11,20 @@ action 'openurl' whtOpenURL(variable url: 'WFInput') {
 
 // JSON text fixtures keep null distinct from an empty string. The only URL target is synthetic.
 const presentJson = text('{"scoreboard_text":"Synthetic scoreboard","completion_message":"Synthetic completion","wht_url":"https://example.invalid/wht"}')
-const emptyJson = text('{"scoreboard_text":"","completion_message":"Synthetic empty fixture","wht_url":"https://example.invalid/wht"}')
-const nullJson = text('{"scoreboard_text":null,"completion_message":"Synthetic null fixture","wht_url":"https://example.invalid/wht"}')
-const missingJson = text('{"completion_message":"Synthetic missing fixture","wht_url":"https://example.invalid/wht"}')
+const emptyJson = text('{"scoreboard_text":"","completion_message":"Synthetic empty fixture","wht_url":"https://example.invalid/wht-empty"}')
+const nullJson = text('{"scoreboard_text":null,"completion_message":"Synthetic null fixture","wht_url":"https://example.invalid/wht-null"}')
+const missingJson = text('{"completion_message":"Synthetic missing fixture","wht_url":"https://example.invalid/wht-missing"}')
 @presentResponse = getDictionary(presentJson)
 @emptyResponse = getDictionary(emptyJson)
 @nullResponse = getDictionary(nullJson)
 @missingResponse = getDictionary(missingJson)
-@presentScoreboard = @presentResponse['scoreboard_text']
-@emptyScoreboard = @emptyResponse['scoreboard_text']
-@nullScoreboard = @nullResponse['scoreboard_text']
-@missingScoreboard = @missingResponse['scoreboard_text']
-@completionMessage = @presentResponse['completion_message']
-@whtURL = @presentResponse['wht_url']
+@fixtureResponse = @presentResponse
+@scoreboardText = getValue(@fixtureResponse, "scoreboard_text")
+@completionMessage = getValue(@fixtureResponse, "completion_message")
+@whtURL = getValue(@fixtureResponse, "wht_url")
 
-if @presentScoreboard {
-    setClipboard(@presentScoreboard)
-}
-if @emptyScoreboard {
-    setClipboard(@emptyScoreboard)
-}
-if @nullScoreboard {
-    setClipboard(@nullScoreboard)
-}
-if @missingScoreboard {
-    setClipboard(@missingScoreboard)
+if @scoreboardText {
+    setClipboard(@scoreboardText)
 }
 
 menu @completionMessage {

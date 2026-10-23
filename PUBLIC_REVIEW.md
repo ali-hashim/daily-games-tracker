@@ -1,5 +1,7 @@
 # Public snapshot review
 
+The original snapshot review below is historical baseline evidence. The October 23, 2026 source update is recorded afterward; its approved preview origin and unsigned full-client CI supersede earlier statements that hosted origins and full-client source were absent.
+
 This file records the scope and validation status of the curated public repository [`ali-hashim/daily-games-tracker`](https://github.com/ali-hashim/daily-games-tracker). It was prepared as a clean source snapshot; the authoritative workspace history and unrelated local work were not published. The repository uses the owner-selected MIT license, including the project icons the owner approved for publication.
 
 ## Included scope
@@ -37,3 +39,35 @@ Validation temporarily used a separate local copy of existing dependencies. Depe
 - The public snapshot manifest is an integrity inventory, not a security certification. The currently unverified local database and Pages smoke checks should be rerun in a normal development environment.
 
 The bounded privacy scan checked known original personal/resource markers and common credential patterns before publication. It is not a security certification. Game names and domains remain for parser compatibility and do not imply affiliation.
+
+---
+
+# October 23, 2026 source update review
+
+Refreshed locally October 23, 2026, for approved source publication and unsigned CI in `ali-hashim/daily-games-tracker`. This directory is a narrow source export; it is not a replacement application snapshot or a deployment unit. The previous curated snapshot is untouched. No Git metadata, signed/unsigned Shortcut artifact, install link, real capture, personal result, database output, deployment config, environment file, attachment or compiler binary is included.
+
+## Scope and provenance
+
+The manifest is the explicit allowlist. Canonical source/helper files are byte copies from the maintained local tree, with source SHA-256 recorded per file. LICENSE and .gitattributes come from the prior curated snapshot. The exported sender module is a documented reduced derivative: only full-client JSON-wire/transport support remains. Its executable syntax trees are checked against the canonical implementations. Root review documents and .gitignore are new. The full-client native contract is structural reference data with capture represented by hash, not captured personal data.
+
+The export contains no third-party source or binary distribution. Project code carries the existing MIT license and copyright attribution. Cherri and GitHub Actions are referenced by immutable commits for later workflow fetching; their respective upstream licenses govern them. Go is referenced as a build requirement. No attribution or binary license is transferred by claiming ownership of those tools.
+
+## Destinations and privacy review
+
+The preview origin `https://preview.winstitute-of-higher-thinking.pages.dev` appears in full-client source, inspector and native contract. The older curated snapshot intentionally omitted hosted origins: this additional public disclosure is approved for this publication. It is a public service hostname, not a credential. Preserving it keeps the source and strict inspector coherent with the locally verified client. Changing it would require source, contract and acceptance review.
+
+`https://hubsign.routinehub.services/sign` remains only as signer support and historical lock provenance. The unsigned workflow never invokes send. The disabled workflow cannot execute because its permanent false condition and zero reviewed-commit sentinel remain intact. Public GitHub compiler/Action destinations are toolchain references. Loopback URLs and reserved example domains in synthetic probes/tests are deliberate fixtures; the scripts do not contact them during preparation. Runtime service responses can supply WHT and install URLs; completion opens the WHT URL on menu selection, while update branches open install URLs directly. Safari JavaScript reads the user-shared page. No new application request or live service call was made for this export.
+
+Automated scans examine all final files for personal markers, private IPv4 destinations, credential-shaped strings, private keys, JWTs, active iCloud links, deployment config names and unexpected binary extensions. Literal synthetic mutation values and protocol header names are reviewed in their test context. The known preview hostname is an explicit exception. Manual review covered the source, native contract, all exported helpers, lock, workflows, tests and documentation. This is bounded review, not a security certification.
+
+## Local verification
+
+On the earlier export before the cosmetic refresh: toolchain/workflow lock verification passed; all 29 Node mutation tests passed; all 12 Python tests passed (nine full-client contract regressions and three focused offline sender tests). Source preparation passed for seven probes and thirteen synthetic runtime fixtures. One complete-client build using the existing pinned local Cherri compiler passed normalizer/native inspection and exact capture embedding. Generated output was kept outside the final inventory or removed from this directory after verification. Signing-package tests used synthetic payloads and injected fake transports only; no real signing package, signature, install link, WHT request, deployment, remote write or workflow execution was produced.
+
+The reduced sender's executable definitions are compared to their maintained canonical counterparts. All required local build and workflow helper paths exist. Workflow static checks retain read-only permissions, Action/runner/compiler/Go pins, explicit unsigned flags, repeat full builds, strict contract comparison and fail-closed signing guards. These were local checks. The refreshed full-client name, icon and menu label were not rebuilt or retested, as requested. Updated unsigned CI has not yet run on GitHub.
+
+## Publication scope
+
+Publication of sanitized source to the existing public repository and unsigned CI is approved. The full client now has the cosmetic name `Upload To WHT`, icon color `431817727`, glyph `59742`, and `Submit Results` confirmation option. This refresh does not add a fresh verification claim. The public repository application and previously curated synthetic fixtures are preserved. Signing remains permanently disabled: the permanent false condition and all-zero trusted commit sentinel are unchanged. No signing dispatch, deployment, installation link or private Git history is included.
+
+This published tree overlays the narrow source export onto public baseline `ab0a7f17f83c8ef49684b1d243a69cc2a6aaa972`. Unchanged public application code, synthetic fixtures, placeholder configuration and attribution remain prior-reviewed baseline input. This publication inventory covers the complete resulting public tree; the narrow local export and private audit material are not published. The root README and this review retain the earlier public context. The existing ignore rules are preserved, with temporary output excluded. Root `AGENTS.md` and the repository publication skill carry the rules for future changes.

@@ -1,0 +1,1926 @@
+{
+  "WFWorkflowActions": [
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.setvariable",
+      "WFWorkflowActionParameters": {
+        "WFInput": {
+          "Value": {
+            "Type": "ExtensionInput",
+            "VariableName": "ShortcutInput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFSerializationType": "WFTextTokenAttachment",
+        "WFVariableName": "originalInput"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.gettext",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "deviceCode",
+        "UUID": "native-id-0",
+        "WFTextActionText": ""
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.comment",
+      "WFWorkflowActionParameters": {
+        "WFCommentActionText": "PRIVATE DEVICE CODE: stored in the Text action immediately above, named deviceCode. Customize Shortcut asks for it on this iPhone. If setup was skipped, edit that Text action. Editing or sharing a configured shortcut can expose the code."
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-1",
+        "WFCondition": 4,
+        "WFConditionalActionString": "",
+        "WFControlFlowMode": 0,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "OutputName": "deviceCode",
+              "OutputUUID": "native-id-0",
+              "Type": "ActionOutput"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.alert",
+      "WFWorkflowActionParameters": {
+        "WFAlertActionCancelButtonShown": false,
+        "WFAlertActionMessage": "Device code is empty. Open this shortcut in the editor and enter your private WHT device code in the Text action named deviceCode. No request was sent.",
+        "WFAlertActionTitle": "Setup required"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.exit"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-1",
+        "UUID": "native-id-1",
+        "WFControlFlowMode": 2
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.text.replace",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "authorizationCode",
+        "UUID": "native-id-2",
+        "WFInput": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "deviceCode",
+                "OutputUUID": "native-id-0",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "\ufffc"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        },
+        "WFReplaceTextCaseSensitive": true,
+        "WFReplaceTextFind": "^\\s+|\\s+$",
+        "WFReplaceTextRegularExpression": true,
+        "WFReplaceTextReplace": ""
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-3",
+        "WFCondition": 4,
+        "WFConditionalActionString": "",
+        "WFControlFlowMode": 0,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "OutputName": "authorizationCode",
+              "OutputUUID": "native-id-2",
+              "Type": "ActionOutput"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.alert",
+      "WFWorkflowActionParameters": {
+        "WFAlertActionCancelButtonShown": false,
+        "WFAlertActionMessage": "Enter your private WHT device code in the Text action named deviceCode. No request was sent.",
+        "WFAlertActionTitle": "Setup required"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.exit"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-3",
+        "UUID": "native-id-3",
+        "WFControlFlowMode": 2
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.getitemtype",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "inputType",
+        "UUID": "native-id-4",
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "originalInput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.dictionary",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "Dictionary",
+        "UUID": "native-id-5",
+        "WFItems": {
+          "Value": {
+            "WFDictionaryFieldValueItems": [
+              {
+                "WFKey": {
+                  "Value": {
+                    "string": "capture_schema"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                },
+                "WFValue": {
+                  "Value": {
+                    "string": "dgt.capture.v1"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                }
+              }
+            ]
+          },
+          "WFSerializationType": "WFDictionaryFieldValue"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.setvariable",
+      "WFWorkflowActionParameters": {
+        "WFInput": {
+          "Value": {
+            "OutputName": "Dictionary",
+            "OutputUUID": "native-id-5",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFSerializationType": "WFTextTokenAttachment",
+        "WFVariableName": "originalCapture"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-6",
+        "WFCondition": 4,
+        "WFConditionalActionString": "Safari Web Page",
+        "WFControlFlowMode": 0,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "OutputName": "inputType",
+              "OutputUUID": "native-id-4",
+              "Type": "ActionOutput"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.runjavascriptonwebpage",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "safariCapture",
+        "UUID": "native-id-7",
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "originalInput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFJavaScript": {
+          "sha256": "fb50c544f795a5db5102c6e936b3bea723eca7fd92f4c6677d2780bfdf0ba2fb",
+          "bytes": 5250
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.detect.dictionary",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "GetDictionary",
+        "UUID": "native-id-8",
+        "WFInput": {
+          "Value": {
+            "OutputName": "safariCapture",
+            "OutputUUID": "native-id-7",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.setvariable",
+      "WFWorkflowActionParameters": {
+        "WFInput": {
+          "Value": {
+            "OutputName": "GetDictionary",
+            "OutputUUID": "native-id-8",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFSerializationType": "WFTextTokenAttachment",
+        "WFVariableName": "originalCapture"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-6",
+        "WFControlFlowMode": 1
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-9",
+        "WFCondition": 4,
+        "WFConditionalActionString": "Text",
+        "WFControlFlowMode": 0,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "OutputName": "inputType",
+              "OutputUUID": "native-id-4",
+              "Type": "ActionOutput"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.detect.text",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "sharedText",
+        "UUID": "native-id-10",
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "originalInput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-11",
+        "WFCondition": 4,
+        "WFConditionalActionString": "",
+        "WFControlFlowMode": 0,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "OutputName": "sharedText",
+              "OutputUUID": "native-id-10",
+              "Type": "ActionOutput"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.alert",
+      "WFWorkflowActionParameters": {
+        "WFAlertActionCancelButtonShown": false,
+        "WFAlertActionMessage": "Unsupported input. Share a completed game from Safari or as text.",
+        "WFAlertActionTitle": "Upload to WHT"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.exit"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-11",
+        "UUID": "native-id-11",
+        "WFControlFlowMode": 2
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-12",
+        "WFCondition": 8,
+        "WFConditionalActionString": "DGT_LOGIN_V1:",
+        "WFControlFlowMode": 0,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "OutputName": "sharedText",
+              "OutputUUID": "native-id-10",
+              "Type": "ActionOutput"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.alert",
+      "WFWorkflowActionParameters": {
+        "WFAlertActionCancelButtonShown": false,
+        "WFAlertActionMessage": "Website login is not available in this shortcut yet.",
+        "WFAlertActionTitle": "Upload to WHT"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.exit"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-12",
+        "UUID": "native-id-12",
+        "WFControlFlowMode": 2
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.dictionary",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "Dictionary 1",
+        "UUID": "native-id-13",
+        "WFItems": {
+          "Value": {
+            "WFDictionaryFieldValueItems": [
+              {
+                "WFKey": {
+                  "Value": {
+                    "string": "capture_schema"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                },
+                "WFValue": {
+                  "Value": {
+                    "string": "dgt.capture.v1"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                }
+              },
+              {
+                "WFKey": {
+                  "Value": {
+                    "string": "shared_text"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                },
+                "WFValue": {
+                  "Value": {
+                    "attachmentsByRange": {
+                      "{0, 1}": {
+                        "OutputName": "sharedText",
+                        "OutputUUID": "native-id-10",
+                        "Type": "ActionOutput"
+                      }
+                    },
+                    "string": "\ufffc"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                }
+              },
+              {
+                "WFKey": {
+                  "Value": {
+                    "string": "source_kind"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                },
+                "WFValue": {
+                  "Value": {
+                    "string": "shared_text"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                }
+              }
+            ]
+          },
+          "WFSerializationType": "WFDictionaryFieldValue"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.setvariable",
+      "WFWorkflowActionParameters": {
+        "WFInput": {
+          "Value": {
+            "OutputName": "Dictionary 1",
+            "OutputUUID": "native-id-13",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFSerializationType": "WFTextTokenAttachment",
+        "WFVariableName": "originalCapture"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-9",
+        "WFControlFlowMode": 1
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.alert",
+      "WFWorkflowActionParameters": {
+        "WFAlertActionCancelButtonShown": false,
+        "WFAlertActionMessage": "Unsupported input. Share a completed game from Safari or as text.",
+        "WFAlertActionTitle": "Upload to WHT"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.exit"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-9",
+        "UUID": "native-id-9",
+        "WFControlFlowMode": 2
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-6",
+        "UUID": "native-id-6",
+        "WFControlFlowMode": 2
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.detect.text",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "captureJson",
+        "UUID": "native-id-14",
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "originalCapture"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.gettext",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "envelopeTemplate",
+        "UUID": "native-id-15",
+        "WFTextActionText": "{\"shortcut_version\":1,\"capture\":__CAPTURE_JSON__}"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.text.replace",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "requestJson",
+        "UUID": "native-id-16",
+        "WFInput": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "envelopeTemplate",
+                "OutputUUID": "native-id-15",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "\ufffc"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        },
+        "WFReplaceTextFind": "__CAPTURE_JSON__",
+        "WFReplaceTextReplace": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "captureJson",
+                "OutputUUID": "native-id-14",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "\ufffc"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.downloadurl",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "validationResult",
+        "UUID": "native-id-17",
+        "WFHTTPBodyType": "File",
+        "WFHTTPHeaders": {
+          "Value": {
+            "WFDictionaryFieldValueItems": [
+              {
+                "WFKey": {
+                  "Value": {
+                    "string": "Authorization"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                },
+                "WFValue": {
+                  "Value": {
+                    "attachmentsByRange": {
+                      "{7, 1}": {
+                        "OutputName": "authorizationCode",
+                        "OutputUUID": "native-id-2",
+                        "Type": "ActionOutput"
+                      }
+                    },
+                    "string": "Device \ufffc"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                }
+              },
+              {
+                "WFKey": {
+                  "Value": {
+                    "string": "Content-Type"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                },
+                "WFValue": {
+                  "Value": {
+                    "string": "application/json"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                }
+              }
+            ]
+          },
+          "WFSerializationType": "WFDictionaryFieldValue"
+        },
+        "WFHTTPMethod": "POST",
+        "WFRequestVariable": {
+          "Value": {
+            "OutputName": "requestJson",
+            "OutputUUID": "native-id-16",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFURL": "https://preview.winstitute-of-higher-thinking.pages.dev/api/import/validate"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.detect.dictionary",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "GetDictionary 1",
+        "UUID": "native-id-18",
+        "WFInput": {
+          "Value": {
+            "OutputName": "validationResult",
+            "OutputUUID": "native-id-17",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.setvariable",
+      "WFWorkflowActionParameters": {
+        "WFInput": {
+          "Value": {
+            "OutputName": "GetDictionary 1",
+            "OutputUUID": "native-id-18",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFSerializationType": "WFTextTokenAttachment",
+        "WFVariableName": "validationResponse"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.getvalueforkey",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "GetValue",
+        "UUID": "native-id-19",
+        "WFDictionaryKey": "status",
+        "WFGetDictionaryValueType": "Value",
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "validationResponse"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.setvariable",
+      "WFWorkflowActionParameters": {
+        "WFInput": {
+          "Value": {
+            "OutputName": "GetValue",
+            "OutputUUID": "native-id-19",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFSerializationType": "WFTextTokenAttachment",
+        "WFVariableName": "validationStatusValue"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.detect.text",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "validationStatus",
+        "UUID": "native-id-20",
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "validationStatusValue"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.setvariable",
+      "WFWorkflowActionParameters": {
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "validationResponse"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFSerializationType": "WFTextTokenAttachment",
+        "WFVariableName": "completionResponse"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-21",
+        "WFCondition": 4,
+        "WFConditionalActionString": "already_submitted",
+        "WFControlFlowMode": 0,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "OutputName": "validationStatus",
+              "OutputUUID": "native-id-20",
+              "Type": "ActionOutput"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.setvariable",
+      "WFWorkflowActionParameters": {
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "validationResponse"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFSerializationType": "WFTextTokenAttachment",
+        "WFVariableName": "completionResponse"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-21",
+        "WFControlFlowMode": 1
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-22",
+        "WFCondition": 4,
+        "WFConditionalActionString": "valid",
+        "WFControlFlowMode": 0,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "OutputName": "validationStatus",
+              "OutputUUID": "native-id-20",
+              "Type": "ActionOutput"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.getvalueforkey",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "GetValue 1",
+        "UUID": "native-id-23",
+        "WFDictionaryKey": "confirmation_text",
+        "WFGetDictionaryValueType": "Value",
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "validationResponse"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.setvariable",
+      "WFWorkflowActionParameters": {
+        "WFInput": {
+          "Value": {
+            "OutputName": "GetValue 1",
+            "OutputUUID": "native-id-23",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFSerializationType": "WFTextTokenAttachment",
+        "WFVariableName": "confirmationText"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.choosefrommenu",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-24",
+        "WFControlFlowMode": 0,
+        "WFMenuItems": [
+          {
+            "WFValue": "Cancel"
+          },
+          {
+            "WFValue": "Submit Results"
+          }
+        ],
+        "WFMenuPrompt": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "Type": "Variable",
+                "VariableName": "confirmationText"
+              }
+            },
+            "string": "\ufffc"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.choosefrommenu",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-24",
+        "WFControlFlowMode": 1,
+        "WFMenuItemAttributedTitle": "Cancel",
+        "WFMenuItemTitle": "Cancel"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.exit"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.choosefrommenu",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-24",
+        "WFControlFlowMode": 1,
+        "WFMenuItemAttributedTitle": "Submit Results",
+        "WFMenuItemTitle": "Submit Results"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.downloadurl",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "submissionResult",
+        "UUID": "native-id-25",
+        "WFHTTPBodyType": "File",
+        "WFHTTPHeaders": {
+          "Value": {
+            "WFDictionaryFieldValueItems": [
+              {
+                "WFKey": {
+                  "Value": {
+                    "string": "Authorization"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                },
+                "WFValue": {
+                  "Value": {
+                    "attachmentsByRange": {
+                      "{7, 1}": {
+                        "OutputName": "authorizationCode",
+                        "OutputUUID": "native-id-2",
+                        "Type": "ActionOutput"
+                      }
+                    },
+                    "string": "Device \ufffc"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                }
+              },
+              {
+                "WFKey": {
+                  "Value": {
+                    "string": "Content-Type"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                },
+                "WFValue": {
+                  "Value": {
+                    "string": "application/json"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                }
+              }
+            ]
+          },
+          "WFSerializationType": "WFDictionaryFieldValue"
+        },
+        "WFHTTPMethod": "POST",
+        "WFRequestVariable": {
+          "Value": {
+            "OutputName": "requestJson",
+            "OutputUUID": "native-id-16",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFURL": "https://preview.winstitute-of-higher-thinking.pages.dev/api/import/submit"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.detect.dictionary",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "GetDictionary 2",
+        "UUID": "native-id-26",
+        "WFInput": {
+          "Value": {
+            "OutputName": "submissionResult",
+            "OutputUUID": "native-id-25",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.setvariable",
+      "WFWorkflowActionParameters": {
+        "WFInput": {
+          "Value": {
+            "OutputName": "GetDictionary 2",
+            "OutputUUID": "native-id-26",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFSerializationType": "WFTextTokenAttachment",
+        "WFVariableName": "submissionResponse"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.getvalueforkey",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "GetValue 2",
+        "UUID": "native-id-27",
+        "WFDictionaryKey": "status",
+        "WFGetDictionaryValueType": "Value",
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "submissionResponse"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.setvariable",
+      "WFWorkflowActionParameters": {
+        "WFInput": {
+          "Value": {
+            "OutputName": "GetValue 2",
+            "OutputUUID": "native-id-27",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFSerializationType": "WFTextTokenAttachment",
+        "WFVariableName": "submissionStatusValue"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.detect.text",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "submissionStatus",
+        "UUID": "native-id-28",
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "submissionStatusValue"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-29",
+        "WFCondition": 4,
+        "WFConditionalActionString": "submitted",
+        "WFControlFlowMode": 0,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "OutputName": "submissionStatus",
+              "OutputUUID": "native-id-28",
+              "Type": "ActionOutput"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.setvariable",
+      "WFWorkflowActionParameters": {
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "submissionResponse"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFSerializationType": "WFTextTokenAttachment",
+        "WFVariableName": "completionResponse"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-29",
+        "WFControlFlowMode": 1
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-30",
+        "WFCondition": 4,
+        "WFConditionalActionString": "already_submitted",
+        "WFControlFlowMode": 0,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "OutputName": "submissionStatus",
+              "OutputUUID": "native-id-28",
+              "Type": "ActionOutput"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.setvariable",
+      "WFWorkflowActionParameters": {
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "submissionResponse"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFSerializationType": "WFTextTokenAttachment",
+        "WFVariableName": "completionResponse"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-30",
+        "WFControlFlowMode": 1
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-31",
+        "WFCondition": 4,
+        "WFConditionalActionString": "error",
+        "WFControlFlowMode": 0,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "OutputName": "submissionStatus",
+              "OutputUUID": "native-id-28",
+              "Type": "ActionOutput"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.getvalueforkey",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "GetValue 3",
+        "UUID": "native-id-32",
+        "WFDictionaryKey": "error_message",
+        "WFGetDictionaryValueType": "Value",
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "submissionResponse"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.setvariable",
+      "WFWorkflowActionParameters": {
+        "WFInput": {
+          "Value": {
+            "OutputName": "GetValue 3",
+            "OutputUUID": "native-id-32",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFSerializationType": "WFTextTokenAttachment",
+        "WFVariableName": "submitError"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.alert",
+      "WFWorkflowActionParameters": {
+        "WFAlertActionCancelButtonShown": false,
+        "WFAlertActionMessage": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "Type": "Variable",
+                "VariableName": "submitError"
+              }
+            },
+            "string": "\ufffc"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        },
+        "WFAlertActionTitle": "Upload to WHT"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.exit"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-31",
+        "WFControlFlowMode": 1
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-33",
+        "WFCondition": 4,
+        "WFConditionalActionString": "update_required",
+        "WFControlFlowMode": 0,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "OutputName": "submissionStatus",
+              "OutputUUID": "native-id-28",
+              "Type": "ActionOutput"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.getvalueforkey",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "GetValue 4",
+        "UUID": "native-id-34",
+        "WFDictionaryKey": "error_message",
+        "WFGetDictionaryValueType": "Value",
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "submissionResponse"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.setvariable",
+      "WFWorkflowActionParameters": {
+        "WFInput": {
+          "Value": {
+            "OutputName": "GetValue 4",
+            "OutputUUID": "native-id-34",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFSerializationType": "WFTextTokenAttachment",
+        "WFVariableName": "submitUpdate"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.alert",
+      "WFWorkflowActionParameters": {
+        "WFAlertActionCancelButtonShown": false,
+        "WFAlertActionMessage": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "Type": "Variable",
+                "VariableName": "submitUpdate"
+              }
+            },
+            "string": "\ufffc"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        },
+        "WFAlertActionTitle": "Update required"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.getvalueforkey",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "GetValue 5",
+        "UUID": "native-id-35",
+        "WFDictionaryKey": "install_url",
+        "WFGetDictionaryValueType": "Value",
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "submissionResponse"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.setvariable",
+      "WFWorkflowActionParameters": {
+        "WFInput": {
+          "Value": {
+            "OutputName": "GetValue 5",
+            "OutputUUID": "native-id-35",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFSerializationType": "WFTextTokenAttachment",
+        "WFVariableName": "submitInstallURL"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.openurl",
+      "WFWorkflowActionParameters": {
+        "Show-WFInput": true,
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "submitInstallURL"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.exit"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-33",
+        "WFControlFlowMode": 1
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.alert",
+      "WFWorkflowActionParameters": {
+        "WFAlertActionCancelButtonShown": false,
+        "WFAlertActionMessage": "WHT did not return a usable response. Try again or contact the administrator.",
+        "WFAlertActionTitle": "Upload to WHT"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.exit"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-33",
+        "UUID": "native-id-33",
+        "WFControlFlowMode": 2
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-31",
+        "UUID": "native-id-31",
+        "WFControlFlowMode": 2
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-30",
+        "UUID": "native-id-30",
+        "WFControlFlowMode": 2
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-29",
+        "UUID": "native-id-29",
+        "WFControlFlowMode": 2
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.choosefrommenu",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-24",
+        "UUID": "native-id-24",
+        "WFControlFlowMode": 2
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-22",
+        "WFControlFlowMode": 1
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-36",
+        "WFCondition": 4,
+        "WFConditionalActionString": "error",
+        "WFControlFlowMode": 0,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "OutputName": "validationStatus",
+              "OutputUUID": "native-id-20",
+              "Type": "ActionOutput"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.getvalueforkey",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "GetValue 6",
+        "UUID": "native-id-37",
+        "WFDictionaryKey": "error_message",
+        "WFGetDictionaryValueType": "Value",
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "validationResponse"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.setvariable",
+      "WFWorkflowActionParameters": {
+        "WFInput": {
+          "Value": {
+            "OutputName": "GetValue 6",
+            "OutputUUID": "native-id-37",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFSerializationType": "WFTextTokenAttachment",
+        "WFVariableName": "validationError"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.alert",
+      "WFWorkflowActionParameters": {
+        "WFAlertActionCancelButtonShown": false,
+        "WFAlertActionMessage": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "Type": "Variable",
+                "VariableName": "validationError"
+              }
+            },
+            "string": "\ufffc"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        },
+        "WFAlertActionTitle": "Upload to WHT"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.exit"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-36",
+        "WFControlFlowMode": 1
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-38",
+        "WFCondition": 4,
+        "WFConditionalActionString": "update_required",
+        "WFControlFlowMode": 0,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "OutputName": "validationStatus",
+              "OutputUUID": "native-id-20",
+              "Type": "ActionOutput"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.getvalueforkey",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "GetValue 7",
+        "UUID": "native-id-39",
+        "WFDictionaryKey": "error_message",
+        "WFGetDictionaryValueType": "Value",
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "validationResponse"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.setvariable",
+      "WFWorkflowActionParameters": {
+        "WFInput": {
+          "Value": {
+            "OutputName": "GetValue 7",
+            "OutputUUID": "native-id-39",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFSerializationType": "WFTextTokenAttachment",
+        "WFVariableName": "validationUpdate"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.alert",
+      "WFWorkflowActionParameters": {
+        "WFAlertActionCancelButtonShown": false,
+        "WFAlertActionMessage": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "Type": "Variable",
+                "VariableName": "validationUpdate"
+              }
+            },
+            "string": "\ufffc"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        },
+        "WFAlertActionTitle": "Update required"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.getvalueforkey",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "GetValue 8",
+        "UUID": "native-id-40",
+        "WFDictionaryKey": "install_url",
+        "WFGetDictionaryValueType": "Value",
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "validationResponse"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.setvariable",
+      "WFWorkflowActionParameters": {
+        "WFInput": {
+          "Value": {
+            "OutputName": "GetValue 8",
+            "OutputUUID": "native-id-40",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFSerializationType": "WFTextTokenAttachment",
+        "WFVariableName": "validationInstallURL"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.openurl",
+      "WFWorkflowActionParameters": {
+        "Show-WFInput": true,
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "validationInstallURL"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.exit"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-38",
+        "WFControlFlowMode": 1
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.alert",
+      "WFWorkflowActionParameters": {
+        "WFAlertActionCancelButtonShown": false,
+        "WFAlertActionMessage": "WHT did not return a usable response. Try again or contact the administrator.",
+        "WFAlertActionTitle": "Upload to WHT"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.exit"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-38",
+        "UUID": "native-id-38",
+        "WFControlFlowMode": 2
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-36",
+        "UUID": "native-id-36",
+        "WFControlFlowMode": 2
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-22",
+        "UUID": "native-id-22",
+        "WFControlFlowMode": 2
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-21",
+        "UUID": "native-id-21",
+        "WFControlFlowMode": 2
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.getvalueforkey",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "GetValue 9",
+        "UUID": "native-id-41",
+        "WFDictionaryKey": "scoreboard_text",
+        "WFGetDictionaryValueType": "Value",
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "completionResponse"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.setvariable",
+      "WFWorkflowActionParameters": {
+        "WFInput": {
+          "Value": {
+            "OutputName": "GetValue 9",
+            "OutputUUID": "native-id-41",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFSerializationType": "WFTextTokenAttachment",
+        "WFVariableName": "scoreboardText"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-42",
+        "WFCondition": 100,
+        "WFControlFlowMode": 0,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "Type": "Variable",
+              "VariableName": "scoreboardText"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.getitemtype",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "scoreboardType",
+        "UUID": "native-id-43",
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "scoreboardText"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-44",
+        "WFCondition": 4,
+        "WFConditionalActionString": "Text",
+        "WFControlFlowMode": 0,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "OutputName": "scoreboardType",
+              "OutputUUID": "native-id-43",
+              "Type": "ActionOutput"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.setclipboard",
+      "WFWorkflowActionParameters": {
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "scoreboardText"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-44",
+        "UUID": "native-id-44",
+        "WFControlFlowMode": 2
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-42",
+        "UUID": "native-id-42",
+        "WFControlFlowMode": 2
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.getvalueforkey",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "GetValue 10",
+        "UUID": "native-id-45",
+        "WFDictionaryKey": "completion_message",
+        "WFGetDictionaryValueType": "Value",
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "completionResponse"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.setvariable",
+      "WFWorkflowActionParameters": {
+        "WFInput": {
+          "Value": {
+            "OutputName": "GetValue 10",
+            "OutputUUID": "native-id-45",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFSerializationType": "WFTextTokenAttachment",
+        "WFVariableName": "completionMessage"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.getvalueforkey",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "GetValue 11",
+        "UUID": "native-id-46",
+        "WFDictionaryKey": "wht_url",
+        "WFGetDictionaryValueType": "Value",
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "completionResponse"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.setvariable",
+      "WFWorkflowActionParameters": {
+        "WFInput": {
+          "Value": {
+            "OutputName": "GetValue 11",
+            "OutputUUID": "native-id-46",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFSerializationType": "WFTextTokenAttachment",
+        "WFVariableName": "whtURL"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.choosefrommenu",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-47",
+        "WFControlFlowMode": 0,
+        "WFMenuItems": [
+          {
+            "WFValue": "Close"
+          },
+          {
+            "WFValue": "Open WHT"
+          }
+        ],
+        "WFMenuPrompt": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "Type": "Variable",
+                "VariableName": "completionMessage"
+              }
+            },
+            "string": "\ufffc"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.choosefrommenu",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-47",
+        "WFControlFlowMode": 1,
+        "WFMenuItemAttributedTitle": "Close",
+        "WFMenuItemTitle": "Close"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.exit"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.choosefrommenu",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-47",
+        "WFControlFlowMode": 1,
+        "WFMenuItemAttributedTitle": "Open WHT",
+        "WFMenuItemTitle": "Open WHT"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.openurl",
+      "WFWorkflowActionParameters": {
+        "Show-WFInput": true,
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "whtURL"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.exit"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.choosefrommenu",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-47",
+        "UUID": "native-id-47",
+        "WFControlFlowMode": 2
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.exit"
+    }
+  ],
+  "WFWorkflowClientVersion": "4033.0.4.3",
+  "WFWorkflowHasShortcutInputVariables": true,
+  "WFWorkflowIcon": {
+    "WFWorkflowIconGlyphNumber": 59742,
+    "WFWorkflowIconStartColor": 431817727
+  },
+  "WFWorkflowImportQuestions": [
+    {
+      "Category": "Parameter",
+      "DefaultValue": "",
+      "ParameterKey": "WFTextActionText",
+      "Text": "Paste your private WHT device code.",
+      "ActionIndex": 1
+    }
+  ],
+  "WFWorkflowInputContentItemClasses": [
+    "WFSafariWebPageContentItem",
+    "WFStringContentItem"
+  ],
+  "WFWorkflowMinimumClientVersion": 900,
+  "WFWorkflowMinimumClientVersionString": "900",
+  "WFWorkflowNoInputBehavior": {
+    "Name": "WFWorkflowNoInputBehaviorShowError",
+    "Parameters": {
+      "Error": "Share a completed game from Safari or as text."
+    }
+  },
+  "WFWorkflowTypes": [
+    "ActionExtension"
+  ]
+}

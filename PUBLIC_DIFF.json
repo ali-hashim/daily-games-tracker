@@ -1,0 +1,197 @@
+{
+  "baselineCommit": "ab0a7f17f83c8ef49684b1d243a69cc2a6aaa972",
+  "changes": [
+    {
+      "afterSha256": "bf21f725fa3cc473f60c64ee360f11732051f7ac2e152e255193f6838a36af42",
+      "beforeSha256": "e705f160ca2f3e59b508f625da5315a8b0bcfafd8863131577d7b619fef2f9d6",
+      "path": ".github/workflows/cherri-alert-experiment.yml",
+      "status": "modified"
+    },
+    {
+      "afterSha256": "fdd13a0c5001bdc87f66d811b6c3d8caacd2478c2daba114ad962c6bb26456ff",
+      "beforeSha256": null,
+      "path": ".github/workflows/shortcut-sign-disabled.yml",
+      "status": "added"
+    },
+    {
+      "afterSha256": "3e6bbd46e25104576051a5681c29ae8b637de3b2248f25d78172d324d9ae9340",
+      "beforeSha256": "9f2da211b9b243c6fe6551d54bc1fdf93f55974abcebf2f6aaef1857540a9f33",
+      "path": ".gitignore",
+      "status": "modified"
+    },
+    {
+      "afterSha256": "e7f6883abf3a7948ff49bc7a5ea743b7eac14245efc1b9fbc3bdc0a81e0377ca",
+      "beforeSha256": null,
+      "path": "AGENTS.md",
+      "status": "added"
+    },
+    {
+      "afterSha256": "c00600ba9502c38be6c6f6aded6b67c48cb82eef6951cf576a127d621da11dc9",
+      "beforeSha256": "08509973ca4c361943197e86e887a98ec8fdc15ceff8ad57807d03461d3fcb91",
+      "path": "PUBLIC_REVIEW.md",
+      "status": "modified"
+    },
+    {
+      "afterSha256": "00285d90345dcbba82ddc007b084f2a579afc2e9deb4e8403cec106072cafb42",
+      "beforeSha256": "d6ac00ae53f7cd770152a35ea295cf9c88d5d817f1f0e6d9fad9fa9229e4a049",
+      "path": "README.md",
+      "status": "modified"
+    },
+    {
+      "afterSha256": "6f7095e955a5b41f76ba1f22bfa5d802ca87e169452f104a4dcd7d97b2cb089e",
+      "beforeSha256": null,
+      "path": "daily-games-tracker/scripts/phase5a-compile-runtime-fixtures.mjs",
+      "status": "added"
+    },
+    {
+      "afterSha256": "80f0ac516684aa87acb10f4160390d12ec747764a419c060dd01d1d62306d976",
+      "beforeSha256": null,
+      "path": "daily-games-tracker/scripts/phase5a-verify-manifest.mjs",
+      "status": "added"
+    },
+    {
+      "afterSha256": "b69dee375b7555bca9ab7516afce6863b31a98fa4eb98980df06402ae79c4bb3",
+      "beforeSha256": null,
+      "path": "daily-games-tracker/scripts/phase5a-verify-signing-workflow.mjs",
+      "status": "added"
+    },
+    {
+      "afterSha256": "7bf742bf9ee1935ed48134b07443b91efcb33abcc4f5a586e948a5006d4d3c29",
+      "beforeSha256": null,
+      "path": "daily-games-tracker/scripts/phase5a-verify-toolchain.mjs",
+      "status": "added"
+    },
+    {
+      "afterSha256": "fd3a0de6fd740be3080aa39946631e24967985d56d439fa83b82e1a85edb321a",
+      "beforeSha256": null,
+      "path": "daily-games-tracker/scripts/phase5a_build_upload.py",
+      "status": "added"
+    },
+    {
+      "afterSha256": "162863bc9ec7fcf011c8a92f0415827b0c433e43e33d0963df33d86f6c2b88e6",
+      "beforeSha256": null,
+      "path": "daily-games-tracker/scripts/phase5a_compare_upload.py",
+      "status": "added"
+    },
+    {
+      "afterSha256": "4e354db1381d8e4df10b2db8c080710251ea1c27cf51782f3f8952713723102c",
+      "beforeSha256": null,
+      "path": "daily-games-tracker/scripts/phase5a_inspect_upload.py",
+      "status": "added"
+    },
+    {
+      "afterSha256": "54e7be3d1a968e4ef1285ccbf19b65ef4dbb5a43f8c919563c0b14c6604ee9a5",
+      "beforeSha256": null,
+      "path": "daily-games-tracker/scripts/phase5a_prepare_signing_package.py",
+      "status": "added"
+    },
+    {
+      "afterSha256": "a4e4f610db921a28858db437c6c505ccfb31b2d4e9df10c98db02b6d6a9c60ee",
+      "beforeSha256": null,
+      "path": "daily-games-tracker/scripts/phase5a_send_hubsign.py",
+      "status": "added"
+    },
+    {
+      "afterSha256": "9d08a2e3bacc2185bc9393adf5c5f50f1a19955668f2154f8d487d05a7c3e6e1",
+      "beforeSha256": null,
+      "path": "daily-games-tracker/scripts/phase5a_upload_signing.py",
+      "status": "added"
+    },
+    {
+      "afterSha256": "20bae3ceb3ed107e1be594ed0397c682c2543170e9ce4b10e324884c91b9cc70",
+      "beforeSha256": null,
+      "path": "daily-games-tracker/scripts/tests/phase5a-signing-workflow.test.mjs",
+      "status": "added"
+    },
+    {
+      "afterSha256": "c440d1e9f59e8eed31ee356d4b32252061b2fa2e47f5f3f93812a459c16d6888",
+      "beforeSha256": null,
+      "path": "daily-games-tracker/scripts/tests/phase5a-verifier.test.mjs",
+      "status": "added"
+    },
+    {
+      "afterSha256": "b8be86cdf41d50885c3128233be7a24ec86db082f0b9d6f0a9ab57c3d9dcbbd4",
+      "beforeSha256": null,
+      "path": "daily-games-tracker/scripts/tests/test_phase5a_sender_support.py",
+      "status": "added"
+    },
+    {
+      "afterSha256": "073f9bab2872ea34b23f2815e6e113a74cd70a025e1079bc684f664d13e6e1d6",
+      "beforeSha256": null,
+      "path": "daily-games-tracker/scripts/tests/test_phase5a_upload.py",
+      "status": "added"
+    },
+    {
+      "afterSha256": "ff0b5116c73671c846cdc540c241893b778508a585858da58175fb957e1eab04",
+      "beforeSha256": "4447c4f8318c925cda4d632b07ae06c37db00c47400d89bba77a8752c0df0faa",
+      "path": "daily-games-tracker/shortcut/cherri-migration/build/build.mjs",
+      "status": "modified"
+    },
+    {
+      "afterSha256": "0a13bf1dfff2927786f3ab3252a49f71f7072b916ea5bb4a6ff9f14fc375bb82",
+      "beforeSha256": null,
+      "path": "daily-games-tracker/shortcut/cherri-migration/build/compare-plists.py",
+      "status": "added"
+    },
+    {
+      "afterSha256": "1bfcea0be87b452c33dc8ae9cb087ae48487f2640dbd361706f57c8271289b7f",
+      "beforeSha256": "a0771b9c37a7239297d19a0ac924e3f020e56286d86cac4c4fc25360d0cc5bb4",
+      "path": "daily-games-tracker/shortcut/cherri-migration/build/inspect-shortcut.py",
+      "status": "modified"
+    },
+    {
+      "afterSha256": "92b8ef4053cab841cad8cf92d7baa85dbba39968ff2cb58fe0dbf7b628a946a9",
+      "beforeSha256": null,
+      "path": "daily-games-tracker/shortcut/cherri-migration/build/path-safety.mjs",
+      "status": "added"
+    },
+    {
+      "afterSha256": "e1f41773caa5902cacea9954443eafd17b1a0b98bb15265a7bc4117a70ce4df6",
+      "beforeSha256": null,
+      "path": "daily-games-tracker/shortcut/cherri-migration/build/runtime-fixtures.mjs",
+      "status": "added"
+    },
+    {
+      "afterSha256": "dc7ac0d245139c857b9dfbe4b4f7f996d29c13f5301c60fed0dc73fbd56f95bf",
+      "beforeSha256": null,
+      "path": "daily-games-tracker/shortcut/cherri-migration/build/upload-native-contract.json",
+      "status": "added"
+    },
+    {
+      "afterSha256": "5a34c1804e965aab4c648122b53e3054b8947bc5c1fb317e7895d5ad52b48a03",
+      "beforeSha256": "64ef9d743779efe43a9ca8a1d7368793275ae0b699ff37905bf0b20da3c6055a",
+      "path": "daily-games-tracker/shortcut/cherri-migration/source/06-routing.cherri",
+      "status": "modified"
+    },
+    {
+      "afterSha256": "38159136088a14620e4246642058eb98a8210e863bb974e0396181468037b8a6",
+      "beforeSha256": "008ac0233d6be9887d3d3f6f5abdc236bff6febe5a21077f853ff8021bfd8b9d",
+      "path": "daily-games-tracker/shortcut/cherri-migration/source/07-completion.cherri",
+      "status": "modified"
+    },
+    {
+      "afterSha256": "067facb1b23fd27adc82467f06ecea4f7412a29a6507ceecdd75397b71c94b10",
+      "beforeSha256": null,
+      "path": "daily-games-tracker/shortcut/cherri-migration/source/upload-to-wht.cherri",
+      "status": "added"
+    },
+    {
+      "afterSha256": "0c2d995961c12c3dc3ed859b09ae00ae20144cf15e6671ccba61364921ed8fd7",
+      "beforeSha256": null,
+      "path": "skills/sanitized-push/SKILL.md",
+      "status": "added"
+    }
+  ],
+  "counts": {
+    "added": 22,
+    "deleted": 0,
+    "modified": 8
+  },
+  "metadataChanges": [
+    "PUBLIC_DIFF.json regenerated; self hash excluded",
+    "PUBLIC_MANIFEST.json regenerated; own hash excluded and reported separately"
+  ],
+  "publicationModel": "allowlisted overlay; no deletions; unchanged existing public files preserved",
+  "repository": "ali-hashim/daily-games-tracker",
+  "schemaVersion": 1
+}
