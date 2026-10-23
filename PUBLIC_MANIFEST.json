@@ -1,6 +1,6 @@
 {
   "baselineCommit": "ab0a7f17f83c8ef49684b1d243a69cc2a6aaa972",
-  "fileCount": 152,
+  "fileCount": 153,
   "files": [
     {
       "bytes": 19,
@@ -14,15 +14,15 @@
       "sha256": "d60f352d0db1404c70afb4bb8b2ca3fd1c610572aa40720e8a0b7baa7885418c"
     },
     {
-      "bytes": 14211,
+      "bytes": 14508,
       "license": "MIT",
       "path": ".github/workflows/cherri-alert-experiment.yml",
       "provenance": {
         "kind": "canonical byte copy",
         "sourcePath": ".github/workflows/cherri-alert-experiment.yml",
-        "sourceSha256": "13befe4533a819283ea064fa737465f175ba4dfbf9cf6c932265fe6603eb07b0"
+        "sourceSha256": "37b58f7f95e29ffd6b7fa07be9ab8f4285fee273ca7ef3596ed90112d9b1478c"
       },
-      "sha256": "13befe4533a819283ea064fa737465f175ba4dfbf9cf6c932265fe6603eb07b0"
+      "sha256": "37b58f7f95e29ffd6b7fa07be9ab8f4285fee273ca7ef3596ed90112d9b1478c"
     },
     {
       "bytes": 6436,
@@ -68,24 +68,24 @@
       "sha256": "8d9c9186789bfda6830d0ada5175cd7241b7e563c31f55ce60abd7c8123e46a7"
     },
     {
-      "bytes": 7783,
+      "bytes": 8141,
       "license": "MIT",
       "path": "PUBLIC_DIFF.json",
       "provenance": {
         "baselineCommit": "ab0a7f17f83c8ef49684b1d243a69cc2a6aaa972",
         "kind": "reviewed merged publication metadata"
       },
-      "sha256": "2b6833ee4487f5ea2cb84a3a3d3f2a2a22614d51ab93e9b93b0a4856a09ee140"
+      "sha256": "6ef6d2c70b6c1278f1a252a60a29f72a37d64a3c6733bf0272fcc28059bc5012"
     },
     {
-      "bytes": 11541,
+      "bytes": 12668,
       "license": "MIT",
       "path": "PUBLIC_REVIEW.md",
       "provenance": {
         "baselineCommit": "ab0a7f17f83c8ef49684b1d243a69cc2a6aaa972",
         "kind": "reviewed merged publication metadata"
       },
-      "sha256": "c00600ba9502c38be6c6f6aded6b67c48cb82eef6951cf576a127d621da11dc9"
+      "sha256": "f649f16d2538edff12fe085d68e7461fedef01b0562c0b89ec8268833dc2a592"
     },
     {
       "bytes": 4789,
@@ -670,6 +670,17 @@
       "sha256": "54a6d7402a80228c844289dffc05308de74a439ecc60d4e62efb5e99a39db702"
     },
     {
+      "bytes": 7123,
+      "license": "MIT",
+      "path": "daily-games-tracker/scripts/inspect_phase5b_login.py",
+      "provenance": {
+        "kind": "canonical byte copy",
+        "sourcePath": "daily-games-tracker/scripts/inspect_phase5b_login.py",
+        "sourceSha256": "edd309e69ebef9142df97a4265297f4988e8928ff6be3af49b86fc7376c0e672"
+      },
+      "sha256": "edd309e69ebef9142df97a4265297f4988e8928ff6be3af49b86fc7376c0e672"
+    },
+    {
       "bytes": 8573,
       "license": "MIT",
       "path": "daily-games-tracker/scripts/phase5a-compile-runtime-fixtures.mjs",
@@ -736,15 +747,15 @@
       "sha256": "162863bc9ec7fcf011c8a92f0415827b0c433e43e33d0963df33d86f6c2b88e6"
     },
     {
-      "bytes": 5418,
+      "bytes": 6084,
       "license": "MIT",
       "path": "daily-games-tracker/scripts/phase5a_inspect_upload.py",
       "provenance": {
         "kind": "canonical byte copy",
         "sourcePath": "daily-games-tracker/scripts/phase5a_inspect_upload.py",
-        "sourceSha256": "4e354db1381d8e4df10b2db8c080710251ea1c27cf51782f3f8952713723102c"
+        "sourceSha256": "76e3a2cd9ab42899d2c29fa5e82ad82586f056daf062b1baa21a01b8da872594"
       },
-      "sha256": "4e354db1381d8e4df10b2db8c080710251ea1c27cf51782f3f8952713723102c"
+      "sha256": "76e3a2cd9ab42899d2c29fa5e82ad82586f056daf062b1baa21a01b8da872594"
     },
     {
       "bytes": 21154,
@@ -764,7 +775,7 @@
       "provenance": {
         "kind": "documented reduced derivative",
         "sourcePath": "daily-games-tracker/scripts/phase5a_send_hubsign.py",
-        "sourceSha256": "801403d6e717804a6b0a9dcaa9cacb7126094f9ffe6707c23e662731d6c91951"
+        "sourceSha256": "a4e4f610db921a28858db437c6c505ccfb31b2d4e9df10c98db02b6d6a9c60ee"
       },
       "sha256": "a4e4f610db921a28858db437c6c505ccfb31b2d4e9df10c98db02b6d6a9c60ee"
     },
@@ -839,9 +850,9 @@
       "provenance": {
         "kind": "canonical byte copy",
         "sourcePath": "daily-games-tracker/scripts/tests/test_phase5a_upload.py",
-        "sourceSha256": "4345746016435a3cfb4342b581b9901ca3e7d567a0fc0585befea2714a813156"
+        "sourceSha256": "e8264ebefb64fb55370b09fb12e3765a5b73587d198596a22852c8501d80515f"
       },
-      "sha256": "4345746016435a3cfb4342b581b9901ca3e7d567a0fc0585befea2714a813156"
+      "sha256": "e8264ebefb64fb55370b09fb12e3765a5b73587d198596a22852c8501d80515f"
     },
     {
       "bytes": 2356,
@@ -998,15 +1009,15 @@
       "sha256": "e1f41773caa5902cacea9954443eafd17b1a0b98bb15265a7bc4117a70ce4df6"
     },
     {
-      "bytes": 58827,
+      "bytes": 76251,
       "license": "MIT",
       "path": "daily-games-tracker/shortcut/cherri-migration/build/upload-native-contract.json",
       "provenance": {
         "kind": "LF-normalized canonical byte copy",
         "sourcePath": "daily-games-tracker/shortcut/cherri-migration/build/upload-native-contract.json",
-        "sourceSha256": "4eba1fc40a943ff39fae556f856d3e7af4a4f610eb32839e6d90aacdbf7e8ffb"
+        "sourceSha256": "7d587594a95aae8d477403f6dfa7a910f7815359c27b0bfe1d001709c52b5920"
       },
-      "sha256": "dc7ac0d245139c857b9dfbe4b4f7f996d29c13f5301c60fed0dc73fbd56f95bf"
+      "sha256": "7d587594a95aae8d477403f6dfa7a910f7815359c27b0bfe1d001709c52b5920"
     },
     {
       "bytes": 129,
@@ -1086,15 +1097,15 @@
       "sha256": "4cfffe9bd5ca041bf2a52eb8459b09f3230f2f2e18b712fef4d60dcfd0f7e25a"
     },
     {
-      "bytes": 6810,
+      "bytes": 8804,
       "license": "MIT",
       "path": "daily-games-tracker/shortcut/cherri-migration/source/upload-to-wht.cherri",
       "provenance": {
         "kind": "canonical byte copy",
         "sourcePath": "daily-games-tracker/shortcut/cherri-migration/source/upload-to-wht.cherri",
-        "sourceSha256": "067facb1b23fd27adc82467f06ecea4f7412a29a6507ceecdd75397b71c94b10"
+        "sourceSha256": "6627cecacdb943be6e56fe6930218543fef3682068d0e53d45a63142dabc8ec7"
       },
-      "sha256": "067facb1b23fd27adc82467f06ecea4f7412a29a6507ceecdd75397b71c94b10"
+      "sha256": "6627cecacdb943be6e56fe6930218543fef3682068d0e53d45a63142dabc8ec7"
     },
     {
       "bytes": 3361,
@@ -1678,12 +1689,12 @@
   "purpose": "Complete resulting curated public tree integrity inventory; not a security certification",
   "repository": "ali-hashim/daily-games-tracker",
   "schemaVersion": 1,
-  "totalBytes": 759199,
+  "totalBytes": 788188,
   "verification": {
     "baseline": "Historical public snapshot evidence retained in PUBLIC_REVIEW.md",
-    "ci": "Unsigned CI authorized; remote result not yet established",
+    "ci": "Unsigned CI includes the Phase 5B source contract and full-client generated-action inspection; remote result not yet established",
     "reducedSender": "Retained Response/redirect/JSON-wire/post_once AST definitions match maintained source",
     "signing": "Permanent false guard and zero reviewed-commit sentinel unchanged",
-    "sourceExport": "29 Node and 12 Python tests passed on earlier October 23 export before cosmetic changes; no fresh cosmetic tests/build"
+    "sourceExport": "Phase 5B source and credential-free inspector added; local generated-action preflight passed; remote CI not yet established"
   }
 }

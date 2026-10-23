@@ -2,7 +2,7 @@
   "baselineCommit": "ab0a7f17f83c8ef49684b1d243a69cc2a6aaa972",
   "changes": [
     {
-      "afterSha256": "13befe4533a819283ea064fa737465f175ba4dfbf9cf6c932265fe6603eb07b0",
+      "afterSha256": "37b58f7f95e29ffd6b7fa07be9ab8f4285fee273ca7ef3596ed90112d9b1478c",
       "beforeSha256": "e705f160ca2f3e59b508f625da5315a8b0bcfafd8863131577d7b619fef2f9d6",
       "path": ".github/workflows/cherri-alert-experiment.yml",
       "status": "modified"
@@ -26,7 +26,7 @@
       "status": "added"
     },
     {
-      "afterSha256": "c00600ba9502c38be6c6f6aded6b67c48cb82eef6951cf576a127d621da11dc9",
+      "afterSha256": "f649f16d2538edff12fe085d68e7461fedef01b0562c0b89ec8268833dc2a592",
       "beforeSha256": "08509973ca4c361943197e86e887a98ec8fdc15ceff8ad57807d03461d3fcb91",
       "path": "PUBLIC_REVIEW.md",
       "status": "modified"
@@ -36,6 +36,12 @@
       "beforeSha256": "d6ac00ae53f7cd770152a35ea295cf9c88d5d817f1f0e6d9fad9fa9229e4a049",
       "path": "README.md",
       "status": "modified"
+    },
+    {
+      "afterSha256": "edd309e69ebef9142df97a4265297f4988e8928ff6be3af49b86fc7376c0e672",
+      "beforeSha256": null,
+      "path": "daily-games-tracker/scripts/inspect_phase5b_login.py",
+      "status": "added"
     },
     {
       "afterSha256": "6f7095e955a5b41f76ba1f22bfa5d802ca87e169452f104a4dcd7d97b2cb089e",
@@ -74,7 +80,7 @@
       "status": "added"
     },
     {
-      "afterSha256": "4e354db1381d8e4df10b2db8c080710251ea1c27cf51782f3f8952713723102c",
+      "afterSha256": "76e3a2cd9ab42899d2c29fa5e82ad82586f056daf062b1baa21a01b8da872594",
       "beforeSha256": null,
       "path": "daily-games-tracker/scripts/phase5a_inspect_upload.py",
       "status": "added"
@@ -116,7 +122,7 @@
       "status": "added"
     },
     {
-      "afterSha256": "4345746016435a3cfb4342b581b9901ca3e7d567a0fc0585befea2714a813156",
+      "afterSha256": "e8264ebefb64fb55370b09fb12e3765a5b73587d198596a22852c8501d80515f",
       "beforeSha256": null,
       "path": "daily-games-tracker/scripts/tests/test_phase5a_upload.py",
       "status": "added"
@@ -152,7 +158,7 @@
       "status": "added"
     },
     {
-      "afterSha256": "dc7ac0d245139c857b9dfbe4b4f7f996d29c13f5301c60fed0dc73fbd56f95bf",
+      "afterSha256": "7d587594a95aae8d477403f6dfa7a910f7815359c27b0bfe1d001709c52b5920",
       "beforeSha256": null,
       "path": "daily-games-tracker/shortcut/cherri-migration/build/upload-native-contract.json",
       "status": "added"
@@ -170,7 +176,7 @@
       "status": "modified"
     },
     {
-      "afterSha256": "067facb1b23fd27adc82467f06ecea4f7412a29a6507ceecdd75397b71c94b10",
+      "afterSha256": "6627cecacdb943be6e56fe6930218543fef3682068d0e53d45a63142dabc8ec7",
       "beforeSha256": null,
       "path": "daily-games-tracker/shortcut/cherri-migration/source/upload-to-wht.cherri",
       "status": "added"
@@ -183,13 +189,14 @@
     }
   ],
   "counts": {
-    "added": 22,
+    "added": 23,
     "deleted": 0,
     "modified": 8
   },
   "metadataChanges": [
     "PUBLIC_DIFF.json regenerated; self hash excluded",
-    "PUBLIC_MANIFEST.json regenerated; own hash excluded and reported separately"
+    "PUBLIC_MANIFEST.json regenerated; own hash excluded and reported separately",
+    "Phase 5B native login source, credential-free inspector, generated-action contract, and CI check added to the reviewed overlay"
   ],
   "publicationModel": "allowlisted overlay; no deletions; unchanged existing public files preserved",
   "repository": "ali-hashim/daily-games-tracker",

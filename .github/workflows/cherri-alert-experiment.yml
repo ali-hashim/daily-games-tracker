@@ -18,6 +18,7 @@ on:
       - daily-games-tracker/shortcut/cherri-migration/build/**
       - daily-games-tracker/shortcut/capture-safari.js
       - daily-games-tracker/scripts/inspect_phase5a_shortcut.py
+      - daily-games-tracker/scripts/inspect_phase5b_login.py
       - daily-games-tracker/scripts/tests/**
       - daily-games-tracker/shortcut/cherri-migration/toolchain.lock.json
       - daily-games-tracker/scripts/phase5a-verify-toolchain.mjs
@@ -55,7 +56,11 @@ jobs:
       - name: Run static Phase 5A Python regression tests
         run: |
           python3 -m py_compile daily-games-tracker/scripts/phase5a_prepare_signing_package.py
+          python3 -m py_compile daily-games-tracker/scripts/inspect_phase5b_login.py
           python3 -m unittest discover -s daily-games-tracker/scripts/tests -p 'test_phase5a_*.py' -v
+
+      - name: Inspect the credential-free Phase 5B login source
+        run: python3 daily-games-tracker/scripts/inspect_phase5b_login.py --self-test
 
       - name: Run Phase 5A workflow and manifest mutation tests
         run: |

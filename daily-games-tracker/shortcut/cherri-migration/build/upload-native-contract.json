@@ -143,10 +143,624 @@
       "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
     },
     {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.detect.text",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "loginInput",
+        "UUID": "native-id-4",
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "originalInput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-5",
+        "WFCondition": 8,
+        "WFConditionalActionString": "DGT_LOGIN_V1:",
+        "WFControlFlowMode": 0,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "OutputName": "loginInput",
+              "OutputUUID": "native-id-4",
+              "Type": "ActionOutput"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.text.replace",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "loginChallenge",
+        "UUID": "native-id-6",
+        "WFInput": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "OutputName": "loginInput",
+                "OutputUUID": "native-id-4",
+                "Type": "ActionOutput"
+              }
+            },
+            "string": "\ufffc"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        },
+        "WFReplaceTextCaseSensitive": true,
+        "WFReplaceTextFind": "^DGT_LOGIN_V1:",
+        "WFReplaceTextRegularExpression": true,
+        "WFReplaceTextReplace": ""
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.choosefrommenu",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-7",
+        "WFControlFlowMode": 0,
+        "WFMenuItems": [
+          {
+            "WFValue": "Cancel"
+          },
+          {
+            "WFValue": "Approve Login"
+          }
+        ],
+        "WFMenuPrompt": "Approve the WHT login you just started? Only approve if you tapped Login with Device in WHT."
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.choosefrommenu",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-7",
+        "WFControlFlowMode": 1,
+        "WFMenuItemAttributedTitle": "Cancel",
+        "WFMenuItemTitle": "Cancel"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.exit"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.choosefrommenu",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-7",
+        "WFControlFlowMode": 1,
+        "WFMenuItemAttributedTitle": "Approve Login",
+        "WFMenuItemTitle": "Approve Login"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.dictionary",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "Dictionary",
+        "UUID": "native-id-8",
+        "WFItems": {
+          "Value": {
+            "WFDictionaryFieldValueItems": [
+              {
+                "WFKey": {
+                  "Value": {
+                    "string": "challenge"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                },
+                "WFValue": {
+                  "Value": {
+                    "attachmentsByRange": {
+                      "{0, 1}": {
+                        "OutputName": "loginChallenge",
+                        "OutputUUID": "native-id-6",
+                        "Type": "ActionOutput"
+                      }
+                    },
+                    "string": "\ufffc"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                }
+              }
+            ]
+          },
+          "WFSerializationType": "WFDictionaryFieldValue"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.setvariable",
+      "WFWorkflowActionParameters": {
+        "WFInput": {
+          "Value": {
+            "OutputName": "Dictionary",
+            "OutputUUID": "native-id-8",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFSerializationType": "WFTextTokenAttachment",
+        "WFVariableName": "loginBody"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.detect.text",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "loginJson",
+        "UUID": "native-id-9",
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "loginBody"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.downloadurl",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "loginResult",
+        "UUID": "native-id-10",
+        "WFHTTPBodyType": "File",
+        "WFHTTPHeaders": {
+          "Value": {
+            "WFDictionaryFieldValueItems": [
+              {
+                "WFKey": {
+                  "Value": {
+                    "string": "Authorization"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                },
+                "WFValue": {
+                  "Value": {
+                    "attachmentsByRange": {
+                      "{7, 1}": {
+                        "OutputName": "authorizationCode",
+                        "OutputUUID": "native-id-2",
+                        "Type": "ActionOutput"
+                      }
+                    },
+                    "string": "Device \ufffc"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                }
+              },
+              {
+                "WFKey": {
+                  "Value": {
+                    "string": "Content-Type"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                },
+                "WFValue": {
+                  "Value": {
+                    "string": "application/json"
+                  },
+                  "WFSerializationType": "WFTextTokenString"
+                }
+              }
+            ]
+          },
+          "WFSerializationType": "WFDictionaryFieldValue"
+        },
+        "WFHTTPMethod": "POST",
+        "WFRequestVariable": {
+          "Value": {
+            "OutputName": "loginJson",
+            "OutputUUID": "native-id-9",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFURL": "https://preview.example.invalid/api/auth/device/approve"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.detect.dictionary",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "GetDictionary",
+        "UUID": "native-id-11",
+        "WFInput": {
+          "Value": {
+            "OutputName": "loginResult",
+            "OutputUUID": "native-id-10",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.setvariable",
+      "WFWorkflowActionParameters": {
+        "WFInput": {
+          "Value": {
+            "OutputName": "GetDictionary",
+            "OutputUUID": "native-id-11",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFSerializationType": "WFTextTokenAttachment",
+        "WFVariableName": "loginResponse"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.getvalueforkey",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "GetValue",
+        "UUID": "native-id-12",
+        "WFDictionaryKey": "status",
+        "WFGetDictionaryValueType": "Value",
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "loginResponse"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.setvariable",
+      "WFWorkflowActionParameters": {
+        "WFInput": {
+          "Value": {
+            "OutputName": "GetValue",
+            "OutputUUID": "native-id-12",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFSerializationType": "WFTextTokenAttachment",
+        "WFVariableName": "loginStatusValue"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.detect.text",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "loginStatus",
+        "UUID": "native-id-13",
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "loginStatusValue"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-14",
+        "WFCondition": 4,
+        "WFConditionalActionString": "approved",
+        "WFControlFlowMode": 0,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "OutputName": "loginStatus",
+              "OutputUUID": "native-id-13",
+              "Type": "ActionOutput"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.getvalueforkey",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "GetValue 1",
+        "UUID": "native-id-15",
+        "WFDictionaryKey": "message",
+        "WFGetDictionaryValueType": "Value",
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "loginResponse"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.setvariable",
+      "WFWorkflowActionParameters": {
+        "WFInput": {
+          "Value": {
+            "OutputName": "GetValue 1",
+            "OutputUUID": "native-id-15",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFSerializationType": "WFTextTokenAttachment",
+        "WFVariableName": "loginMessage"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.choosefrommenu",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-16",
+        "WFControlFlowMode": 0,
+        "WFMenuItems": [
+          {
+            "WFValue": "Return to WHT"
+          },
+          {
+            "WFValue": "I'll return manually"
+          }
+        ],
+        "WFMenuPrompt": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "Type": "Variable",
+                "VariableName": "loginMessage"
+              }
+            },
+            "string": "\ufffc"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.choosefrommenu",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-16",
+        "WFControlFlowMode": 1,
+        "WFMenuItemAttributedTitle": "Return to WHT",
+        "WFMenuItemTitle": "Return to WHT"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.getvalueforkey",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "GetValue 2",
+        "UUID": "native-id-17",
+        "WFDictionaryKey": "return_url",
+        "WFGetDictionaryValueType": "Value",
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "loginResponse"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.setvariable",
+      "WFWorkflowActionParameters": {
+        "WFInput": {
+          "Value": {
+            "OutputName": "GetValue 2",
+            "OutputUUID": "native-id-17",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFSerializationType": "WFTextTokenAttachment",
+        "WFVariableName": "loginReturnURL"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.openurl",
+      "WFWorkflowActionParameters": {
+        "Show-WFInput": true,
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "loginReturnURL"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.exit"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.choosefrommenu",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-16",
+        "WFControlFlowMode": 1,
+        "WFMenuItemAttributedTitle": "I'll return manually",
+        "WFMenuItemTitle": "I'll return manually"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.exit"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.choosefrommenu",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-16",
+        "UUID": "native-id-16",
+        "WFControlFlowMode": 2
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.exit"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-14",
+        "WFControlFlowMode": 1
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-18",
+        "WFCondition": 4,
+        "WFConditionalActionString": "error",
+        "WFControlFlowMode": 0,
+        "WFInput": {
+          "Type": "Variable",
+          "Variable": {
+            "Value": {
+              "OutputName": "loginStatus",
+              "OutputUUID": "native-id-13",
+              "Type": "ActionOutput"
+            },
+            "WFSerializationType": "WFTextTokenAttachment"
+          }
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.getvalueforkey",
+      "WFWorkflowActionParameters": {
+        "CustomOutputName": "GetValue 3",
+        "UUID": "native-id-19",
+        "WFDictionaryKey": "error_message",
+        "WFGetDictionaryValueType": "Value",
+        "WFInput": {
+          "Value": {
+            "Type": "Variable",
+            "VariableName": "loginResponse"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.setvariable",
+      "WFWorkflowActionParameters": {
+        "WFInput": {
+          "Value": {
+            "OutputName": "GetValue 3",
+            "OutputUUID": "native-id-19",
+            "Type": "ActionOutput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        },
+        "WFSerializationType": "WFTextTokenAttachment",
+        "WFVariableName": "loginError"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.alert",
+      "WFWorkflowActionParameters": {
+        "WFAlertActionCancelButtonShown": false,
+        "WFAlertActionMessage": {
+          "Value": {
+            "attachmentsByRange": {
+              "{0, 1}": {
+                "Type": "Variable",
+                "VariableName": "loginError"
+              }
+            },
+            "string": "\ufffc"
+          },
+          "WFSerializationType": "WFTextTokenString"
+        },
+        "WFAlertActionTitle": "Login with Device"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.exit"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-18",
+        "WFControlFlowMode": 1
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.alert",
+      "WFWorkflowActionParameters": {
+        "WFAlertActionCancelButtonShown": false,
+        "WFAlertActionMessage": "WHT did not return a usable approval response. Return to the window where you started login and tap Check login. If the response was lost, approval may still have succeeded. Do not retry this approval.",
+        "WFAlertActionTitle": "Login with Device"
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.exit"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-18",
+        "UUID": "native-id-18",
+        "WFControlFlowMode": 2
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-14",
+        "UUID": "native-id-14",
+        "WFControlFlowMode": 2
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.choosefrommenu",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-7",
+        "UUID": "native-id-7",
+        "WFControlFlowMode": 2
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.exit"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-5",
+        "UUID": "native-id-5",
+        "WFControlFlowMode": 2
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
       "WFWorkflowActionIdentifier": "is.workflow.actions.getitemtype",
       "WFWorkflowActionParameters": {
         "CustomOutputName": "inputType",
-        "UUID": "native-id-4",
+        "UUID": "native-id-20",
         "WFInput": {
           "Value": {
             "Type": "Variable",
@@ -159,8 +773,8 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.dictionary",
       "WFWorkflowActionParameters": {
-        "CustomOutputName": "Dictionary",
-        "UUID": "native-id-5",
+        "CustomOutputName": "Dictionary 1",
+        "UUID": "native-id-21",
         "WFItems": {
           "Value": {
             "WFDictionaryFieldValueItems": [
@@ -189,8 +803,8 @@
       "WFWorkflowActionParameters": {
         "WFInput": {
           "Value": {
-            "OutputName": "Dictionary",
-            "OutputUUID": "native-id-5",
+            "OutputName": "Dictionary 1",
+            "OutputUUID": "native-id-21",
             "Type": "ActionOutput"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -202,7 +816,7 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-6",
+        "GroupingIdentifier": "native-id-22",
         "WFCondition": 4,
         "WFConditionalActionString": "Safari Web Page",
         "WFControlFlowMode": 0,
@@ -211,7 +825,7 @@
           "Variable": {
             "Value": {
               "OutputName": "inputType",
-              "OutputUUID": "native-id-4",
+              "OutputUUID": "native-id-20",
               "Type": "ActionOutput"
             },
             "WFSerializationType": "WFTextTokenAttachment"
@@ -223,7 +837,7 @@
       "WFWorkflowActionIdentifier": "is.workflow.actions.runjavascriptonwebpage",
       "WFWorkflowActionParameters": {
         "CustomOutputName": "safariCapture",
-        "UUID": "native-id-7",
+        "UUID": "native-id-23",
         "WFInput": {
           "Value": {
             "Type": "Variable",
@@ -240,12 +854,12 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.detect.dictionary",
       "WFWorkflowActionParameters": {
-        "CustomOutputName": "GetDictionary",
-        "UUID": "native-id-8",
+        "CustomOutputName": "GetDictionary 1",
+        "UUID": "native-id-24",
         "WFInput": {
           "Value": {
             "OutputName": "safariCapture",
-            "OutputUUID": "native-id-7",
+            "OutputUUID": "native-id-23",
             "Type": "ActionOutput"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -257,8 +871,8 @@
       "WFWorkflowActionParameters": {
         "WFInput": {
           "Value": {
-            "OutputName": "GetDictionary",
-            "OutputUUID": "native-id-8",
+            "OutputName": "GetDictionary 1",
+            "OutputUUID": "native-id-24",
             "Type": "ActionOutput"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -270,14 +884,14 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-6",
+        "GroupingIdentifier": "native-id-22",
         "WFControlFlowMode": 1
       }
     },
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-9",
+        "GroupingIdentifier": "native-id-25",
         "WFCondition": 4,
         "WFConditionalActionString": "Text",
         "WFControlFlowMode": 0,
@@ -286,7 +900,7 @@
           "Variable": {
             "Value": {
               "OutputName": "inputType",
-              "OutputUUID": "native-id-4",
+              "OutputUUID": "native-id-20",
               "Type": "ActionOutput"
             },
             "WFSerializationType": "WFTextTokenAttachment"
@@ -298,7 +912,7 @@
       "WFWorkflowActionIdentifier": "is.workflow.actions.detect.text",
       "WFWorkflowActionParameters": {
         "CustomOutputName": "sharedText",
-        "UUID": "native-id-10",
+        "UUID": "native-id-26",
         "WFInput": {
           "Value": {
             "Type": "Variable",
@@ -311,7 +925,7 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-11",
+        "GroupingIdentifier": "native-id-27",
         "WFCondition": 4,
         "WFConditionalActionString": "",
         "WFControlFlowMode": 0,
@@ -320,7 +934,7 @@
           "Variable": {
             "Value": {
               "OutputName": "sharedText",
-              "OutputUUID": "native-id-10",
+              "OutputUUID": "native-id-26",
               "Type": "ActionOutput"
             },
             "WFSerializationType": "WFTextTokenAttachment"
@@ -345,53 +959,8 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-11",
-        "UUID": "native-id-11",
-        "WFControlFlowMode": 2
-      }
-    },
-    {
-      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
-    },
-    {
-      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
-      "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-12",
-        "WFCondition": 8,
-        "WFConditionalActionString": "DGT_LOGIN_V1:",
-        "WFControlFlowMode": 0,
-        "WFInput": {
-          "Type": "Variable",
-          "Variable": {
-            "Value": {
-              "OutputName": "sharedText",
-              "OutputUUID": "native-id-10",
-              "Type": "ActionOutput"
-            },
-            "WFSerializationType": "WFTextTokenAttachment"
-          }
-        }
-      }
-    },
-    {
-      "WFWorkflowActionIdentifier": "is.workflow.actions.alert",
-      "WFWorkflowActionParameters": {
-        "WFAlertActionCancelButtonShown": false,
-        "WFAlertActionMessage": "Website login is not available in this shortcut yet.",
-        "WFAlertActionTitle": "Upload to WHT"
-      }
-    },
-    {
-      "WFWorkflowActionIdentifier": "is.workflow.actions.exit"
-    },
-    {
-      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
-    },
-    {
-      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
-      "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-12",
-        "UUID": "native-id-12",
+        "GroupingIdentifier": "native-id-27",
+        "UUID": "native-id-27",
         "WFControlFlowMode": 2
       }
     },
@@ -401,8 +970,8 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.dictionary",
       "WFWorkflowActionParameters": {
-        "CustomOutputName": "Dictionary 1",
-        "UUID": "native-id-13",
+        "CustomOutputName": "Dictionary 2",
+        "UUID": "native-id-28",
         "WFItems": {
           "Value": {
             "WFDictionaryFieldValueItems": [
@@ -432,7 +1001,7 @@
                     "attachmentsByRange": {
                       "{0, 1}": {
                         "OutputName": "sharedText",
-                        "OutputUUID": "native-id-10",
+                        "OutputUUID": "native-id-26",
                         "Type": "ActionOutput"
                       }
                     },
@@ -466,8 +1035,8 @@
       "WFWorkflowActionParameters": {
         "WFInput": {
           "Value": {
-            "OutputName": "Dictionary 1",
-            "OutputUUID": "native-id-13",
+            "OutputName": "Dictionary 2",
+            "OutputUUID": "native-id-28",
             "Type": "ActionOutput"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -479,7 +1048,7 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-9",
+        "GroupingIdentifier": "native-id-25",
         "WFControlFlowMode": 1
       }
     },
@@ -500,8 +1069,8 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-9",
-        "UUID": "native-id-9",
+        "GroupingIdentifier": "native-id-25",
+        "UUID": "native-id-25",
         "WFControlFlowMode": 2
       }
     },
@@ -511,8 +1080,8 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-6",
-        "UUID": "native-id-6",
+        "GroupingIdentifier": "native-id-22",
+        "UUID": "native-id-22",
         "WFControlFlowMode": 2
       }
     },
@@ -523,7 +1092,7 @@
       "WFWorkflowActionIdentifier": "is.workflow.actions.detect.text",
       "WFWorkflowActionParameters": {
         "CustomOutputName": "captureJson",
-        "UUID": "native-id-14",
+        "UUID": "native-id-29",
         "WFInput": {
           "Value": {
             "Type": "Variable",
@@ -537,7 +1106,7 @@
       "WFWorkflowActionIdentifier": "is.workflow.actions.gettext",
       "WFWorkflowActionParameters": {
         "CustomOutputName": "envelopeTemplate",
-        "UUID": "native-id-15",
+        "UUID": "native-id-30",
         "WFTextActionText": "{\"shortcut_version\":1,\"capture\":__CAPTURE_JSON__}"
       }
     },
@@ -545,13 +1114,13 @@
       "WFWorkflowActionIdentifier": "is.workflow.actions.text.replace",
       "WFWorkflowActionParameters": {
         "CustomOutputName": "requestJson",
-        "UUID": "native-id-16",
+        "UUID": "native-id-31",
         "WFInput": {
           "Value": {
             "attachmentsByRange": {
               "{0, 1}": {
                 "OutputName": "envelopeTemplate",
-                "OutputUUID": "native-id-15",
+                "OutputUUID": "native-id-30",
                 "Type": "ActionOutput"
               }
             },
@@ -565,7 +1134,7 @@
             "attachmentsByRange": {
               "{0, 1}": {
                 "OutputName": "captureJson",
-                "OutputUUID": "native-id-14",
+                "OutputUUID": "native-id-29",
                 "Type": "ActionOutput"
               }
             },
@@ -579,7 +1148,7 @@
       "WFWorkflowActionIdentifier": "is.workflow.actions.downloadurl",
       "WFWorkflowActionParameters": {
         "CustomOutputName": "validationResult",
-        "UUID": "native-id-17",
+        "UUID": "native-id-32",
         "WFHTTPBodyType": "File",
         "WFHTTPHeaders": {
           "Value": {
@@ -627,7 +1196,7 @@
         "WFRequestVariable": {
           "Value": {
             "OutputName": "requestJson",
-            "OutputUUID": "native-id-16",
+            "OutputUUID": "native-id-31",
             "Type": "ActionOutput"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -638,12 +1207,12 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.detect.dictionary",
       "WFWorkflowActionParameters": {
-        "CustomOutputName": "GetDictionary 1",
-        "UUID": "native-id-18",
+        "CustomOutputName": "GetDictionary 2",
+        "UUID": "native-id-33",
         "WFInput": {
           "Value": {
             "OutputName": "validationResult",
-            "OutputUUID": "native-id-17",
+            "OutputUUID": "native-id-32",
             "Type": "ActionOutput"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -655,8 +1224,8 @@
       "WFWorkflowActionParameters": {
         "WFInput": {
           "Value": {
-            "OutputName": "GetDictionary 1",
-            "OutputUUID": "native-id-18",
+            "OutputName": "GetDictionary 2",
+            "OutputUUID": "native-id-33",
             "Type": "ActionOutput"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -668,8 +1237,8 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.getvalueforkey",
       "WFWorkflowActionParameters": {
-        "CustomOutputName": "GetValue",
-        "UUID": "native-id-19",
+        "CustomOutputName": "GetValue 4",
+        "UUID": "native-id-34",
         "WFDictionaryKey": "status",
         "WFGetDictionaryValueType": "Value",
         "WFInput": {
@@ -686,8 +1255,8 @@
       "WFWorkflowActionParameters": {
         "WFInput": {
           "Value": {
-            "OutputName": "GetValue",
-            "OutputUUID": "native-id-19",
+            "OutputName": "GetValue 4",
+            "OutputUUID": "native-id-34",
             "Type": "ActionOutput"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -700,7 +1269,7 @@
       "WFWorkflowActionIdentifier": "is.workflow.actions.detect.text",
       "WFWorkflowActionParameters": {
         "CustomOutputName": "validationStatus",
-        "UUID": "native-id-20",
+        "UUID": "native-id-35",
         "WFInput": {
           "Value": {
             "Type": "Variable",
@@ -727,7 +1296,7 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-21",
+        "GroupingIdentifier": "native-id-36",
         "WFCondition": 4,
         "WFConditionalActionString": "already_submitted",
         "WFControlFlowMode": 0,
@@ -736,7 +1305,7 @@
           "Variable": {
             "Value": {
               "OutputName": "validationStatus",
-              "OutputUUID": "native-id-20",
+              "OutputUUID": "native-id-35",
               "Type": "ActionOutput"
             },
             "WFSerializationType": "WFTextTokenAttachment"
@@ -761,14 +1330,14 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-21",
+        "GroupingIdentifier": "native-id-36",
         "WFControlFlowMode": 1
       }
     },
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-22",
+        "GroupingIdentifier": "native-id-37",
         "WFCondition": 4,
         "WFConditionalActionString": "valid",
         "WFControlFlowMode": 0,
@@ -777,7 +1346,7 @@
           "Variable": {
             "Value": {
               "OutputName": "validationStatus",
-              "OutputUUID": "native-id-20",
+              "OutputUUID": "native-id-35",
               "Type": "ActionOutput"
             },
             "WFSerializationType": "WFTextTokenAttachment"
@@ -788,8 +1357,8 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.getvalueforkey",
       "WFWorkflowActionParameters": {
-        "CustomOutputName": "GetValue 1",
-        "UUID": "native-id-23",
+        "CustomOutputName": "GetValue 5",
+        "UUID": "native-id-38",
         "WFDictionaryKey": "confirmation_text",
         "WFGetDictionaryValueType": "Value",
         "WFInput": {
@@ -806,8 +1375,8 @@
       "WFWorkflowActionParameters": {
         "WFInput": {
           "Value": {
-            "OutputName": "GetValue 1",
-            "OutputUUID": "native-id-23",
+            "OutputName": "GetValue 5",
+            "OutputUUID": "native-id-38",
             "Type": "ActionOutput"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -819,7 +1388,7 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.choosefrommenu",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-24",
+        "GroupingIdentifier": "native-id-39",
         "WFControlFlowMode": 0,
         "WFMenuItems": [
           {
@@ -846,7 +1415,7 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.choosefrommenu",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-24",
+        "GroupingIdentifier": "native-id-39",
         "WFControlFlowMode": 1,
         "WFMenuItemAttributedTitle": "Cancel",
         "WFMenuItemTitle": "Cancel"
@@ -861,7 +1430,7 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.choosefrommenu",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-24",
+        "GroupingIdentifier": "native-id-39",
         "WFControlFlowMode": 1,
         "WFMenuItemAttributedTitle": "Submit Results",
         "WFMenuItemTitle": "Submit Results"
@@ -871,7 +1440,7 @@
       "WFWorkflowActionIdentifier": "is.workflow.actions.downloadurl",
       "WFWorkflowActionParameters": {
         "CustomOutputName": "submissionResult",
-        "UUID": "native-id-25",
+        "UUID": "native-id-40",
         "WFHTTPBodyType": "File",
         "WFHTTPHeaders": {
           "Value": {
@@ -919,7 +1488,7 @@
         "WFRequestVariable": {
           "Value": {
             "OutputName": "requestJson",
-            "OutputUUID": "native-id-16",
+            "OutputUUID": "native-id-31",
             "Type": "ActionOutput"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -930,12 +1499,12 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.detect.dictionary",
       "WFWorkflowActionParameters": {
-        "CustomOutputName": "GetDictionary 2",
-        "UUID": "native-id-26",
+        "CustomOutputName": "GetDictionary 3",
+        "UUID": "native-id-41",
         "WFInput": {
           "Value": {
             "OutputName": "submissionResult",
-            "OutputUUID": "native-id-25",
+            "OutputUUID": "native-id-40",
             "Type": "ActionOutput"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -947,8 +1516,8 @@
       "WFWorkflowActionParameters": {
         "WFInput": {
           "Value": {
-            "OutputName": "GetDictionary 2",
-            "OutputUUID": "native-id-26",
+            "OutputName": "GetDictionary 3",
+            "OutputUUID": "native-id-41",
             "Type": "ActionOutput"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -960,8 +1529,8 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.getvalueforkey",
       "WFWorkflowActionParameters": {
-        "CustomOutputName": "GetValue 2",
-        "UUID": "native-id-27",
+        "CustomOutputName": "GetValue 6",
+        "UUID": "native-id-42",
         "WFDictionaryKey": "status",
         "WFGetDictionaryValueType": "Value",
         "WFInput": {
@@ -978,8 +1547,8 @@
       "WFWorkflowActionParameters": {
         "WFInput": {
           "Value": {
-            "OutputName": "GetValue 2",
-            "OutputUUID": "native-id-27",
+            "OutputName": "GetValue 6",
+            "OutputUUID": "native-id-42",
             "Type": "ActionOutput"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -992,7 +1561,7 @@
       "WFWorkflowActionIdentifier": "is.workflow.actions.detect.text",
       "WFWorkflowActionParameters": {
         "CustomOutputName": "submissionStatus",
-        "UUID": "native-id-28",
+        "UUID": "native-id-43",
         "WFInput": {
           "Value": {
             "Type": "Variable",
@@ -1005,7 +1574,7 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-29",
+        "GroupingIdentifier": "native-id-44",
         "WFCondition": 4,
         "WFConditionalActionString": "submitted",
         "WFControlFlowMode": 0,
@@ -1014,7 +1583,7 @@
           "Variable": {
             "Value": {
               "OutputName": "submissionStatus",
-              "OutputUUID": "native-id-28",
+              "OutputUUID": "native-id-43",
               "Type": "ActionOutput"
             },
             "WFSerializationType": "WFTextTokenAttachment"
@@ -1039,14 +1608,14 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-29",
+        "GroupingIdentifier": "native-id-44",
         "WFControlFlowMode": 1
       }
     },
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-30",
+        "GroupingIdentifier": "native-id-45",
         "WFCondition": 4,
         "WFConditionalActionString": "already_submitted",
         "WFControlFlowMode": 0,
@@ -1055,7 +1624,7 @@
           "Variable": {
             "Value": {
               "OutputName": "submissionStatus",
-              "OutputUUID": "native-id-28",
+              "OutputUUID": "native-id-43",
               "Type": "ActionOutput"
             },
             "WFSerializationType": "WFTextTokenAttachment"
@@ -1080,14 +1649,14 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-30",
+        "GroupingIdentifier": "native-id-45",
         "WFControlFlowMode": 1
       }
     },
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-31",
+        "GroupingIdentifier": "native-id-46",
         "WFCondition": 4,
         "WFConditionalActionString": "error",
         "WFControlFlowMode": 0,
@@ -1096,7 +1665,7 @@
           "Variable": {
             "Value": {
               "OutputName": "submissionStatus",
-              "OutputUUID": "native-id-28",
+              "OutputUUID": "native-id-43",
               "Type": "ActionOutput"
             },
             "WFSerializationType": "WFTextTokenAttachment"
@@ -1107,8 +1676,8 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.getvalueforkey",
       "WFWorkflowActionParameters": {
-        "CustomOutputName": "GetValue 3",
-        "UUID": "native-id-32",
+        "CustomOutputName": "GetValue 7",
+        "UUID": "native-id-47",
         "WFDictionaryKey": "error_message",
         "WFGetDictionaryValueType": "Value",
         "WFInput": {
@@ -1125,8 +1694,8 @@
       "WFWorkflowActionParameters": {
         "WFInput": {
           "Value": {
-            "OutputName": "GetValue 3",
-            "OutputUUID": "native-id-32",
+            "OutputName": "GetValue 7",
+            "OutputUUID": "native-id-47",
             "Type": "ActionOutput"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -1160,14 +1729,14 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-31",
+        "GroupingIdentifier": "native-id-46",
         "WFControlFlowMode": 1
       }
     },
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-33",
+        "GroupingIdentifier": "native-id-48",
         "WFCondition": 4,
         "WFConditionalActionString": "update_required",
         "WFControlFlowMode": 0,
@@ -1176,7 +1745,7 @@
           "Variable": {
             "Value": {
               "OutputName": "submissionStatus",
-              "OutputUUID": "native-id-28",
+              "OutputUUID": "native-id-43",
               "Type": "ActionOutput"
             },
             "WFSerializationType": "WFTextTokenAttachment"
@@ -1187,8 +1756,8 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.getvalueforkey",
       "WFWorkflowActionParameters": {
-        "CustomOutputName": "GetValue 4",
-        "UUID": "native-id-34",
+        "CustomOutputName": "GetValue 8",
+        "UUID": "native-id-49",
         "WFDictionaryKey": "error_message",
         "WFGetDictionaryValueType": "Value",
         "WFInput": {
@@ -1205,8 +1774,8 @@
       "WFWorkflowActionParameters": {
         "WFInput": {
           "Value": {
-            "OutputName": "GetValue 4",
-            "OutputUUID": "native-id-34",
+            "OutputName": "GetValue 8",
+            "OutputUUID": "native-id-49",
             "Type": "ActionOutput"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -1237,8 +1806,8 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.getvalueforkey",
       "WFWorkflowActionParameters": {
-        "CustomOutputName": "GetValue 5",
-        "UUID": "native-id-35",
+        "CustomOutputName": "GetValue 9",
+        "UUID": "native-id-50",
         "WFDictionaryKey": "install_url",
         "WFGetDictionaryValueType": "Value",
         "WFInput": {
@@ -1255,8 +1824,8 @@
       "WFWorkflowActionParameters": {
         "WFInput": {
           "Value": {
-            "OutputName": "GetValue 5",
-            "OutputUUID": "native-id-35",
+            "OutputName": "GetValue 9",
+            "OutputUUID": "native-id-50",
             "Type": "ActionOutput"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -1284,7 +1853,7 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-33",
+        "GroupingIdentifier": "native-id-48",
         "WFControlFlowMode": 1
       }
     },
@@ -1305,8 +1874,8 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-33",
-        "UUID": "native-id-33",
+        "GroupingIdentifier": "native-id-48",
+        "UUID": "native-id-48",
         "WFControlFlowMode": 2
       }
     },
@@ -1316,8 +1885,8 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-31",
-        "UUID": "native-id-31",
+        "GroupingIdentifier": "native-id-46",
+        "UUID": "native-id-46",
         "WFControlFlowMode": 2
       }
     },
@@ -1327,8 +1896,8 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-30",
-        "UUID": "native-id-30",
+        "GroupingIdentifier": "native-id-45",
+        "UUID": "native-id-45",
         "WFControlFlowMode": 2
       }
     },
@@ -1338,8 +1907,8 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-29",
-        "UUID": "native-id-29",
+        "GroupingIdentifier": "native-id-44",
+        "UUID": "native-id-44",
         "WFControlFlowMode": 2
       }
     },
@@ -1349,8 +1918,8 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.choosefrommenu",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-24",
-        "UUID": "native-id-24",
+        "GroupingIdentifier": "native-id-39",
+        "UUID": "native-id-39",
         "WFControlFlowMode": 2
       }
     },
@@ -1360,14 +1929,14 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-22",
+        "GroupingIdentifier": "native-id-37",
         "WFControlFlowMode": 1
       }
     },
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-36",
+        "GroupingIdentifier": "native-id-51",
         "WFCondition": 4,
         "WFConditionalActionString": "error",
         "WFControlFlowMode": 0,
@@ -1376,7 +1945,7 @@
           "Variable": {
             "Value": {
               "OutputName": "validationStatus",
-              "OutputUUID": "native-id-20",
+              "OutputUUID": "native-id-35",
               "Type": "ActionOutput"
             },
             "WFSerializationType": "WFTextTokenAttachment"
@@ -1387,8 +1956,8 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.getvalueforkey",
       "WFWorkflowActionParameters": {
-        "CustomOutputName": "GetValue 6",
-        "UUID": "native-id-37",
+        "CustomOutputName": "GetValue 10",
+        "UUID": "native-id-52",
         "WFDictionaryKey": "error_message",
         "WFGetDictionaryValueType": "Value",
         "WFInput": {
@@ -1405,8 +1974,8 @@
       "WFWorkflowActionParameters": {
         "WFInput": {
           "Value": {
-            "OutputName": "GetValue 6",
-            "OutputUUID": "native-id-37",
+            "OutputName": "GetValue 10",
+            "OutputUUID": "native-id-52",
             "Type": "ActionOutput"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -1440,14 +2009,14 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-36",
+        "GroupingIdentifier": "native-id-51",
         "WFControlFlowMode": 1
       }
     },
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-38",
+        "GroupingIdentifier": "native-id-53",
         "WFCondition": 4,
         "WFConditionalActionString": "update_required",
         "WFControlFlowMode": 0,
@@ -1456,7 +2025,7 @@
           "Variable": {
             "Value": {
               "OutputName": "validationStatus",
-              "OutputUUID": "native-id-20",
+              "OutputUUID": "native-id-35",
               "Type": "ActionOutput"
             },
             "WFSerializationType": "WFTextTokenAttachment"
@@ -1467,8 +2036,8 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.getvalueforkey",
       "WFWorkflowActionParameters": {
-        "CustomOutputName": "GetValue 7",
-        "UUID": "native-id-39",
+        "CustomOutputName": "GetValue 11",
+        "UUID": "native-id-54",
         "WFDictionaryKey": "error_message",
         "WFGetDictionaryValueType": "Value",
         "WFInput": {
@@ -1485,8 +2054,8 @@
       "WFWorkflowActionParameters": {
         "WFInput": {
           "Value": {
-            "OutputName": "GetValue 7",
-            "OutputUUID": "native-id-39",
+            "OutputName": "GetValue 11",
+            "OutputUUID": "native-id-54",
             "Type": "ActionOutput"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -1517,8 +2086,8 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.getvalueforkey",
       "WFWorkflowActionParameters": {
-        "CustomOutputName": "GetValue 8",
-        "UUID": "native-id-40",
+        "CustomOutputName": "GetValue 12",
+        "UUID": "native-id-55",
         "WFDictionaryKey": "install_url",
         "WFGetDictionaryValueType": "Value",
         "WFInput": {
@@ -1535,8 +2104,8 @@
       "WFWorkflowActionParameters": {
         "WFInput": {
           "Value": {
-            "OutputName": "GetValue 8",
-            "OutputUUID": "native-id-40",
+            "OutputName": "GetValue 12",
+            "OutputUUID": "native-id-55",
             "Type": "ActionOutput"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -1564,7 +2133,7 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-38",
+        "GroupingIdentifier": "native-id-53",
         "WFControlFlowMode": 1
       }
     },
@@ -1585,8 +2154,30 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-38",
-        "UUID": "native-id-38",
+        "GroupingIdentifier": "native-id-53",
+        "UUID": "native-id-53",
+        "WFControlFlowMode": 2
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-51",
+        "UUID": "native-id-51",
+        "WFControlFlowMode": 2
+      }
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
+    },
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
+      "WFWorkflowActionParameters": {
+        "GroupingIdentifier": "native-id-37",
+        "UUID": "native-id-37",
         "WFControlFlowMode": 2
       }
     },
@@ -1605,32 +2196,10 @@
       "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
     },
     {
-      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
-      "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-22",
-        "UUID": "native-id-22",
-        "WFControlFlowMode": 2
-      }
-    },
-    {
-      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
-    },
-    {
-      "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
-      "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-21",
-        "UUID": "native-id-21",
-        "WFControlFlowMode": 2
-      }
-    },
-    {
-      "WFWorkflowActionIdentifier": "is.workflow.actions.nothing"
-    },
-    {
       "WFWorkflowActionIdentifier": "is.workflow.actions.getvalueforkey",
       "WFWorkflowActionParameters": {
-        "CustomOutputName": "GetValue 9",
-        "UUID": "native-id-41",
+        "CustomOutputName": "GetValue 13",
+        "UUID": "native-id-56",
         "WFDictionaryKey": "scoreboard_text",
         "WFGetDictionaryValueType": "Value",
         "WFInput": {
@@ -1647,8 +2216,8 @@
       "WFWorkflowActionParameters": {
         "WFInput": {
           "Value": {
-            "OutputName": "GetValue 9",
-            "OutputUUID": "native-id-41",
+            "OutputName": "GetValue 13",
+            "OutputUUID": "native-id-56",
             "Type": "ActionOutput"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -1660,7 +2229,7 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-42",
+        "GroupingIdentifier": "native-id-57",
         "WFCondition": 100,
         "WFControlFlowMode": 0,
         "WFInput": {
@@ -1679,7 +2248,7 @@
       "WFWorkflowActionIdentifier": "is.workflow.actions.getitemtype",
       "WFWorkflowActionParameters": {
         "CustomOutputName": "scoreboardType",
-        "UUID": "native-id-43",
+        "UUID": "native-id-58",
         "WFInput": {
           "Value": {
             "Type": "Variable",
@@ -1692,7 +2261,7 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-44",
+        "GroupingIdentifier": "native-id-59",
         "WFCondition": 4,
         "WFConditionalActionString": "Text",
         "WFControlFlowMode": 0,
@@ -1701,7 +2270,7 @@
           "Variable": {
             "Value": {
               "OutputName": "scoreboardType",
-              "OutputUUID": "native-id-43",
+              "OutputUUID": "native-id-58",
               "Type": "ActionOutput"
             },
             "WFSerializationType": "WFTextTokenAttachment"
@@ -1727,8 +2296,8 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-44",
-        "UUID": "native-id-44",
+        "GroupingIdentifier": "native-id-59",
+        "UUID": "native-id-59",
         "WFControlFlowMode": 2
       }
     },
@@ -1738,8 +2307,8 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.conditional",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-42",
-        "UUID": "native-id-42",
+        "GroupingIdentifier": "native-id-57",
+        "UUID": "native-id-57",
         "WFControlFlowMode": 2
       }
     },
@@ -1749,8 +2318,8 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.getvalueforkey",
       "WFWorkflowActionParameters": {
-        "CustomOutputName": "GetValue 10",
-        "UUID": "native-id-45",
+        "CustomOutputName": "GetValue 14",
+        "UUID": "native-id-60",
         "WFDictionaryKey": "completion_message",
         "WFGetDictionaryValueType": "Value",
         "WFInput": {
@@ -1767,8 +2336,8 @@
       "WFWorkflowActionParameters": {
         "WFInput": {
           "Value": {
-            "OutputName": "GetValue 10",
-            "OutputUUID": "native-id-45",
+            "OutputName": "GetValue 14",
+            "OutputUUID": "native-id-60",
             "Type": "ActionOutput"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -1780,8 +2349,8 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.getvalueforkey",
       "WFWorkflowActionParameters": {
-        "CustomOutputName": "GetValue 11",
-        "UUID": "native-id-46",
+        "CustomOutputName": "GetValue 15",
+        "UUID": "native-id-61",
         "WFDictionaryKey": "wht_url",
         "WFGetDictionaryValueType": "Value",
         "WFInput": {
@@ -1798,8 +2367,8 @@
       "WFWorkflowActionParameters": {
         "WFInput": {
           "Value": {
-            "OutputName": "GetValue 11",
-            "OutputUUID": "native-id-46",
+            "OutputName": "GetValue 15",
+            "OutputUUID": "native-id-61",
             "Type": "ActionOutput"
           },
           "WFSerializationType": "WFTextTokenAttachment"
@@ -1811,7 +2380,7 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.choosefrommenu",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-47",
+        "GroupingIdentifier": "native-id-62",
         "WFControlFlowMode": 0,
         "WFMenuItems": [
           {
@@ -1838,7 +2407,7 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.choosefrommenu",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-47",
+        "GroupingIdentifier": "native-id-62",
         "WFControlFlowMode": 1,
         "WFMenuItemAttributedTitle": "Close",
         "WFMenuItemTitle": "Close"
@@ -1853,7 +2422,7 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.choosefrommenu",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-47",
+        "GroupingIdentifier": "native-id-62",
         "WFControlFlowMode": 1,
         "WFMenuItemAttributedTitle": "Open WHT",
         "WFMenuItemTitle": "Open WHT"
@@ -1881,8 +2450,8 @@
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.choosefrommenu",
       "WFWorkflowActionParameters": {
-        "GroupingIdentifier": "native-id-47",
-        "UUID": "native-id-47",
+        "GroupingIdentifier": "native-id-62",
+        "UUID": "native-id-62",
         "WFControlFlowMode": 2
       }
     },
