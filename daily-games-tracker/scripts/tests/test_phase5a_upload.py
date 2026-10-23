@@ -36,7 +36,7 @@ def params(w,kind=None,output=None,key=None,n=0):
 
 class UploadContractTests(unittest.TestCase):
     def test_reviewed_contract(self):
-        self.assertEqual(i.inspect(fixture())['networkActions'],2)
+        self.assertEqual(i.inspect(fixture())['networkActions'],3)
 
     def test_native_mutations_rejected(self):
         mutations=[

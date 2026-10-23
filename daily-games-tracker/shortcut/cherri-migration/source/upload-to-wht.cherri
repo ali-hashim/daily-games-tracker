@@ -39,6 +39,47 @@ action 'openurl' whtOpenURL(variable url: 'WFInput') {
     "Show-WFInput": true
 }
 
+// Login is dispatched before type inspection, capture, or shared-text handling.
+// Only the leading literal prefix is removed; never expose the challenge.
+const loginInput = getText(@originalInput)
+if loginInput beginsWith "DGT_LOGIN_V1:" {
+    const loginChallenge = replaceText("^DGT_LOGIN_V1:", "", loginInput, true, true)
+    menu "Approve the WHT login you just started? Only approve if you tapped Login with Device in WHT." {
+        item "Cancel":
+            stop()
+        item "Approve Login":
+            @loginBody = {"challenge":"{loginChallenge}"}
+            const loginJson = getText(@loginBody)
+            // Native transport failures abort execution. Do not replay approval.
+            const loginResult = whtPostJsonText("https://preview.winstitute-of-higher-thinking.pages.dev/api/auth/device/approve", loginJson, {"Content-Type":"application/json", "Authorization":"Device {authorizationCode}"})
+            @loginResponse = getDictionary(loginResult)
+            @loginStatusValue = getValue(@loginResponse, "status")
+            const loginStatus = getText(@loginStatusValue)
+            if loginStatus == "approved" {
+                @loginMessage = getValue(@loginResponse, "message")
+                menu @loginMessage {
+                    item "Return to WHT":
+                        @loginReturnURL = getValue(@loginResponse, "return_url")
+                        whtOpenURL(@loginReturnURL)
+                        stop()
+                    item "I'll return manually":
+                        stop()
+                }
+                stop()
+            } else {
+                if loginStatus == "error" {
+                    @loginError = getValue(@loginResponse, "error_message")
+                    alert("{@loginError}", "Login with Device")
+                    stop()
+                } else {
+                    alert("WHT did not return a usable approval response. Return to the window where you started login and tap Check login. If the response was lost, approval may still have succeeded. Do not retry this approval.", "Login with Device")
+                    stop()
+                }
+            }
+    }
+    stop()
+}
+
 const inputType = typeOf(@originalInput)
 // Type labels are deliberately visible in source and require native acceptance.
 // Do not coerce the original webpage into text before this branch.
@@ -51,10 +92,6 @@ if inputType == "Safari Web Page" {
         const sharedText = getText(@originalInput)
         if sharedText == "" {
             alert("Unsupported input. Share a completed game from Safari or as text.", "Upload to WHT")
-            stop()
-        }
-        if sharedText beginsWith "DGT_LOGIN_V1:" {
-            alert("Website login is not available in this shortcut yet.", "Upload to WHT")
             stop()
         }
         @originalCapture = {"capture_schema":"dgt.capture.v1", "source_kind":"shared_text", "shared_text":"{sharedText}"}

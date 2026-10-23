@@ -56,16 +56,24 @@ def inspect(workflow, require_contract=True):
     assert script['WFJavaScript'].encode()==CAPTURE.read_bytes()
     assert script['WFInput']['Value']=={'Type':'Variable','VariableName':'originalInput'}
     requests=[x for i,x in enumerate(p) if ids[i]=='downloadurl']
-    assert len(requests)==2
-    for request,endpoint in zip(requests,['validate','submit']):
-        assert request['WFURL']=='https://preview.winstitute-of-higher-thinking.pages.dev/api/import/'+endpoint
+    assert len(requests)==3
+    for request,endpoint in zip(requests,['auth/device/approve','import/validate','import/submit']):
+        assert request['WFURL']=='https://preview.winstitute-of-higher-thinking.pages.dev/api/'+endpoint
         assert request['WFHTTPMethod']=='POST' and request['WFHTTPBodyType']=='File'
         assert 'WFJSONValues' not in request and 'WFFormValues' not in request
-        assert request['WFRequestVariable']['Value']['OutputName']=='requestJson'
-    assert requests[0]['WFRequestVariable']==requests[1]['WFRequestVariable']
+    assert requests[0]['WFRequestVariable']['Value']['OutputName']=='loginJson'
+    assert requests[1]['WFRequestVariable']['Value']['OutputName']=='requestJson'
+    assert requests[1]['WFRequestVariable']==requests[2]['WFRequestVariable']
     def header_items(request):
         return {x['WFKey']['Value']['string']:x['WFValue'] for x in request['WFHTTPHeaders']['Value']['WFDictionaryFieldValueItems']}
-    assert header_items(requests[0])==header_items(requests[1])
+    assert header_items(requests[0])==header_items(requests[1])==header_items(requests[2])
+    login_index=ids.index('downloadurl')
+    assert ids[login_index-2:login_index]==['setvariable','detect.text']
+    assert p[login_index-2]['WFVariableName']=='loginBody'
+    assert p[login_index-1]['CustomOutputName']=='loginJson'
+    assert p[login_index]['WFRequestVariable']['Value']['OutputName']=='loginJson'
+    login_dispatch=ids.index('conditional', ids.index('detect.text'))
+    assert p[login_dispatch]['WFConditionalActionString']=='DGT_LOGIN_V1:'
     assert ids.count('setclipboard')==1
     copy_index=ids.index('setclipboard')
     assert ids[copy_index-3:copy_index]==['conditional','getitemtype','conditional']
@@ -89,11 +97,11 @@ def inspect(workflow, require_contract=True):
                 assert p[start]['WFMenuItems']==[{'WFValue':t} for t in titles]
                 menus.append(titles)
     assert not stack
-    assert menus==[['Cancel','Submit Results'],['Close','Open WHT']]
+    assert menus==[['Return to WHT',"I'll return manually"],['Cancel','Approve Login'],['Cancel','Submit Results'],['Close','Open WHT']]
     if require_contract:
         expected=json.loads(CONTRACT.read_text(encoding='utf-8'))
         assert canonical(workflow)==expected, 'Native action contract mismatch (order, slot, reference or literal).'
-    return {'structuralChecks':'passed','actions':len(a),'networkActions':2,'clipboardActions':1,'importQuestionActionIndex':1,'captureBytes':len(CAPTURE.read_bytes()),'nativeExecution':'not performed','dynamicSerialization':'requires native acceptance','transportAndCopyPermissionFailure':'native fail-stop requires acceptance'}
+    return {'structuralChecks':'passed','actions':len(a),'networkActions':3,'clipboardActions':1,'importQuestionActionIndex':1,'captureBytes':len(CAPTURE.read_bytes()),'nativeExecution':'not performed','dynamicSerialization':'requires native acceptance','transportAndCopyPermissionFailure':'native fail-stop requires acceptance'}
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
