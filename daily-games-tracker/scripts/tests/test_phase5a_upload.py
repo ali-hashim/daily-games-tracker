@@ -36,7 +36,103 @@ def params(w,kind=None,output=None,key=None,n=0):
 
 class UploadContractTests(unittest.TestCase):
     def test_reviewed_contract(self):
+        # The accepted upload tail still has validate/submit; Phase 5B adds
+        # the separate device-approval request ahead of it.
         self.assertEqual(i.inspect(fixture())['networkActions'],3)
+
+    def test_login_return_contract_matches_current_source(self):
+        source = b.SOURCE.read_text(encoding='utf-8')
+        self.assertIn('@loginReturnURL = getValue(@loginResponse, "return_url")', source)
+        self.assertIn('item "Return to WHT":', source)
+        self.assertIn('whtOpenURL(@loginReturnURL)\n                        stop()', source)
+
+        workflow = fixture()
+        i.inspect(workflow)
+        actions = workflow['WFWorkflowActions']
+        params_by_index = [a.get('WFWorkflowActionParameters', {}) for a in actions]
+        return_reads = [
+            (index, params)
+            for index, params in enumerate(params_by_index)
+            if actions[index]['WFWorkflowActionIdentifier'].endswith('.getvalueforkey')
+            and params.get('WFDictionaryKey') == 'return_url'
+        ]
+        self.assertEqual(len(return_reads), 1)
+        return_index, return_params = return_reads[0]
+        self.assertEqual(return_params['WFInput']['Value']['VariableName'], 'loginResponse')
+        self.assertEqual(params_by_index[return_index + 1]['WFVariableName'], 'loginReturnURL')
+
+        success_menus = [
+            (index, params)
+            for index, params in enumerate(params_by_index)
+            if actions[index]['WFWorkflowActionIdentifier'].endswith('.choosefrommenu')
+            and params.get('WFControlFlowMode') == 0
+            and [item['WFValue'] for item in params.get('WFMenuItems', [])]
+            == ['Close', 'Return to WHT']
+        ]
+        self.assertEqual(len(success_menus), 1)
+        menu_index, menu = success_menus[0]
+        self.assertEqual(menu['WFMenuPrompt'], 'Login approved. Return to WHT in Safari?')
+        group = menu['GroupingIdentifier']
+        close_index = next(
+            index for index in range(menu_index + 1, len(actions))
+            if params_by_index[index].get('GroupingIdentifier') == group
+            and params_by_index[index].get('WFMenuItemTitle') == 'Close'
+        )
+        return_item_index = next(
+            index for index in range(close_index + 1, len(actions))
+            if params_by_index[index].get('GroupingIdentifier') == group
+            and params_by_index[index].get('WFMenuItemTitle') == 'Return to WHT'
+        )
+        self.assertEqual(actions[close_index + 1]['WFWorkflowActionIdentifier'], 'is.workflow.actions.exit')
+        self.assertEqual(actions[return_item_index + 1]['WFWorkflowActionIdentifier'], 'is.workflow.actions.openurl')
+        return_open_params = params_by_index[return_item_index + 1]
+        self.assertEqual(return_open_params['WFInput']['Value']['VariableName'], 'loginReturnURL')
+        self.assertEqual(actions[return_item_index + 2]['WFWorkflowActionIdentifier'], 'is.workflow.actions.exit')
+
+    def test_login_return_native_mutations_rejected(self):
+        mutations = []
+
+        def remove_return_read(workflow):
+            actions = workflow['WFWorkflowActions']
+            actions[:] = [
+                action for action in actions
+                if action.get('WFWorkflowActionParameters', {}).get('WFDictionaryKey') != 'return_url'
+            ]
+        mutations.append(remove_return_read)
+
+        def hard_code_return_target(workflow):
+            for action in workflow['WFWorkflowActions']:
+                params = action.get('WFWorkflowActionParameters', {})
+                if action['WFWorkflowActionIdentifier'].endswith('.openurl') and params.get('WFInput', {}).get('Value', {}).get('VariableName') == 'loginReturnURL':
+                    params['WFInput'] = {'Value': 'https://example.invalid', 'WFSerializationType': 'WFTextTokenString'}
+                    return
+            raise AssertionError('return URL action not found')
+        mutations.append(hard_code_return_target)
+
+        def remove_return_stop(workflow):
+            actions = workflow['WFWorkflowActions']
+            for index, action in enumerate(actions):
+                if action.get('WFWorkflowActionParameters', {}).get('WFMenuItemTitle') == 'Return to WHT':
+                    del actions[index + 2]
+                    return
+            raise AssertionError('Return to WHT menu item not found')
+        mutations.append(remove_return_stop)
+
+        def remove_close_stop(workflow):
+            actions = workflow['WFWorkflowActions']
+            for index, action in enumerate(actions):
+                if action.get('WFWorkflowActionParameters', {}).get('WFMenuItemTitle') == 'Close':
+                    del actions[index + 1]
+                    return
+            raise AssertionError('Close menu item not found')
+        mutations.append(remove_close_stop)
+
+        for number, mutate in enumerate(mutations):
+            with self.subTest(mutation=number):
+                workflow = fixture()
+                mutate(workflow)
+                with self.assertRaises((AssertionError, KeyError, IndexError)):
+                    i.inspect(workflow, require_contract=False)
 
     def test_native_mutations_rejected(self):
         mutations=[
@@ -97,7 +193,7 @@ class UploadContractTests(unittest.TestCase):
         raw=fixture();raw['WFWorkflowActions'].pop(2);raw['WFWorkflowImportQuestions'][0].pop('ActionIndex')
         raw_bytes=plistlib.dumps(raw);binary=plistlib.dumps(b.normalize(raw))
         (build/'compiler-output.shortcut').write_bytes(raw_bytes)
-        (build/'Upload To WHT_unsigned.shortcut').write_bytes(binary)
+        (build/'Upload to WHT_unsigned.shortcut').write_bytes(binary)
         (build/'upload-to-wht.cherri').write_text(b.render_source(),encoding='utf-8')
         manifest={'sourceSha256':b.digest(b.SOURCE.read_bytes()),'artifactSha256':b.digest(binary),'rawArtifactSha256':b.digest(raw_bytes),'lockSha256':b.digest(b.LOCK.read_bytes()),'normalizerSha256':b.digest(Path(b.__file__).read_bytes()),'inspectorSha256':b.digest(Path(i.__file__).read_bytes()),'nativeContractSha256':b.digest(i.CONTRACT.read_bytes())}
         manifest['captureSha256']=b.digest(b.CAPTURE.read_bytes())
