@@ -15,9 +15,9 @@ SOURCE = Path(__file__).resolve().parents[1] / "shortcut/cherri-migration/source
 ORIGIN = "https://preview.example.invalid"
 PREFIX = "DGT_LOGIN_V1:"
 # Accepted upload tail, with only its obsolete login-unavailable guard removed.
-UPLOAD_SHA = "f77c43028d90d1863e7f508578fe6237e04b2ea56567c6860bb11d39589f2d89"
-SETUP_SHA = "07724891437eeb254408ee7213ab5f6436f881c3eb95d2d3bf8e7b6c05cddbd2"
-LOGIN_SHA = "8fcfcb9656020a9d988ba9efdef9f29417b1873e04373ffd8a141888ad4ef0c9"
+UPLOAD_SHA = "7ff5c843a8e0f7a5cbf4ff0bf730975b0703479a3f1a1f16ce68360443d19f35"
+SETUP_SHA = "ce49df7a86019b643ef27da2c3dafb1ababed7cefca46ab503f1f74a98db8fca"
+LOGIN_SHA = "dcd2287a5a929db2aa28ca5588e9e03fe6241bde6bdd200c99be15b156592477"
 
 
 def digest(text: str) -> str:
@@ -47,15 +47,22 @@ def inspect(source: str) -> dict:
             "Must send exactly one approval with the accepted runtime credential")
     require('item "Cancel":\n            stop()\n        item "Approve Login":' in login,
             "Cancel must stop before any approval")
-    require('whtOpenURL(@loginReturnURL)\n                        stop()' in login,
-            "Automatic return must stop")
-    require('item "I\'ll return manually":\n                        stop()' in login,
-            "Manual return must stop without opening a URL")
+    return_read = '@loginReturnURL = getValue(@loginResponse, "return_url")'
+    require(login.count(return_read) == 1,
+            "Approved login must read exactly one runtime return_url")
+    require(login.count("whtOpenURL(") == 1 and "whtOpenURL(@loginReturnURL)" in login,
+            "Return to WHT must open the runtime return_url through Safari")
+    require('whtOpenURL("' not in login,
+            "Return to WHT must not use a hard-coded URL")
+    require('item "Close":\n                        stop()' in login,
+            "Close branch must stop")
+    require('item "Return to WHT":\n                        whtOpenURL(@loginReturnURL)\n                        stop()' in login,
+            "Return to WHT branch must stop")
     require(login.rstrip().endswith("stop()\n}"), "Login must end with a fail-closed stop")
     for forbidden in ("setClipboard(", "whtExactCapture(", "/api/import/", "Cookie", "install_url"):
         require(forbidden not in login, "Forbidden login side effect or credential field")
     # Pin the complete reviewed branch, including error/unknown handling, nesting,
-    # server-message binding, return_url binding, and every explicit stop. This
+    # approved-login menu and every explicit stop. This
     # intentionally rejects edits until their control flow is reviewed again.
     require(digest(login) == LOGIN_SHA, "Reviewed login control flow changed")
     return {
@@ -64,7 +71,7 @@ def inspect(source: str) -> dict:
         "uploadSha256": digest(upload),
         "checks": ["preserved original input and trimmed runtime credential",
                    "first-prefix routing and anchored removal", "exact approval request",
-                   "Cancel without request", "approved automatic/manual return",
+                   "Cancel without request", "approved Safari return menu",
                    "error/unknown explicit stops", "no login capture/upload/clipboard fall-through",
                    "accepted upload tail preserved"],
         "generatedActionInspection": "not performed",
@@ -82,8 +89,10 @@ def self_test(source: str) -> int:
         ('loginJson, {"Content-Type"', 'requestJson, {"Content-Type"'),
         ('/api/auth/device/approve', '/api/import/submit'),
         ('item "Cancel":\n            stop()', 'item "Cancel":\n            alert("Cancelled")'),
-        ('item "I\'ll return manually":\n                        stop()', 'item "I\'ll return manually":\n                        whtOpenURL(@loginReturnURL)'),
+        ('@loginReturnURL = getValue(@loginResponse, "return_url")\n', ''),
+        ('whtOpenURL(@loginReturnURL)', 'whtOpenURL("https://example.invalid/hard-coded")'),
         ('whtOpenURL(@loginReturnURL)\n                        stop()', 'whtOpenURL(@loginReturnURL)'),
+        ('item "Close":\n                        stop()', 'item "Close":\n                        alert("Closed")'),
         ('if loginStatus == "error"', 'if loginStatus == "approved"'),
         ('const loginInput = getText(@originalInput)', 'const loginInput = getText(Clipboard)'),
         ('const loginJson = getText(@loginBody)', 'setClipboard(loginChallenge)\n            const loginJson = getText(@loginBody)'),

@@ -2,9 +2,9 @@
 #include 'actions/text'
 #include 'actions/sharing'
 #define name Upload To WHT
-// Pinned Cherri calls native bright green (0x19BD03FF) teal.
-#define color teal
-#define glyph gameController
+// Match the installed Shortcuts tile: green with Cherri's "locationPin" glyph.
+#define color green
+#define glyph locationPin
 #define mac false
 #define inputs webpage, text
 #define from sharesheet
@@ -56,16 +56,14 @@ if loginInput beginsWith "DGT_LOGIN_V1:" {
             @loginStatusValue = getValue(@loginResponse, "status")
             const loginStatus = getText(@loginStatusValue)
             if loginStatus == "approved" {
-                @loginMessage = getValue(@loginResponse, "message")
-                menu @loginMessage {
+                @loginReturnURL = getValue(@loginResponse, "return_url")
+                menu "Login approved. Return to WHT in Safari?" {
+                    item "Close":
+                        stop()
                     item "Return to WHT":
-                        @loginReturnURL = getValue(@loginResponse, "return_url")
                         whtOpenURL(@loginReturnURL)
                         stop()
-                    item "I'll return manually":
-                        stop()
                 }
-                stop()
             } else {
                 if loginStatus == "error" {
                     @loginError = getValue(@loginResponse, "error_message")
@@ -186,3 +184,4 @@ menu @completionMessage {
         stop()
 }
 stop()
+openApp("com.apple.AppStore")

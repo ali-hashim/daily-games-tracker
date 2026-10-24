@@ -79,7 +79,46 @@ def inspect(workflow, require_contract=True):
     assert ids[copy_index-3:copy_index]==['conditional','getitemtype','conditional']
     assert p[copy_index-3]['WFCondition']==100
     assert p[copy_index-1]['WFConditionalActionString']=='Text'
-    assert ids[-1]=='exit'
+    assert ids[-2:] == ['exit', 'openapp']
+    assert p[-1]['WFAppIdentifier'] == 'com.apple.AppStore'
+    assert p[-1]['WFSelectedApp'] == {'BundleIdentifier': 'com.apple.AppStore'}
+    approved_start = next(i for i,x in enumerate(p)
+                          if ids[i]=='conditional'
+                          and x.get('WFControlFlowMode')==0
+                          and x.get('WFConditionalActionString')=='approved')
+    approved_group = p[approved_start]['GroupingIdentifier']
+    approved_end = next(i for i in range(approved_start + 1, len(p))
+                        if ids[i]=='conditional'
+                        and p[i].get('WFControlFlowMode')==2
+                        and p[i].get('GroupingIdentifier')==approved_group)
+    return_reads = [i for i,x in enumerate(p)
+                    if ids[i]=='getvalueforkey' and x.get('WFDictionaryKey')=='return_url']
+    assert len(return_reads)==1 and approved_start < return_reads[0] < approved_end
+    return_index = return_reads[0]
+    assert p[return_index]['WFInput']['Value']=={'Type':'Variable','VariableName':'loginResponse'}
+    assert p[return_index + 1]['WFVariableName']=='loginReturnURL'
+    success_start = next(i for i,x in enumerate(p)
+                         if ids[i]=='choosefrommenu'
+                         and x.get('WFControlFlowMode')==0
+                         and x.get('WFMenuItems')==[{'WFValue':'Close'},{'WFValue':'Return to WHT'}])
+    assert approved_start < success_start < approved_end
+    success_group = p[success_start]['GroupingIdentifier']
+    assert p[success_start]['WFMenuPrompt']=='Login approved. Return to WHT in Safari?'
+    success_end = next(i for i in range(success_start + 1, approved_end)
+                       if ids[i]=='choosefrommenu'
+                       and p[i].get('WFControlFlowMode')==2
+                       and p[i].get('GroupingIdentifier')==success_group)
+    close_index = next(i for i in range(success_start + 1, success_end)
+                       if p[i].get('WFMenuItemTitle')=='Close'
+                       and p[i].get('GroupingIdentifier')==success_group)
+    return_item_index = next(i for i in range(close_index + 1, success_end)
+                             if p[i].get('WFMenuItemTitle')=='Return to WHT'
+                             and p[i].get('GroupingIdentifier')==success_group)
+    assert ids[close_index + 1]=='exit'
+    assert ids[return_item_index + 1]=='openurl'
+    assert p[return_item_index + 1]['WFInput']['Value']=={'Type':'Variable','VariableName':'loginReturnURL'}
+    assert 'WFURL' not in p[return_item_index + 1]
+    assert ids[return_item_index + 2]=='exit'
     stack=[]; groups=set(); menus=[]
     for i,x in enumerate(p):
         mode=x.get('WFControlFlowMode')
@@ -97,7 +136,7 @@ def inspect(workflow, require_contract=True):
                 assert p[start]['WFMenuItems']==[{'WFValue':t} for t in titles]
                 menus.append(titles)
     assert not stack
-    assert menus==[['Return to WHT',"I'll return manually"],['Cancel','Approve Login'],['Cancel','Submit Results'],['Close','Open WHT']]
+    assert menus==[['Close','Return to WHT'],['Cancel','Approve Login'],['Cancel','Submit Results'],['Close','Open WHT']]
     if require_contract:
         expected=json.loads(CONTRACT.read_text(encoding='utf-8'))
         assert canonical(workflow)==expected, 'Native action contract mismatch (order, slot, reference or literal).'
