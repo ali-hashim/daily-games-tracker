@@ -20,6 +20,10 @@ const mutations = [
   ['runtime origin secret', 'WHT_RUNTIME_ORIGIN: ' + expression + ' secrets.WHT_RUNTIME_ORIGIN }}', 'WHT_RUNTIME_ORIGIN: https://runtime.example.invalid'],
   ['output encryption secret', 'WHT_SIGNING_OUTPUT_KEY: ' + expression + ' secrets.WHT_SIGNING_OUTPUT_KEY }}', 'WHT_SIGNING_OUTPUT_KEY: unset'],
   ['migrated ambiguity secret', 'WHT_AMBIGUOUS_SIGNING_RECORD: ' + expression + ' secrets.WHT_AMBIGUOUS_SIGNING_RECORD }}', 'WHT_AMBIGUOUS_SIGNING_RECORD: unset'],
+  ['ambiguous recovery input', 'confirm_ambiguous_recovery:', 'confirm_ambiguous_recovery_removed:'],
+  ['ambiguous recovery authorization secret', 'WHT_AMBIGUOUS_RECOVERY_AUTH: ' + expression + ' secrets.WHT_AMBIGUOUS_RECOVERY_AUTH }}', 'WHT_AMBIGUOUS_RECOVERY_AUTH: unset'],
+  ['recovery first attempt guard', 'test "$GITHUB_RUN_ATTEMPT" = 1', 'test "$GITHUB_RUN_ATTEMPT" = 2'],
+  ['manual recovery guard', 'test "$GITHUB_EVENT_NAME" = workflow_dispatch', 'test "$GITHUB_EVENT_NAME" = push'],
   ['status permission', '  statuses: write', '  statuses: read'],
   ['serialized protected run', 'cancel-in-progress: false', 'cancel-in-progress: true'],
   ['reserved origin guard', 'assert host != "localhost" and not host.endswith((".invalid", ".example", ".test"))', 'assert True'],
@@ -34,6 +38,7 @@ const mutations = [
   ['strict package validation', 'phase5a_upload_signing.py validate', 'echo validate'],
   ['encrypted intent', 'phase5a_actions_signing.mjs prepare', 'echo prepare'],
   ['direct HubSign send', 'phase5a_actions_signing.mjs send', 'echo send'],
+  ['encrypted provider outcome capture', '--outcome-path "$RUNNER_TEMP/wht-signing-outcome.enc"', '--outcome-path "$RUNNER_TEMP/wht-signing-result.enc"'],
   ['encrypted result upload', 'name: ' + expression + ' steps.prepare.outputs.result_artifact }}', 'name: signed.shortcut'],
   ['public package upload', 'path: ' + expression + ' steps.prepare.outputs.intent_path }}', 'path: ' + expression + ' runner.temp }}/upload-review-package'],
 ];

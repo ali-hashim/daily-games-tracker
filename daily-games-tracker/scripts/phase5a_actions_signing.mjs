@@ -6,7 +6,9 @@
  * GitHub commit status is the durable lease: pending means permanently
  * ambiguous and blocks every later attempt for the same logical operation.
  * A private encrypted migrated record blocks the prior ambiguous logical
- * package even when a later commit produces different wire bytes.
+ * package even when a later commit produces different wire bytes. Only an
+ * exact protected, run-bound recovery authorization can release that record
+ * for one first-attempt run; the status lease still blocks its reruns.
  */
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
@@ -15,6 +17,7 @@ import { fileURLToPath } from 'node:url';
 
 export const HUBSIGN_ENDPOINT = 'https://hubsign.routinehub.services/sign';
 export const MAX_SIGNED_BYTES = 8 * 1024 * 1024;
+const MAX_PROVIDER_BODY_EVIDENCE_BYTES = 8 * 1024 * 1024;
 const STATUS_PREFIX = 'wht-shortcut-signing/';
 const KEY_PREFIX = 'wht-shortcut-signing-v3\n';
 
@@ -176,23 +179,27 @@ export function validateSignedShortcut(bytes) {
   return { valid: true };
 }
 
-export function hubSignRequestOptions(wire) {
+export function hubSignRequestOptions(wire, compilerVersion = 'v2.3.0') {
   if (!Buffer.isBuffer(wire) || wire.length === 0) throw new Error('HubSign wire must be non-empty bytes');
+  if (typeof compilerVersion !== 'string' || !/^v\d+\.\d+\.\d+$/.test(compilerVersion)) {
+    throw new Error('Cherri compiler version is invalid');
+  }
   return {
     method: 'POST',
     redirect: 'manual',
     headers: {
       'content-type': 'application/json',
       'content-length': String(wire.length),
-      'user-agent': 'wht-actions-signing/1',
+      'user-agent': `cherri/${compilerVersion}`,
     },
     body: wire,
   };
 }
 
 export function hubSignResponseAccepted(status, contentType) {
+  const accepted = new Set(['application/octet-stream', 'application/x-plist', 'application/x-apple-shortcut']);
   return status === 200 && typeof contentType === 'string'
-    && contentType.split(';', 1)[0].trim().toLowerCase() === 'application/octet-stream';
+    && accepted.has(contentType.split(';', 1)[0].trim().toLowerCase());
 }
 
 export function migratedRecordBlocks(record, sourceIdentity, targetOriginSha256, wireSha256) {
@@ -268,6 +275,52 @@ function readMigratedAmbiguityRecord(outputKey) {
   const encoded = process.env.WHT_AMBIGUOUS_SIGNING_RECORD;
   if (!encoded) throw new Error('migrated ambiguous signing record is not configured');
   return decodeMigratedAmbiguityRecord(encoded, outputKey);
+}
+
+function decodeRecoveryAuthorization(encoded) {
+  if (typeof encoded !== 'string' || !encoded.trim()) {
+    throw new Error('recovery authorization is invalid');
+  }
+  let authorization;
+  try {
+    const normalized = encoded.trim();
+    const bytes = Buffer.from(normalized, 'base64');
+    if (!bytes.length || bytes.toString('base64') !== normalized) throw new Error('invalid authorization encoding');
+    authorization = JSON.parse(bytes.toString('utf8'));
+  } catch {
+    throw new Error('recovery authorization is invalid');
+  }
+  const expectedKeys = new Set([
+    'schemaVersion', 'runId', 'runAttempt', 'sourceCommit',
+    'logicalSourceIdentity', 'targetOriginSha256', 'operationKey', 'migratedWireSha256',
+  ]);
+  if (!authorization || typeof authorization !== 'object'
+    || Object.keys(authorization).some(key => !expectedKeys.has(key))
+    || authorization.schemaVersion !== 1
+    || typeof authorization.runId !== 'string' || !/^[A-Za-z0-9._-]{1,128}$/.test(authorization.runId)
+    || !Number.isInteger(authorization.runAttempt) || authorization.runAttempt < 1
+  ) {
+    throw new Error('recovery authorization is invalid');
+  }
+  assertCommit(authorization.sourceCommit);
+  assertHex(authorization.logicalSourceIdentity, 64, 'recovery logical source identity');
+  assertHex(authorization.targetOriginSha256, 64, 'recovery target origin SHA-256');
+  assertHex(authorization.operationKey, 64, 'recovery operation key');
+  assertHex(authorization.migratedWireSha256, 64, 'recovery migrated wire SHA-256');
+  return authorization;
+}
+
+function recoveryAuthorizationMatches(authorization, record, metadata, sourceCommit) {
+  return authorization.runAttempt === 1
+    && process.env.GITHUB_RUN_ID === authorization.runId
+    && process.env.GITHUB_RUN_ATTEMPT === '1'
+    && authorization.sourceCommit === sourceCommit
+    && authorization.logicalSourceIdentity === record.logicalSourceIdentity
+    && authorization.logicalSourceIdentity === metadata.sourceIdentity
+    && authorization.targetOriginSha256 === metadata.targetOriginSha256
+    && (!record.targetOriginSha256 || authorization.targetOriginSha256 === record.targetOriginSha256)
+    && authorization.operationKey === metadata.key
+    && authorization.migratedWireSha256 === record.wireSha256;
 }
 
 function githubRepository() {
@@ -379,7 +432,7 @@ function output(name, value) {
   return writeFile(target, `${name}=${value}\n`, { flag: 'a' });
 }
 
-async function packageMetadata(packageDirectory, runtimeOrigin, expectedManifestSha, expectedWireSha, outputKey) {
+async function packageMetadata(packageDirectory, runtimeOrigin, expectedManifestSha, expectedWireSha, outputKey, recovery = {}) {
   const packagePath = resolve(packageDirectory);
   const manifestBytes = await readFile(resolve(packagePath, 'approval-manifest.json'));
   const manifestSha = sha256(manifestBytes);
@@ -399,19 +452,46 @@ async function packageMetadata(packageDirectory, runtimeOrigin, expectedManifest
   if (buildManifest.lockSha256 !== lockSha || manifest.toolchain?.lockSha256 !== lockSha) {
     throw new Error('toolchain lock provenance digest mismatch');
   }
+  const semanticProjection = semanticToolchainProjection(buildManifest);
   const sourceIdentity = logicalSourceIdentity(buildManifest);
   const origin = validateRuntimeOrigin(runtimeOrigin);
   const targetOriginSha256 = sha256(Buffer.from(origin, 'utf8'));
+  const key = operationKey(sourceIdentity, targetOriginSha256);
   const migratedRecord = readMigratedAmbiguityRecord(outputKey);
   if (migratedRecordBlocks(migratedRecord, sourceIdentity, targetOriginSha256, wireSha)) {
-    throw new Error('known ambiguous logical package is permanently blocked');
+    if (recovery.requested !== true) throw new Error('known ambiguous logical package is permanently blocked');
+    const authorization = decodeRecoveryAuthorization(recovery.authorization);
+    if (!recoveryAuthorizationMatches(authorization, migratedRecord, { sourceIdentity, targetOriginSha256, key }, recovery.sourceCommit)) {
+      throw new Error('recovery authorization does not match the protected ambiguous operation');
+    }
   }
-  const key = operationKey(sourceIdentity, targetOriginSha256);
-  return { packagePath, manifestBytes, manifest, manifestSha, wire, wireSha, sourceIdentity, targetOriginSha256, key };
+  return {
+    packagePath,
+    manifestBytes,
+    manifest,
+    manifestSha,
+    wire,
+    wireSha,
+    sourceIdentity,
+    compilerVersion: semanticProjection.compiler.version,
+    targetOriginSha256,
+    key,
+  };
 }
 
 export async function prepareSigning(args) {
-  const metadata = await packageMetadata(args.package, args.runtimeOrigin, args.manifestSha, args.wireSha, args.outputKey);
+  const metadata = await packageMetadata(
+    args.package,
+    args.runtimeOrigin,
+    args.manifestSha,
+    args.wireSha,
+    args.outputKey,
+    {
+      requested: args.recoveryRequested === true,
+      authorization: args.recoveryAuthorization,
+      sourceCommit: args.sourceCommit,
+    },
+  );
   const context = statusContext(metadata.key);
   if (await currentStatus(context)) throw new Error('existing signing status blocks this operation');
   await createStatus(context, 'pending', 'Encrypted signing intent recorded; interruption remains ambiguous');
@@ -421,6 +501,7 @@ export async function prepareSigning(args) {
     operationKey: metadata.key,
     sourceCommit: args.sourceCommit,
     logicalSourceIdentity: metadata.sourceIdentity,
+    compilerVersion: metadata.compilerVersion,
     statusAnchor: statusSha(),
     targetOriginSha256: metadata.targetOriginSha256,
     manifestSha256: metadata.manifestSha,
@@ -447,10 +528,59 @@ async function readIntent(path, outputKey) {
   assertHex(intent.targetOriginSha256, 64, 'target origin SHA-256');
   assertHex(intent.manifestSha256, 64, 'manifest SHA-256');
   assertHex(intent.wireSha256, 64, 'wire SHA-256');
+  if (typeof intent.compilerVersion !== 'string' || !/^v\d+\.\d+\.\d+$/.test(intent.compilerVersion)) {
+    throw new Error('private signing intent Cherri version is invalid');
+  }
   if (operationKey(intent.logicalSourceIdentity, intent.targetOriginSha256) !== intent.operationKey) {
     throw new Error('private signing intent key mismatch');
   }
   return intent;
+}
+
+async function persistProviderOutcome(outcomePath, intent, outputKey, fields) {
+  if (!outcomePath) throw new Error('private provider outcome path is required');
+  const outcome = {
+    schemaVersion: 1,
+    status: 'ambiguous',
+    operationKey: intent.operationKey,
+    sourceCommit: intent.sourceCommit,
+    logicalSourceIdentity: intent.logicalSourceIdentity,
+    statusAnchor: intent.statusAnchor,
+    targetOriginSha256: intent.targetOriginSha256,
+    manifestSha256: intent.manifestSha256,
+    wireSha256: intent.wireSha256,
+    ...fields,
+  };
+  await writeFile(outputPath(outcomePath), `${JSON.stringify(encryptPrivateEnvelope(Buffer.from(JSON.stringify(outcome)), outputKey))}\n`, { mode: 0o600 });
+}
+
+async function responseEvidence(response) {
+  const contentType = response.headers.get('content-type');
+  let body;
+  try {
+    body = Buffer.from(await response.arrayBuffer());
+  } catch {
+    return {
+      providerContentType: contentType,
+      providerBodyLength: null,
+      providerBodySha256: null,
+      providerBodyBase64: null,
+      providerBodyReadFailure: true,
+    };
+  }
+  const fields = {
+    providerContentType: contentType,
+    providerBodyLength: body.length,
+    providerBodySha256: sha256(body),
+    providerBodyReadFailure: false,
+  };
+  if (body.length <= MAX_PROVIDER_BODY_EVIDENCE_BYTES) {
+    fields.providerBodyBase64 = body.toString('base64');
+  } else {
+    fields.providerBodyBase64 = null;
+    fields.providerBodyTooLarge = true;
+  }
+  return fields;
 }
 
 export async function sendSigning(args) {
@@ -462,19 +592,55 @@ export async function sendSigning(args) {
   let response;
   try {
     response = await fetch(HUBSIGN_ENDPOINT, {
-      ...hubSignRequestOptions(wire),
+      ...hubSignRequestOptions(wire, intent.compilerVersion),
       signal: AbortSignal.timeout(30_000),
     });
   } catch {
+    await persistProviderOutcome(args.outcomePath, intent, args.outputKey, {
+      transportFailure: true,
+      providerStatus: null,
+      providerContentType: null,
+      providerBodyLength: null,
+      providerBodySha256: null,
+      providerBodyBase64: null,
+    });
     throw new Error('HubSign transfer is ambiguous; no retry is permitted');
   }
   if (!hubSignResponseAccepted(response.status, response.headers.get('content-type'))) {
+    await persistProviderOutcome(args.outcomePath, intent, args.outputKey, {
+      transportFailure: false,
+      providerStatus: response.status,
+      ...(await responseEvidence(response)),
+    });
     throw new Error('HubSign response is ambiguous; no retry is permitted');
   }
-  const signed = Buffer.from(await response.arrayBuffer());
+  let signed;
+  try {
+    signed = Buffer.from(await response.arrayBuffer());
+  } catch {
+    await persistProviderOutcome(args.outcomePath, intent, args.outputKey, {
+      transportFailure: false,
+      providerStatus: response.status,
+      providerContentType: response.headers.get('content-type'),
+      providerBodyLength: null,
+      providerBodySha256: null,
+      providerBodyBase64: null,
+      providerBodyReadFailure: true,
+    });
+    throw new Error('HubSign response is ambiguous; no retry is permitted');
+  }
   try {
     validateSignedShortcut(signed);
   } catch {
+    await persistProviderOutcome(args.outcomePath, intent, args.outputKey, {
+      transportFailure: false,
+      providerStatus: response.status,
+      providerContentType: response.headers.get('content-type'),
+      providerBodyLength: signed.length,
+      providerBodySha256: sha256(signed),
+      providerBodyBase64: signed.length <= MAX_PROVIDER_BODY_EVIDENCE_BYTES ? signed.toString('base64') : null,
+      providerBodyTooLarge: signed.length > MAX_PROVIDER_BODY_EVIDENCE_BYTES,
+    });
     throw new Error('HubSign response is ambiguous; no retry is permitted');
   }
   const result = {
@@ -541,8 +707,13 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       wireSha: args.wireSha,
       outputKey: process.env.WHT_SIGNING_OUTPUT_KEY,
       intentPath: args.intentPath,
+      recoveryRequested: process.env.WHT_AMBIGUOUS_RECOVERY_REQUESTED === 'true',
+      recoveryAuthorization: process.env.WHT_AMBIGUOUS_RECOVERY_AUTH,
     });
-    else if (command === 'send') await sendSigning({ package: args.package, intentPath: args.intentPath, resultPath: args.resultPath, outputKey: process.env.WHT_SIGNING_OUTPUT_KEY });
+    else if (command === 'send') {
+      if (!args.outcomePath) throw new Error('private provider outcome path is required');
+      await sendSigning({ package: args.package, intentPath: args.intentPath, resultPath: args.resultPath, outcomePath: args.outcomePath, outputKey: process.env.WHT_SIGNING_OUTPUT_KEY });
+    }
     else if (command === 'complete') await complete({ resultPath: args.resultPath, outputKey: process.env.WHT_SIGNING_OUTPUT_KEY });
     else if (command === 'recover') await recover({ resultPath: args.resultPath, output: args.output, operationKey: args.operationKey, outputKey: process.env.WHT_SIGNING_OUTPUT_KEY });
     else throw new Error('unknown signing command');

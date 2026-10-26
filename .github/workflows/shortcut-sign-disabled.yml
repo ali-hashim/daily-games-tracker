@@ -27,6 +27,11 @@ on:
         required: true
         type: boolean
         default: false
+      confirm_ambiguous_recovery:
+        description: Authorize one bounded recovery attempt for the existing ambiguous package
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -52,6 +57,8 @@ jobs:
       WHT_RUNTIME_ORIGIN: ${{ secrets.WHT_RUNTIME_ORIGIN }}
       WHT_SIGNING_OUTPUT_KEY: ${{ secrets.WHT_SIGNING_OUTPUT_KEY }}
       WHT_AMBIGUOUS_SIGNING_RECORD: ${{ secrets.WHT_AMBIGUOUS_SIGNING_RECORD }}
+      WHT_AMBIGUOUS_RECOVERY_AUTH: ${{ secrets.WHT_AMBIGUOUS_RECOVERY_AUTH }}
+      WHT_AMBIGUOUS_RECOVERY_REQUESTED: ${{ github.event_name == 'workflow_dispatch' && inputs.confirm_ambiguous_recovery == true }}
       CHERRI_COMMIT: d2072c62ea708e7727099fab94fa28b0bcec747b
       PYTHONUTF8: "1"
       PYTHONOPTIMIZE: "0"
@@ -68,6 +75,11 @@ jobs:
           test -n "$WHT_RUNTIME_ORIGIN"
           test -n "$WHT_SIGNING_OUTPUT_KEY"
           test -n "$WHT_AMBIGUOUS_SIGNING_RECORD"
+          if [[ "$WHT_AMBIGUOUS_RECOVERY_REQUESTED" == true ]]; then
+            test "$GITHUB_EVENT_NAME" = workflow_dispatch
+            test "$GITHUB_RUN_ATTEMPT" = 1
+            test -n "$WHT_AMBIGUOUS_RECOVERY_AUTH"
+          fi
           python3 - <<'PY'
           import base64, os
           from urllib.parse import urlsplit
@@ -191,13 +203,24 @@ jobs:
           retention-days: 90
 
       - name: Send exactly one direct HubSign request
+        id: send
         shell: bash
         run: |
           set -euo pipefail
           node daily-games-tracker/scripts/phase5a_actions_signing.mjs send \
             --package "$RUNNER_TEMP/upload-review-package" \
             --intent-path "$RUNNER_TEMP/wht-signing-intent.enc" \
+            --outcome-path "$RUNNER_TEMP/wht-signing-outcome.enc" \
             --result-path "$RUNNER_TEMP/wht-signing-result.enc"
+
+      - name: Upload encrypted provider outcome
+        if: ${{ always() && steps.send.outcome == 'failure' }}
+        uses: actions/upload-artifact@615b319bd27bb32c3d64dca6b6ed6974d5fbe653 # v6.0.0
+        with:
+          name: ${{ steps.prepare.outputs.intent_artifact }}-provider-outcome
+          path: ${{ runner.temp }}/wht-signing-outcome.enc
+          if-no-files-found: ignore
+          retention-days: 90
 
       - name: Upload encrypted signed result
         uses: actions/upload-artifact@615b319bd27bb32c3d64dca6b6ed6974d5fbe653 # v6.0.0
