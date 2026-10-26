@@ -42,7 +42,7 @@
 
 **Interfaces:**
 - Produces `POST /api/auth/device/start` accepting optional `{ return_url?: string }`, with missing/invalid values normalized to `/user`; approval returns an absolute same-origin `return_url` of `/user` or `/daily/YYYY-MM-DD`.
-- Produces `GET /api/user/stats` returning `{ status: "ok", player, games: [{ key, display_name, icon, total, games_played, average, rank }], install_url }`, with the active games in canonical order and `install_url` either the existing validated iCloud URL or `null`.
+- Produces `GET /api/user/stats` returning `{ status: "ok", player, games: [{ key, display_name, icon, total, games_played, average, rank }], install_url }`, with the active games in canonical order and `install_url` either the privately configured validated hosted Shortcut URL or `null`.
 - Existing Login with Device session cookie, expiry, revocation, same-origin checks, and native approval semantics remain unchanged.
 
 - [ ] **Step 1: Write failing integration tests** for stored/default/invalid return paths, approval response, authenticated stats, zero-play games, privacy, 401, and supported/unsupported install URL behavior.

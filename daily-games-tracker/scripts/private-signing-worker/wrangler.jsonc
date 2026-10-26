@@ -1,0 +1,23 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "wht-private-signing-worker",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-20",
+  "vars": {
+    "HUBSIGN_ENDPOINT": "https://hubsign.routinehub.services/sign"
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "SIGNING_OPERATIONS",
+        "class_name": "SigningOperation"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["SigningOperation"]
+    }
+  ]
+}

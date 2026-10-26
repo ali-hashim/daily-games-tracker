@@ -17,6 +17,16 @@ function problem(code: string, message: string, status = 422): ApiError {
   return new ApiError(status, code, `${message}\n\nNothing was submitted.`);
 }
 const alreadySavedMessage = "You already have a result saved for this game today.";
+const SUPPORTED_INSTALL_URL = /^https:\/\/www\.icloud\.com\/shortcuts\/[a-f0-9]{32}$/i;
+const TEST_INSTALL_URL = "https://example.invalid/shortcuts/EXAMPLE_SHORTCUT";
+
+function installUrl(env: AppEnv): string | null {
+  const value = env.SHORTCUT_INSTALL_URL ?? "";
+  return SUPPORTED_INSTALL_URL.test(value) || (env.APP_ENV === "test" && value === TEST_INSTALL_URL)
+    ? value
+    : null;
+}
+
 const identityConflict = () =>
   problem(
     "IDENTITY_CONFLICT",
@@ -286,11 +296,7 @@ export async function importRequest(
     )
       throw new Error("Invalid Shortcut policy");
     // Match registration's accepted iCloud install-link shape; the phone opens this verbatim.
-    const installUrl = /^https:\/\/www\.icloud\.com\/shortcuts\/[a-f0-9]{32}$/i.test(
-      env.SHORTCUT_INSTALL_URL ?? "",
-    )
-      ? env.SHORTCUT_INSTALL_URL
-      : null;
+    const installUrlValue = installUrl(env);
     const support = {
       shortcut_support:
         Number(body.shortcut_version) < minimum
@@ -299,10 +305,10 @@ export async function importRequest(
             ? "update_available"
             : "supported",
       latest_version: latest,
-      install_url: installUrl,
+      install_url: installUrlValue,
     };
     if (support.shortcut_support === "update_required") {
-      if (!installUrl)
+      if (!installUrlValue)
         throw problem(
           "SHORTCUT_UPDATE_UNAVAILABLE",
           "This Shortcut needs an update, but its installation link is unavailable. Contact the administrator for the latest Upload to WHT Shortcut.",

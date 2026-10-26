@@ -19,7 +19,7 @@ export async function requireAdmin(request: Request, env: AppEnv, requestId = "u
     !issuer ||
     !audience ||
     !email ||
-    !/^https:\/\/[a-z0-9-]+\.cloudflareaccess\.com$/.test(issuer)
+    !isAllowedAccessIssuer(issuer, env.APP_ENV)
   ) {
     throw new ApiError(503, "ADMIN_NOT_CONFIGURED", "Administrator access is not configured yet.");
   }
@@ -47,6 +47,13 @@ export async function requireAdmin(request: Request, env: AppEnv, requestId = "u
     }
     throw error;
   }
+}
+
+function isAllowedAccessIssuer(issuer: string, appEnv?: AppEnv["APP_ENV"]): boolean {
+  return (
+    /^https:\/\/[a-z0-9-]+\.cloudflareaccess\.com$/.test(issuer) ||
+    (appEnv === "test" && /^https:\/\/[a-z0-9-]+\.test\.invalid$/.test(issuer))
+  );
 }
 
 /** The resolver argument permits signed-key tests; request data never controls the trusted key set. */

@@ -153,7 +153,7 @@ test('toolchain verifier rejects runner drift, unknown action pins, and a missin
       ['unknown action', text => `${text}\n      - uses: actions/cache@${'a'.repeat(40)}\n`, /action not present in the lock/],
       ['missing compiler flag', text => text.replace('"$RUNNER_TEMP/cherri" "$dir/01-alert.cherri" --skip-sign --derive-uuids', '"$RUNNER_TEMP/cherri" "$dir/01-alert.cherri"'), /missing locked flag/],
       ['missing strict current inspector guard', text => text.replace('inspector_flags+=(--strict-current)', 'inspector_flags+=(--experiment-only)'), /strict-current/],
-      ['missing full client repeat', text => text.replace('phase5a_build_upload.py --compiler "$RUNNER_TEMP/cherri" --output "$RUNNER_TEMP/upload-second"', 'removed-full-client-repeat'), /second complete unsigned client/],
+      ['missing full client repeat', text => text.replace('phase5a_build_upload.py --compiler "$RUNNER_TEMP/cherri" --runtime-origin "https://runtime.example.invalid" --output "$RUNNER_TEMP/upload-second"', 'removed-full-client-repeat'), /second complete unsigned client/],
       ['missing full client comparison', text => text.replace('phase5a_compare_upload.py', 'removed-comparison.py'), /complete-client native contract/],
       ['signing transfer in routine workflow', text => text.replace('phase5a_upload_signing.py prepare', 'phase5a_upload_signing.py send'), /must not send a signing payload/],
     ]) {

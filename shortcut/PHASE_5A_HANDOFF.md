@@ -14,7 +14,13 @@ Updated October 23, 2026 (`America/Los_Angeles`). This handoff records the accep
 - Signed candidate: 31,044 bytes, SHA-256 `19b4be2bd3c920ff6061e416d364bf53c8e2cd2d6161d0330a430dd0274b90cd`
 - Candidate name: **Upload to WHT**
 
-The signed candidate was installed and configured by the user on an iPhone 15 Pro running iOS 26.6.1. Reported passes cover setup, already-saved Text/Safari completion, scoreboard copy and returned-link behavior, unsupported input with clipboard preservation, Cancel with clipboard preservation, new-save confirmation/success, website score/answer readback, and already-saved reshare without a second confirmation.
+The signed candidate's native acceptance was reported complete on a privately
+held device. Reported passes cover setup, already-saved Text/Safari completion,
+scoreboard copy and returned-link behavior, unsupported input with clipboard
+preservation, Cancel with clipboard preservation, new-save confirmation/success,
+website score/answer readback, and already-saved reshare without a second
+confirmation. Device model, operating-system version, and detailed native
+evidence remain private.
 
 ## Integrity evidence
 
@@ -31,12 +37,19 @@ This is bounded evidence. It does not reconstruct a pretest database baseline, p
 | Saved-result integrity | Bounded evidence complete; historical baseline limits recorded above |
 | Native race/concurrency exercise | Explicitly waived by user |
 | General byte/semantic reproducibility | Explicitly waived by user |
-| Protected signing workflow | Static preflight complete; activation remains disabled |
+| Protected signing workflow | Static preflight complete; activation and dispatch remain pending |
 | Phase 5B source/toolchain handoff | Prepared by this document |
 
 ## Signing and handoff boundary
 
-The disabled signing workflow's static verifier passed, and the one-off HubSign candidate hash was reverified. The workflow remains protected by its permanent `false && inputs.confirm_external_signing` guard and all-zero reviewed-commit sentinel; no automated signing activation is claimed. The source, lock, build instructions, native reports, and candidate hash are retained for Phase 5B integration. The unchanged private manual-pilot backup is recorded as saved by user report; its identifier and hash were not recorded, so it remains a user-held rollback reference rather than an independently verified artifact.
+The protected signing workflow's static verifier passed, and the one-off
+HubSign candidate hash was reverified. Activation and dispatch remain pending
+collective review and protected environment configuration; no automated signing
+run is claimed. The source, lock, build instructions, native reports, and
+candidate hash are retained for Phase 5B integration. The unchanged private
+manual-pilot backup is recorded as saved by user report; its identifier and
+hash were not recorded, so it remains a user-held rollback reference rather
+than an independently verified artifact.
 
 Creating an installation link, sharing it publicly, preview deployment, and production rollout are separate release decisions.
 

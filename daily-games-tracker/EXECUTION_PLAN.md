@@ -3,7 +3,7 @@
 **Authority:** `../Daily_Games_Tracker_Final_Implementation_Plan.md` \
 **Updated:** October 25, 2026
 
-**Current status — October 25, 2026:** Core features through Phase 8 and Phase 9 hardening are implemented and preview-deployed (944ff1a6). Production remains undeployed. Phase 5B closed under bounded acceptance; Phase 5A formal closeout and Phase 9 launch gates remain open. **Phase 10 User page/tab is implemented, independently reviewed, and preview-deployed at `3e7e7979`; physical-device/native evidence remains open.** See [PROJECT_STATUS.md](PROJECT_STATUS.md) and [Phase 10 evidence](reports/phase10-user-page-verification.md).
+**Current status — October 25, 2026:** Core features through Phase 8 and Phase 9 hardening are implemented in the reviewed source; hosted preview identity is retained in private evidence. Production remains undeployed. Phase 5B closed under bounded acceptance; Phase 5A formal closeout and Phase 9 launch gates remain open. **Phase 10 User page/tab is implemented and independently reviewed in the source; physical-device/native evidence remains open.** See [PROJECT_STATUS.md](PROJECT_STATUS.md) and [Phase 10 evidence](reports/phase10-user-page-verification.md).
 
 **Sequence:** Phases 0–9 retain numbering, Phase 5 is 5A/5B, and Phase 10 is the final additional User phase. Reviewed one-time HubSign sends have standing authorization; protected automated signing remains disabled. New/modified Shortcuts compile through pinned CI, never locally.
 
@@ -94,7 +94,7 @@ No broad rollout until Cloudflare Access, backup/restore, session revocation, sp
 
 ### Phase 1 — Pages, Functions, and final D1 schema
 
-**Complete.** Preview was verified at `https://preview.example.invalid`, with schema version 1 and both games. The baseline and environment configuration are committed as `e88c923` and `5bc9f03`. Production remains undeployed.
+**Complete in historical private evidence.** The earlier preview verification covered schema version 1 and both games. Hosted origin and deployment identity are intentionally omitted from this public plan. The baseline and environment configuration are committed as `e88c923` and `5bc9f03`; production remains undeployed.
 
 1. Keep the Pages Functions directory routing and same-origin architecture.
 2. Configure current Pages-compatible Wrangler settings, D1 binding `DB`, local `preview_database_id`, and separate preview/production configuration.
@@ -108,7 +108,7 @@ No broad rollout until Cloudflare Access, backup/restore, session revocation, sp
 
 ### Phase 2 — Players, Access bootstrap, invitations, and devices
 
-**Access/onboarding externally verified in preview.** Access JWT verification, the admin onboarding UI, player creation/deactivation, 24-hour invitations, transactional redemption, device status/revocation, browser-session bootstrap, `/api/auth/me`, and logout are implemented. All 50 automated tests pass. Preview deployment `52800ae3` is available at `https://preview.example.invalid`. Automated tests include signed/forged JWTs, concurrent redemption, rollback, origins, expiry, replay, token-hash storage, and revocation.
+**Access/onboarding externally verified in historical private evidence.** Access JWT verification, the admin onboarding UI, player creation/deactivation, 24-hour invitations, transactional redemption, device status/revocation, browser-session bootstrap, `/api/auth/me`, and logout are implemented. All 50 automated tests pass. The hosted origin and deployment identity are retained privately. Automated tests include signed/forged JWTs, concurrent redemption, rollback, origins, expiry, replay, token-hash storage, and revocation.
 
 Historical Phase 2 checkpoint: preview Access configuration, administrator sign-in, and player creation were verified in private evidence. Anonymous probes confirmed public/player routes and protected administrator destinations; `PHASE_2_ACCESS_SETUP.md` records the public contract and evidence boundary. The raw-JSON/no-upload pilot at that checkpoint was superseded by the accepted Phase 4 pilot described above. Website login subsequently closed under bounded Phase 5B acceptance; see current status. Production remains undeployed.
 
@@ -126,7 +126,7 @@ The final plan requires admin-created players here, although the full dashboard 
 
 ### Phase 3 — Capture and parser proof
 
-**Native envelope contracts and the recorded synthetic diagnostic checks passed within the Phase 3 scope.** Generic Safari capture, strict envelope checks, pure parsers, error handling, and local Node/workerd benchmarks are implemented. Native whitespace trimming and replacement-device authentication were exercised; exact device captures, player results, and byte measurements remain private evidence and are not reproduced here. The authenticated fixed-fixture preview diagnostic passed its recorded checks; its detailed report remains private. Historical Phase 3 preview `f231a411` adds a one-copy refreshed Safari capture/measurement helper, with no uploads or database operations; see `PHASE_3_PREVIEW_PROOF.md`. Those then-open Gate C items were subsequently closed in PHASE_3_CLOSEOUT.md; import CPU remains separate Phase 4 monitoring. The extra newline scratch test is optional. No Phase 4 endpoints or submission writes were added. Production remains undeployed; current reviewed source is preserved in this candidate.
+**Native envelope contracts and the recorded synthetic diagnostic checks passed within the Phase 3 scope.** Generic Safari capture, strict envelope checks, pure parsers, error handling, and local Node/workerd benchmarks are implemented. Native whitespace trimming and replacement-device authentication were exercised; exact device captures, player results, and byte measurements remain private evidence and are not reproduced here. The authenticated fixed-fixture preview diagnostic passed its recorded checks; its detailed report remains private. A historical preview revision added a one-copy refreshed Safari capture/measurement helper, with no uploads or database operations; see `PHASE_3_PREVIEW_PROOF.md`. Those then-open Gate C items were subsequently closed in PHASE_3_CLOSEOUT.md; import CPU remains separate Phase 4 monitoring. The extra newline scratch test is optional. No Phase 4 endpoints or submission writes were added. Production remains undeployed; current reviewed source is preserved in this candidate.
 
 1. Implement the generic Safari JavaScript capture envelope with bounded visible text/nodes and explicit exclusion of hidden elements, scripts, styles, storage, cookies, and form secrets.
 2. Implement the shared-text envelope with line-ending normalization only.
@@ -141,7 +141,7 @@ The final plan requires admin-created players here, although the full dashboard 
 
 ### Phase 4 — Validate, confirm, and submit
 
-**Backend, functional acceptance, clean installation and required-update checks complete, with the user's accepted Shortcut pilot exceptions.** Preview `1b5572a3` has both import routes, the original two-field capture contract (no confirmation token), database uniqueness with uniform already-saved notices, server scoreboard completion payloads, atomic D1 writes, race-safe duplicate handling and live-session refresh. Preview schema 2 has no `result_hash` column. The user leaves CPU as an open monitoring item (13/14 ms on saved-result validations versus the Free 10 ms/request limit); new-save CPU remains unmeasured. Production remains undeployed. See `PHASE_4_STATUS.md` and `PHASE_4_CPU_INVESTIGATION.md`.
+**Backend, functional acceptance, clean installation and required-update checks complete, with the user's accepted Shortcut pilot exceptions.** The reviewed preview evidence covered both import routes, the original two-field capture contract (no confirmation token), database uniqueness with uniform already-saved notices, server scoreboard completion payloads, atomic D1 writes, race-safe duplicate handling and live-session refresh. Preview schema 2 has no `result_hash` column. The user leaves CPU as an open monitoring item (13/14 ms on saved-result validations versus the Free 10 ms/request limit); new-save CPU remains unmeasured. Production remains undeployed. See `PHASE_4_STATUS.md` and `PHASE_4_CPU_INVESTIGATION.md`.
 
 1. Implement `POST /api/import/validate`: device authentication, Shortcut support check, detection, parse, date validation, duplicate precheck, server-authored confirmation, device activity update, and active-session extension. It writes no submission.
 2. Implement `POST /api/import/submit`: repeat the full validation and save atomically.
@@ -217,7 +217,7 @@ The score-only server renderer and automatic post-upload payload have been pulle
 
 ### Phase 9 — Hardening and launch
 
-**Current status:** Engineering reviewed clean and preview-deployed to 944ff1a6. Full launch readiness remains open: see PHASE_9_LAUNCH_GATES.md and PROJECT_STATUS.md.
+**Current status:** Engineering reviewed clean in the source; hosted preview identity is retained in private evidence. Full launch readiness remains open: see PHASE_9_LAUNCH_GATES.md and PROJECT_STATUS.md.
 
 1. Add CSP, origin/CSRF protection, rate limits, payload caps, XSS tests, structured redacted logs, and monitoring.
 2. Rehearse D1 backup/export, Time Travel/restore, forward migration, and administrator recovery.
@@ -229,7 +229,7 @@ The score-only server renderer and automatic post-upload payload have been pulle
 
 ### Phase 10 — User page/tab (final additional phase)
 
-**Implemented, independently reviewed, and preview-deployed.** [Requirements and evidence](PHASE_10_USER_PAGE_PLAN.md): canonical `/user` with `/login` alias; permanent fourth dock tile after All-Time; 401-only logged-out Daily redirect with safe dated return; no signed-in Daily identity/logout card; polished Login with Device; signed-in per-game stats, supported Shortcut redownload and logout. Metrics/layout decisions are recorded in the Phase 10 design. Physical-device/native evidence and existing Phase 5A/Phase 9 launch gates remain open. Preview alias: `https://preview.example.invalid`; latest deployment: `3e7e7979`.
+**Implemented and independently reviewed in the source.** [Requirements and evidence](PHASE_10_USER_PAGE_PLAN.md): canonical `/user` with `/login` alias; permanent fourth dock tile after All-Time; 401-only logged-out Daily redirect with safe dated return; no signed-in Daily identity/logout card; polished Login with Device; signed-in per-game stats, supported Shortcut redownload and logout. Metrics/layout decisions are recorded in the Phase 10 design. Physical-device/native evidence and existing Phase 5A/Phase 9 launch gates remain open. Hosted preview origin and deployment identity are retained in private evidence and intentionally omitted from this public plan.
 
 ## 5. First implementation batch — completed
 

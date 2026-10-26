@@ -5,10 +5,12 @@ import { authenticateSession, refreshSession, sessionCookie } from "../../_lib/s
 import type { AppData, AppEnv } from "../../_lib/runtime";
 
 const SUPPORTED_INSTALL_URL = /^https:\/\/www\.icloud\.com\/shortcuts\/[a-f0-9]{32}$/i;
+const TEST_INSTALL_URL = "https://example.invalid/shortcuts/EXAMPLE_SHORTCUT";
 
 function installUrl(env: AppEnv): string | null {
-  return SUPPORTED_INSTALL_URL.test(env.SHORTCUT_INSTALL_URL ?? "")
-    ? (env.SHORTCUT_INSTALL_URL ?? null)
+  const value = env.SHORTCUT_INSTALL_URL ?? "";
+  return SUPPORTED_INSTALL_URL.test(value) || (env.APP_ENV === "test" && value === TEST_INSTALL_URL)
+    ? value
     : null;
 }
 

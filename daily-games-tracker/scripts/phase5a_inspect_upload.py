@@ -6,7 +6,14 @@ import json
 from pathlib import Path
 import plistlib
 
-from phase5a_build_upload import CAPTURE, MIGRATION, NOTE, PROMPT
+from phase5a_build_upload import (
+    CAPTURE,
+    MIGRATION,
+    NOTE,
+    PROMPT,
+    RUNTIME_ORIGIN_TOKEN,
+    runtime_origin as resolve_runtime_origin,
+)
 
 CONTRACT = MIGRATION/'build/upload-native-contract.json'
 
@@ -39,7 +46,18 @@ def canonical(workflow):
         return value
     return visit(workflow)
 
-def inspect(workflow, require_contract=True):
+def _replace_origin_token(value, origin):
+    if isinstance(value, str):
+        return value.replace(RUNTIME_ORIGIN_TOKEN, origin)
+    if isinstance(value, list):
+        return [_replace_origin_token(item, origin) for item in value]
+    if isinstance(value, dict):
+        return {key: _replace_origin_token(item, origin) for key, item in value.items()}
+    return value
+
+
+def inspect(workflow, require_contract=True, runtime_origin=None):
+    runtime_origin = resolve_runtime_origin(runtime_origin)
     a=workflow['WFWorkflowActions']
     p=[x.get('WFWorkflowActionParameters',{}) for x in a]
     ids=[x['WFWorkflowActionIdentifier'].removeprefix('is.workflow.actions.') for x in a]
@@ -58,7 +76,7 @@ def inspect(workflow, require_contract=True):
     requests=[x for i,x in enumerate(p) if ids[i]=='downloadurl']
     assert len(requests)==3
     for request,endpoint in zip(requests,['auth/device/approve','import/validate','import/submit']):
-        assert request['WFURL']=='https://preview.example.invalid/api/'+endpoint
+        assert request['WFURL']==runtime_origin+'/api/'+endpoint
         assert request['WFHTTPMethod']=='POST' and request['WFHTTPBodyType']=='File'
         assert 'WFJSONValues' not in request and 'WFFormValues' not in request
     assert requests[0]['WFRequestVariable']['Value']['OutputName']=='loginJson'
@@ -138,12 +156,14 @@ def inspect(workflow, require_contract=True):
     assert not stack
     assert menus==[['Close','Return to WHT'],['Cancel','Approve Login'],['Cancel','Submit Results'],['Close','Open WHT']]
     if require_contract:
-        expected=json.loads(CONTRACT.read_text(encoding='utf-8'))
+        expected=_replace_origin_token(json.loads(CONTRACT.read_text(encoding='utf-8')), runtime_origin)
         assert canonical(workflow)==expected, 'Native action contract mismatch (order, slot, reference or literal).'
     return {'structuralChecks':'passed','actions':len(a),'networkActions':3,'clipboardActions':1,'importQuestionActionIndex':1,'captureBytes':len(CAPTURE.read_bytes()),'nativeExecution':'not performed','dynamicSerialization':'requires native acceptance','transportAndCopyPermissionFailure':'native fail-stop requires acceptance'}
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('shortcut',type=Path)
+    parser.add_argument('--runtime-origin', default=None,
+                        help='HTTPS origin; defaults to WHT_RUNTIME_ORIGIN or a generic fixture origin')
     args=parser.parse_args()
-    print(json.dumps(inspect(plistlib.loads(args.shortcut.read_bytes())),indent=2))
+    print(json.dumps(inspect(plistlib.loads(args.shortcut.read_bytes()), runtime_origin=args.runtime_origin),indent=2))

@@ -1,6 +1,6 @@
 # Phase 9 launch gates and Phase 5A closeout ledger
 
-**Current roadmap (October 25):** Engineering reviewed and preview-deployed; full readiness remains open. [Current status](PROJECT_STATUS.md) reconciles phases and distinct artifacts. This ledger retains older exact 5A reference and unchanged JSON dispositions. [Phase 10 User page/tab](PHASE_10_USER_PAGE_PLAN.md) is implemented, independently reviewed, and preview-deployed at `a968f574`; physical-device/native rechecks remain required for expanded V1.
+**Current roadmap (October 25):** Engineering reviewed in the source; hosted preview identity is retained in private evidence and full readiness remains open. [Current status](PROJECT_STATUS.md) reconciles phases and distinct artifacts. This ledger retains older exact 5A reference and unchanged JSON dispositions. [Phase 10 User page/tab](PHASE_10_USER_PAGE_PLAN.md) is implemented and independently reviewed in the source; physical-device/native rechecks remain required for expanded V1.
 
 Updated October 25, 2026 (`America/Los_Angeles`). This is the human-readable
 companion to [`reports/phase9-launch-gates.json`](reports/phase9-launch-gates.json).
@@ -27,8 +27,7 @@ states, not failures of the ledger format.
 
 ## Candidate and scope
 
-- Preview alias: `https://preview.example.invalid`
-- Read-only unique preview evidence: `https://preview.example.invalid`
+- Preview origin and deployment identity: retained in private operational evidence; omitted from this public ledger.
 - Phase 5A candidate: **Upload to WHT**
 - Exact signed candidate SHA-256: `19b4be2bd3c920ff6061e416d364bf53c8e2cd2d6161d0330a430dd0274b90cd`
 - No production deployment, public publication, installation-link change, workflow activation/dispatch, WHT API write, or credential access was performed for this ledger.
@@ -47,18 +46,17 @@ The ledger is grounded in these exact records:
 ## Read-only preview evidence
 
 On October 25, 2026, the reviewed build was deployed to the preview branch.
-Read-only health checks returned HTTP 200, `schemaVersion: 2`, and
-`gameDay: 2026-10-25` for both:
+Private read-only health checks returned HTTP 200, `schemaVersion: 2`, and
+`gameDay: 2026-10-25` for the reviewed preview origins. Their hostnames and
+deployment identities are intentionally omitted from this public ledger.
 
-- `https://preview.example.invalid/api/health`
-- `https://preview.example.invalid/api/health`
-
-The unique deployment also passed read-only boundary checks: security headers
+The reviewed deployment also passed read-only boundary checks: security headers
 and request IDs were present; `/api/not-real` returned `404 NOT_FOUND`;
 `POST /api/health` returned `405` with `Allow: GET`; an oversized
 `POST /api/import/validate` returned `413 PAYLOAD_TOO_LARGE` before
 authentication; and anonymous `/api/admin/players` reached the Cloudflare
-Access sign-in boundary. No valid submission or WHT API write was sent.
+Access sign-in boundary. No valid submission or WHT API write was sent. The
+private evidence retains the exact origin and request records.
 
 These checks are preview evidence only and do not establish production
 deployment, production configuration, or current account-wide usage margin.
@@ -92,7 +90,7 @@ deployment, production configuration, or current account-wide usage margin.
 | Exact signed candidate identity                         | `pass`      | SHA-256 is `19b4be2bd3c920ff6061e416d364bf53c8e2cd2d6161d0330a430dd0274b90cd`.                                                                             |
 | Bounded user-reported core device flows                 | `pass`      | Handoff records setup, Text/Safari, scoreboard/returned-link, unsupported-input, Cancel, new-save, readback, and repeat flows for this candidate.          |
 | Independent saved-result integrity                      | `pending`   | Current consistency and zero-write evidence are bounded; no pretest baseline, historical timestamp proof, exact phone request count, or native race proof. |
-| Protected operational signing workflow                  | `pending`   | Static preparation passed, but the permanent false guard and all-zero reviewed-commit sentinel remain; no activation or dispatch is claimed.               |
+| Protected operational signing workflow                  | `pending`   | The signing workflow and durable private-worker service contract are implemented with an automatic relevant-reviewed-`main` trigger, optional protected manual recovery, stable-operation and receipt safeguards; the protected environment/configuration remain unprovisioned, so no operational CI signing run or signed delivery is claimed. |
 | Independently identified and hashed rollback reference  | `pending`   | Private backup is `SAVED` by user report; identifier/hash and independent byte verification are absent.                                                    |
 | Phase 5B source/toolchain handoff                       | `pending`   | Handoff document is prepared, but incomplete rollback and operational-signing gates keep accepted-baseline closeout pending.                               |
 
@@ -106,7 +104,7 @@ ledger:
 | Native edge-case matrix                                       | `waived`    | Explicitly waived by the user; no native test pass is implied.                     |
 | Native race/concurrency exercise                              | `waived`    | Explicitly waived by the user; backend tests do not become native race evidence.   |
 | General byte/semantic reproducibility                         | `waived`    | Bounded artifact comparisons do not become a general reproducibility claim.        |
-| Operational signing activation                                | `pending`   | The protected signing workflow remains disabled and undispatched.                  |
+| Operational signing activation                                | `pending`   | The protected automatic/manual-recovery workflow is implemented but no operational CI signing run or signed delivery has been independently recorded.                  |
 | User-reported-only backup without independent identifier/hash | `pending`   | The private backup remains user-held and unverified; do not inspect or publish it. |
 
 ## Local recovery and rehearsal checks

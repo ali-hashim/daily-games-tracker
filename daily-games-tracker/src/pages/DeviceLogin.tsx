@@ -82,7 +82,7 @@ export default function DeviceLogin({
     setPlayer(null);
     setWaiting(false);
     setShortcut(null);
-    setMessage("Your login expired or was revoked. Start a new login to continue.");
+    setMessage("Your login expired or was revoked. Login with Device to continue.");
     setAuthError(null);
   }, []);
 
@@ -215,7 +215,9 @@ export default function DeviceLogin({
       });
       setShortcut(result.shortcut_url);
       setWaiting(true);
-      setMessage("Tap Open Upload to WHT to verify this login. This request lasts two minutes.");
+      setMessage(
+        "Tap Login with your device to verify this login. This request lasts two minutes.",
+      );
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Try again.");
     } finally {
@@ -284,32 +286,30 @@ export default function DeviceLogin({
             <h2>Login with Device</h2>
             <p>Your registered Upload to WHT Shortcut verifies your login in this window.</p>
             {authError && <p className="notice error">{authErrorMessage(authError)}</p>}
-            <button
-              type="button"
-              className="primary-action"
-              disabled={busy}
-              onClick={() => void start()}
-            >
-              {busy ? "Preparing…" : waiting ? "Start a new login" : "Login with Device"}
-            </button>
+            {!waiting && (
+              <button
+                type="button"
+                className="primary-action"
+                disabled={busy}
+                onClick={() => void start()}
+              >
+                {busy ? "Preparing…" : "Login with Device"}
+              </button>
+            )}
             {shortcut && (
               <a className="primary-action" href={shortcut}>
-                Open Upload to WHT
+                Login with your device
               </a>
             )}
+            <div className="device-login-advisory">
+              <p>Already logged in? Tap Check login below.</p>
+              <p>Shortcut unavailable? Contact your administrator.</p>
+            </div>
             {waiting && (
               <button type="button" className="primary-action" onClick={() => void complete()}>
                 Check login
               </button>
             )}
-            <p>
-              If Shortcuts opens Safari instead of your Home Screen app, return manually to this
-              original window and tap Check login. Keep it open while approving.
-            </p>
-            <p>
-              Shortcut unavailable? Reinstall your configured Shortcut or ask the administrator for
-              a new device invitation.
-            </p>
           </>
         )}
         {message && <p role="status">{message}</p>}

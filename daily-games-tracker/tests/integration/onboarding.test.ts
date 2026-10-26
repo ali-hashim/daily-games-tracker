@@ -269,7 +269,7 @@ describe("D1 player and invitation onboarding", () => {
 
   it("requires a signed Access identity for admin mutations and rejects cross-origin writes", async () => {
     const pair = await generateKeyPair("RS256");
-    const issuer = "https://team.example.invalid";
+    const issuer = "https://integration.test.invalid";
     const jwks = {
       keys: [{ ...(await exportJWK(pair.publicKey)), kid: "integration", alg: "RS256" }],
     };
@@ -280,6 +280,7 @@ describe("D1 player and invitation onboarding", () => {
     const savedEnv = env;
     env = {
       ...env,
+      APP_ENV: "test",
       CLOUDFLARE_ACCESS_DOMAIN: issuer,
       CLOUDFLARE_ACCESS_AUD: "integration-admin",
       ADMIN_EMAIL: admin,

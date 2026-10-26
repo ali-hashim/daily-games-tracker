@@ -31,6 +31,6 @@ Redownload uses the supported server-configured install URL; do not expose/recov
 - [x] Verify metric/zero/no-result correctness, public All-Time, Daily locks and clipboard behavior through the full suite and focused privacy tests.
 - [x] Verify mobile dock/safe-area CSS, accessibility states, and separate Safari/PWA cache/session boundaries in local tests/source review; physical device rendering remains open.
 - [x] Run relevant checks and Luna xhigh implementation / Sol medium independent review-repair cycles; record evidence in `reports/phase10-user-page-verification.md`.
-- [x] Verify reviewed preview deployment when authorized; refresh affected Phase 9 evidence and tracking. Preview alias: `https://preview.example.invalid`; latest unique deployment: `https://preview.example.invalid`.
+- [x] Verify the reviewed preview deployment when authorized; refresh affected Phase 9 evidence and tracking. The hosted origin and deployment identity are retained in private evidence and intentionally omitted from this public plan.
 
 The Phase 10 engineering scope is implemented, preview-verified, and evidenced above. Production and physical-device/native acceptance remain separately open and are not implied by this documentation update.

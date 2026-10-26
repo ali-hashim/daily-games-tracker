@@ -26,7 +26,7 @@ beforeAll(async () => {
       d1Databases: ["DB"],
     }),
   );
-  env = { DB: (await runtime.getD1Database("DB")) as unknown as D1Database };
+  env = { APP_ENV: "test", DB: (await runtime.getD1Database("DB")) as unknown as D1Database };
   const directory = new URL("../../migrations/", import.meta.url);
   for (const file of readdirSync(directory)
     .filter((name) => name.endsWith(".sql"))
@@ -228,7 +228,7 @@ describe("authenticated personal stats", () => {
   it("returns only the supported configured iCloud install URL", async () => {
     await addPlayer("alex", "Alex");
     const token = await createSession("alex");
-    const valid = "https://www.icloud.com/shortcuts/EXAMPLE_SHORTCUT";
+    const valid = "https://example.invalid/shortcuts/EXAMPLE_SHORTCUT";
     env.SHORTCUT_INSTALL_URL = valid;
     expect(await decode<InstallUrlResponse>(await statsApi(context(token)))).toMatchObject({
       install_url: valid,
@@ -236,9 +236,8 @@ describe("authenticated personal stats", () => {
 
     for (const value of [
       undefined,
-      "http://www.icloud.com/shortcuts/EXAMPLE_SHORTCUT",
-      "https://www.icloud.com.attacker.test/shortcuts/0123456789abcdef0123456789abcdef",
-      "https://www.icloud.com/shortcuts/EXAMPLE_SHORTCUT",
+      "http://example.invalid/shortcuts/EXAMPLE_SHORTCUT",
+      "https://example.invalid.attacker.test/shortcuts/0123456789abcdef0123456789abcdef",
       `${valid}?secret=do-not-echo`,
     ]) {
       env.SHORTCUT_INSTALL_URL = value;

@@ -361,7 +361,7 @@
           },
           "WFSerializationType": "WFTextTokenAttachment"
         },
-        "WFURL": "https://preview.example.invalid/api/auth/device/approve"
+        "WFURL": "__WHT_RUNTIME_ORIGIN__/api/auth/device/approve"
       }
     },
     {
@@ -1156,7 +1156,7 @@
           },
           "WFSerializationType": "WFTextTokenAttachment"
         },
-        "WFURL": "https://preview.example.invalid/api/import/validate"
+        "WFURL": "__WHT_RUNTIME_ORIGIN__/api/import/validate"
       }
     },
     {
@@ -1448,7 +1448,7 @@
           },
           "WFSerializationType": "WFTextTokenAttachment"
         },
-        "WFURL": "https://preview.example.invalid/api/import/submit"
+        "WFURL": "__WHT_RUNTIME_ORIGIN__/api/import/submit"
       }
     },
     {

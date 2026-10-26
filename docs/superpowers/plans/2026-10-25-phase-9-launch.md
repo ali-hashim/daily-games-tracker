@@ -17,7 +17,7 @@
 - Preserve Phase 5A's signed candidate SHA-256 `19b4be2bd3c920ff6061e416d364bf53c8e2cd2d6161d0330a430dd0274b90cd`.
 - Preserve the truth that the Phase 5A native edge-case matrix, native race/concurrency exercise, and general byte/semantic reproducibility are waived limitations.
 - Use test-first implementation for new behavior and fresh verification before completion claims.
-- Use current preview alias `https://preview.example.invalid` and record the unique deployment URL returned by the preview deployment.
+- Use the privately configured preview origin for authorized read-only checks; do not record its hostname or deployment identity in the public repository.
 
 ## Review Focus
 

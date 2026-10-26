@@ -2,7 +2,7 @@
 
 Current planning cross-reference (October 22): original-pilot functional, clean-install and required-update acceptance is complete as recorded in [PHASE_4_STATUS.md](PHASE_4_STATUS.md). Older pending statements below are historical checkpoints. [Phase 5A](PHASE_5A_PLAN.md) rechecks compatibility for a new compiled client, not unfinished Phase 4 backend features; [Phase 5B](PHASE_5B_PLAN.md) owns the locally implemented website/API login and pending native integration. CPU remains nonblocking monitoring.
 
-Prepared October 21, 2026. **Updated user decision:** confirmation-hash exchange is removed in the implementation and native guide. Validate/submit use only shortcut_version and capture. All game-result hashing/content comparison is also removed; a database uniqueness check returns the same already_submitted completion response with a fresh scoreboard for every valid repeat. Update-link validation/fallback is now implemented on preview 71bac4c3; clean-template publication/configuration and native required-update proof remain open. Conditional API work below remains a plan; see PHASE_4_STATUS.md for deployment/verification status. Supersedes the earlier handoff's client-side defensive requirements.
+Prepared October 21, 2026. **Updated user decision:** confirmation-hash exchange is removed in the implementation and native guide. Validate/submit use only shortcut_version and capture. All game-result hashing/content comparison is also removed; a database uniqueness check returns the same already_submitted completion response with a fresh scoreboard for every valid repeat. Update-link validation/fallback is implemented in the reviewed source; clean-template publication/configuration and native required-update proof remain open. Conditional API work below remains a plan; see PHASE_4_STATUS.md for deployment/verification status. Supersedes the earlier handoff's client-side defensive requirements.
 
 ## Contract to preserve
 
@@ -35,7 +35,7 @@ Authority: `../Daily_Games_Tracker_Final_Implementation_Plan.md`, sections 5, 8,
 
 ### Evidence
 
-The earlier handler returned raw install_url regardless of link readiness. Preview 71bac4c3 now validates the same HTTPS www.icloud.com/shortcuts/<32 hex> shape used by registration and returns a server-authored SHORTCUT_UPDATE_UNAVAILABLE error when an update is required but the link is unusable. Both endpoints have no-write regression coverage. Preview 1945fb36 now references the inspected and installation-tested import template. A thin native Open URLs action cannot repair a missing/malformed link or know whether an old template implements the required version.
+The earlier handler returned raw install_url regardless of link readiness. The reviewed source now validates the private hosted Shortcut URL supplied by the selected environment and returns a server-authored SHORTCUT_UPDATE_UNAVAILABLE error when an update is required but the link is unusable. Both endpoints have no-write regression coverage. The current source references the inspected and installation-tested import template in private release evidence. A thin native Open URLs action cannot repair a missing/malformed link or know whether an old template implements the required version.
 
 ### Implemented server changes and remaining release work
 
@@ -90,7 +90,7 @@ After alignment and native validation/cancel proof, get explicit approval before
 
 1. Use the rewritten thin guide; no API change needed for the ordinary valid/confirm/cancel/submit path.
 2. Test actual native request serialization and error delivery (B).
-3. Server fallback/validation (A) is implemented on preview 71bac4c3; configure the correct clean template after native acceptance.
+3. Server fallback/validation (A) is implemented in the reviewed source; configure the correct clean template after native acceptance.
 4. Implement B's adapter only if the native evidence requires it.
 5. Recheck integrity, native statuses, cancellation, real approved save/retry and CPU before Phase 4 closeout.
 
@@ -110,7 +110,7 @@ Use the user-provided layout now recorded in authoritative section 12 and shortc
 
 On October 21, 2026, the user explicitly accepted the shared native pilot's documented tradeoffs: Safari capture may replace the clipboard before later Cancel/error handling; the submit race/retry path has a bounded duplicate policy; and native scoreboard Copy actions have no null/empty guard. These are accepted pilot tradeoffs for the small group, not required fixes or native acceptance blockers. The stricter build guidance remains the deferred target for a future revision. Backend responses, saved-result uniqueness and the score-only scoreboard format are unchanged. Native clipboard preservation on Cancel/error/unavailable-scoreboard and submit-race clipboard copying are not claimed as proved. The configured Shortcut identity and private device evidence remain outside the public repository.
 
-Clean-template work item A.3 is complete: public artifact inspection and user-reported private installation passed, and the final URL is configured/read back on preview 1945fb36. Native required-update behavior also passed; the temporary preview-only version policy was restored to 1. Phase 4 functional, installation and update checks are complete with the user's accepted Shortcut pilot exceptions. CPU remains open for monitoring by user decision and does not block Phase 5; see PHASE_4_CPU_INVESTIGATION.md. Production remains undeployed.
+Clean-template work item A.3 is complete: public artifact inspection and user-reported private installation passed, and the final URL is configured/read back in private environment evidence. Native required-update behavior also passed; the temporary preview-only version policy was restored to 1. Phase 4 functional, installation and update checks are complete with the user's accepted Shortcut pilot exceptions. CPU remains open for monitoring by user decision and does not block Phase 5; see PHASE_4_CPU_INVESTIGATION.md. Production remains undeployed.
 
 Native closeout update: clean installation and the real required-update message/link/stop now pass by user report. The coordinated temporary preview requirement was restored and verified at minimum/latest 1; the clean template stays version 1. All agreed functional checks pass with the user-accepted pilot exceptions. CPU performance remains open; see PHASE_4_STATUS.md (../PHASE_4_STATUS.md from shortcut/) and reports/phase4-native-acceptance.json.
 

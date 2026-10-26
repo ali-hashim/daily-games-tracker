@@ -386,6 +386,68 @@ afterEach(async () => {
 });
 
 describe("Phase 10 User behavior", () => {
+  it("cleans up the waiting Login with Device actions and advisory notes", async () => {
+    const requestPaths: string[] = [];
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        const path = String(input);
+        requestPaths.push(path);
+
+        if (path === "/api/auth/me") {
+          return Response.json({ error_message: "required" }, { status: 401 });
+        }
+        if (path === "/api/auth/device/start") {
+          return Response.json({
+            shortcut_url: "shortcuts://run-shortcut?name=Upload%20To%20WHT",
+          });
+        }
+        if (path === "/api/auth/device/complete") {
+          return Response.json({ status: "pending" });
+        }
+
+        throw new Error(`Unexpected request: ${path}`);
+      }),
+    );
+
+    const rendered = await renderBehavior(createElement(DeviceLogin));
+    await flushBehavior();
+
+    expect(buttonWithText(rendered.container, "Login with Device")).toBeDefined();
+    expect(rendered.container.textContent).not.toContain("Start a new login");
+
+    await act(async () => {
+      buttonWithText(rendered.container, "Login with Device").click();
+    });
+    await flushBehavior();
+
+    expect(requestPaths).toContain("/api/auth/device/start");
+    const shortcut = rendered.container.querySelector("a.primary-action");
+    expect(shortcut?.textContent).toBe("Login with your device");
+    expect(shortcut?.getAttribute("href")).toBe("shortcuts://run-shortcut?name=Upload%20To%20WHT");
+    expect(rendered.container.textContent).not.toContain("Open Upload to WHT");
+    expect(rendered.container.textContent).not.toContain("Home Screen app");
+    expect(rendered.container.textContent).not.toContain("If Shortcuts opens Safari");
+    expect(rendered.container.textContent).toContain("Already logged in? Tap Check login below.");
+    expect(rendered.container.textContent).toContain(
+      "Shortcut unavailable? Contact your administrator.",
+    );
+    expect(rendered.container.textContent).not.toContain("Reinstall your configured Shortcut");
+    expect(() => buttonWithText(rendered.container, "Start a new login")).toThrow();
+    expect(buttonWithText(rendered.container, "Check login")).toBeDefined();
+
+    const advisory = rendered.container.querySelector(".device-login-advisory");
+    expect(advisory).not.toBeNull();
+    expect(advisory?.textContent).toContain("Already logged in? Tap Check login below.");
+
+    const checkLogin = buttonWithText(rendered.container, "Check login");
+    expect(checkLogin.parentNode).toBe(advisory?.parentNode);
+    expect(checkLogin.parentNode?.childNodes.indexOf(advisory!)).toBeLessThan(
+      checkLogin.parentNode?.childNodes.indexOf(checkLogin) ?? -1,
+    );
+  });
+
   it("registers behavior roots for deterministic teardown", async () => {
     await renderBehavior(createElement("div", null, "teardown probe"));
     expect(behaviorRoots).toHaveLength(1);
@@ -459,6 +521,9 @@ describe("Phase 10 User behavior", () => {
     expect(rendered.window.location.pathname).toBe("/user");
     expect(locationAssign).not.toHaveBeenCalled();
     expect(rendered.container.textContent).toContain("Login with Device");
+    expect(rendered.container.textContent).toContain(
+      "Your login expired or was revoked. Login with Device to continue.",
+    );
     expect(rendered.container.textContent).not.toContain("Alex");
   });
 

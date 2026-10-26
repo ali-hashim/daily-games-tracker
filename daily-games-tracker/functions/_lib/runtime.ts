@@ -1,6 +1,6 @@
 export interface AppEnv {
   DB: D1Database;
-  APP_ENV?: "local" | "preview" | "production";
+  APP_ENV?: "local" | "preview" | "production" | "test";
   APP_ORIGIN?: string;
   CLOUDFLARE_ACCESS_DOMAIN?: string;
   CLOUDFLARE_ACCESS_AUD?: string;

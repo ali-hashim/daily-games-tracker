@@ -11,14 +11,16 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 import phase5a_build_upload as b
 import phase5a_inspect_upload as i
 import phase5a_upload_signing as s
-from phase5a_send_hubsign import Response
 TEST_TMP=b.ROOT/'tmp/phase5a-upload-tests'
 TEST_TMP.mkdir(parents=True,exist_ok=True)
 
 def fixture():
     # Reconstruct UUID spellings only; this is the reviewed complete native
     # contract, not a second source renderer or implementation of game logic.
-    w=json.loads(i.CONTRACT.read_text(encoding='utf-8'))
+    w=i._replace_origin_token(
+        json.loads(i.CONTRACT.read_text(encoding='utf-8')),
+        b.DEFAULT_RUNTIME_ORIGIN,
+    )
     for action in w['WFWorkflowActions']:
         p=action.get('WFWorkflowActionParameters',{})
         if 'WFJavaScript' in p: p['WFJavaScript']=b.CAPTURE.read_text(encoding='utf-8')
@@ -186,7 +188,37 @@ class UploadContractTests(unittest.TestCase):
     def test_script_render_is_exact_single_embedding(self):
         rendered=b.render_source()
         self.assertNotIn('__WHT_CAPTURE_SCRIPT__',rendered)
+        self.assertNotIn(b.RUNTIME_ORIGIN_TOKEN, rendered)
+        self.assertIn(b.DEFAULT_RUNTIME_ORIGIN, rendered)
         self.assertEqual(rendered.count(b.CAPTURE.read_text(encoding='utf-8').replace("'","\\'")),1)
+
+    def test_runtime_origin_is_injected_only_after_strict_origin_validation(self):
+        origin = 'https://runtime.example.invalid'
+        with self.assertRaises(ValueError):
+            b.validate_runtime_origin(origin, allow_fixture=False)
+        rendered = b.render_source(origin)
+        self.assertIn(origin + '/api/import/validate', rendered)
+        self.assertNotIn(b.RUNTIME_ORIGIN_TOKEN, rendered)
+        for invalid in (
+            'http://runtime.example.invalid',
+            'https://runtime.example.invalid/path',
+            'https://runtime.example.invalid/',
+            ' https://runtime.example.invalid',
+            'https://user:pass@runtime.example.invalid',
+        ):
+            with self.subTest(invalid=invalid), self.assertRaises(ValueError):
+                b.render_source(invalid)
+
+    def test_contract_token_is_bound_to_the_same_runtime_origin(self):
+        origin = 'https://runtime.example.invalid'
+        workflow = i._replace_origin_token(
+            json.loads(i.CONTRACT.read_text(encoding='utf-8')), origin
+        )
+        for action in workflow['WFWorkflowActions']:
+            params = action.get('WFWorkflowActionParameters', {})
+            if 'WFJavaScript' in params:
+                params['WFJavaScript'] = b.CAPTURE.read_text(encoding='utf-8')
+        self.assertEqual(i.inspect(workflow, runtime_origin=origin)['networkActions'], 3)
 
     def package(self,root):
         build=root/'build';build.mkdir()
@@ -202,18 +234,13 @@ class UploadContractTests(unittest.TestCase):
         package=root/'package';info=s.freeze(build,package)
         return package,info
 
-    def test_package_and_one_shot_fake_signer(self):
+    def test_package_validation_keeps_unsigned_payload_and_requires_exact_digests(self):
         with tempfile.TemporaryDirectory(dir=TEST_TMP) as directory:
-            root=Path(directory);package,info=self.package(root);calls=[]
-            def fake(*args):
-                calls.append(args)
-                return Response(200,{'Content-Type':'application/octet-stream'},b'AEA1synthetic')
-            evidence=s.send(package,root/'evidence',info['manifestSha256'],info['wireSha256'],fake)
-            self.assertTrue(evidence['acceptedContainer']);self.assertEqual(len(calls),1)
-            self.assertEqual(calls[0][0],'https://hubsign.routinehub.services/sign')
-            with self.assertRaises(AssertionError): s.send(package,root/'evidence',info['manifestSha256'],info['wireSha256'],fake)
-            self.assertEqual(len(calls),1)
-
+            root=Path(directory);package,info=self.package(root)
+            payload=s.validate(package,info['manifestSha256'],info['wireSha256'])
+            self.assertTrue(payload.startswith(b'<?xml'))
+            with self.assertRaises(AssertionError):
+                s.validate(package,'0'*64,info['wireSha256'])
     def test_freeze_rejects_capture_and_rendered_source_provenance_drift(self):
         for field in ('captureSha256','renderedSourceSha256'):
             with self.subTest(field=field), tempfile.TemporaryDirectory(dir=TEST_TMP) as directory:
@@ -223,25 +250,17 @@ class UploadContractTests(unittest.TestCase):
                 manifest_path.write_text(json.dumps(manifest),encoding='utf-8')
                 with self.assertRaises(AssertionError): s.freeze(root/'build',root/'rejected')
 
-    def test_wrong_approved_hashes_stop_before_sender_and_intent(self):
+    def test_wrong_approved_hashes_stop_before_private_worker(self):
         with tempfile.TemporaryDirectory(dir=TEST_TMP) as directory:
-            root=Path(directory);package,info=self.package(root);calls=[]
-            def fake(*args): calls.append(args)
+            root=Path(directory);package,info=self.package(root)
             for name,manifest,wire in (('manifest','0'*64,info['wireSha256']),('wire',info['manifestSha256'],'0'*64)):
                 with self.subTest(name=name), self.assertRaises(AssertionError):
-                    s.send(package,root/name,manifest,wire,fake)
-                self.assertFalse((root/name).exists())
-            self.assertEqual(calls,[])
+                    s.validate(package,manifest,wire)
 
-    def test_package_tampering_and_signer_failure(self):
+    def test_package_tampering_is_rejected_before_private_worker(self):
         with tempfile.TemporaryDirectory(dir=TEST_TMP) as directory:
-            root=Path(directory);package,info=self.package(root);calls=[]
-            def fake(*args):
-                calls.append(args);return Response(403,{'Content-Type':'text/plain'},b'refused')
-            with self.assertRaises(AssertionError): s.send(package,root/'failure',info['manifestSha256'],info['wireSha256'],fake)
-            self.assertEqual(len(calls),1);self.assertTrue((root/'failure/evidence.json').exists())
+            root=Path(directory);package,info=self.package(root)
             (package/'hubsign-request.json').write_bytes(b'changed')
-            with self.assertRaises(AssertionError): s.send(package,root/'no-request',info['manifestSha256'],info['wireSha256'],fake)
-            self.assertEqual(len(calls),1);self.assertFalse((root/'no-request').exists())
-
+            with self.assertRaises(AssertionError):
+                s.validate(package,info['manifestSha256'],info['wireSha256'])
 if __name__=='__main__': unittest.main()

@@ -12,12 +12,12 @@ import json
 from pathlib import Path
 
 SOURCE = Path(__file__).resolve().parents[1] / "shortcut/cherri-migration/source/upload-to-wht.cherri"
-ORIGIN = "https://preview.example.invalid"
+ORIGIN = "__WHT_RUNTIME_ORIGIN__"
 PREFIX = "DGT_LOGIN_V1:"
 # Accepted upload tail, with only its obsolete login-unavailable guard removed.
-UPLOAD_SHA = "7ff5c843a8e0f7a5cbf4ff0bf730975b0703479a3f1a1f16ce68360443d19f35"
+UPLOAD_SHA = "5bcdc1c398fc950760a4b00e3f79df2611987a57afd44efca339f290ec4745a0"
 SETUP_SHA = "ce49df7a86019b643ef27da2c3dafb1ababed7cefca46ab503f1f74a98db8fca"
-LOGIN_SHA = "dcd2287a5a929db2aa28ca5588e9e03fe6241bde6bdd200c99be15b156592477"
+LOGIN_SHA = "086d9eebe42c906bfcec94cd6a8b4f042366371efeb0298c2777de1434fc52c0"
 
 
 def digest(text: str) -> str:

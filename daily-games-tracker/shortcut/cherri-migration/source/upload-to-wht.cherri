@@ -51,7 +51,7 @@ if loginInput beginsWith "DGT_LOGIN_V1:" {
             @loginBody = {"challenge":"{loginChallenge}"}
             const loginJson = getText(@loginBody)
             // Native transport failures abort execution. Do not replay approval.
-            const loginResult = whtPostJsonText("https://preview.example.invalid/api/auth/device/approve", loginJson, {"Content-Type":"application/json", "Authorization":"Device {authorizationCode}"})
+            const loginResult = whtPostJsonText("__WHT_RUNTIME_ORIGIN__/api/auth/device/approve", loginJson, {"Content-Type":"application/json", "Authorization":"Device {authorizationCode}"})
             @loginResponse = getDictionary(loginResult)
             @loginStatusValue = getValue(@loginResponse, "status")
             const loginStatus = getText(@loginStatusValue)
@@ -103,7 +103,7 @@ if inputType == "Safari Web Page" {
 const captureJson = getText(@originalCapture)
 const envelopeTemplate = text('{"shortcut_version":1,"capture":__CAPTURE_JSON__}')
 const requestJson = replaceText("__CAPTURE_JSON__", captureJson, envelopeTemplate)
-const validationResult = whtPostJsonText("https://preview.example.invalid/api/import/validate", requestJson, {"Content-Type":"application/json", "Authorization":"Device {authorizationCode}"})
+const validationResult = whtPostJsonText("__WHT_RUNTIME_ORIGIN__/api/import/validate", requestJson, {"Content-Type":"application/json", "Authorization":"Device {authorizationCode}"})
 @validationResponse = getDictionary(validationResult)
 @validationStatusValue = getValue(@validationResponse, "status")
 const validationStatus = getText(@validationStatusValue)
@@ -117,7 +117,7 @@ if validationStatus == "already_submitted" {
             item "Cancel":
                 stop()
             item "Submit Results":
-                const submissionResult = whtPostJsonText("https://preview.example.invalid/api/import/submit", requestJson, {"Content-Type":"application/json", "Authorization":"Device {authorizationCode}"})
+                const submissionResult = whtPostJsonText("__WHT_RUNTIME_ORIGIN__/api/import/submit", requestJson, {"Content-Type":"application/json", "Authorization":"Device {authorizationCode}"})
                 @submissionResponse = getDictionary(submissionResult)
                 @submissionStatusValue = getValue(@submissionResponse, "status")
                 const submissionStatus = getText(@submissionStatusValue)
