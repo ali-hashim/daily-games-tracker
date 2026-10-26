@@ -1,6 +1,6 @@
 # Cloudflare Provisioning Checklist
 
-**Phase 1 completed:** Pages and both D1 databases are provisioned. The preview is verified at `https://preview.example.invalid`. The steps below are the historical provisioning checklist; current work continues in `PHASE_2_ACCESS_SETUP.md`.
+**Phase 1 historical record:** The earlier Pages and D1 provisioning evidence is retained privately. Hosted origins and deployment identities are intentionally omitted here; current work continues in `PHASE_2_ACCESS_SETUP.md`.
 
 The local application is ready without Cloudflare credentials. Complete this checklist before the first preview deployment. Do not paste API tokens or database credentials into tracked files.
 
@@ -8,19 +8,18 @@ The local application is ready without Cloudflare credentials. Complete this che
 
 ```bash
 npx wrangler login
-npx wrangler pages project create example-project --production-branch main
-npx wrangler d1 create example-database
-npx wrangler d1 create example-database
+npx wrangler pages project create <private-pages-project> --production-branch main
+npx wrangler d1 create <private-preview-d1-name>
+npx wrangler d1 create <private-production-d1-name>
 ```
 
-Record the two D1 `database_id` values. They are resource identifiers, not secret credentials.
+Record the two D1 `database_id` values only in private platform configuration. They are operational resource identifiers and must not be copied into tracked documentation.
 
 ## 2. Replace safe placeholders
 
 In `wrangler.jsonc`:
 
-- replace `11111111-1111-1111-1111-111111111111` with the preview D1 ID;
-- replace `22222222-2222-2222-2222-222222222222` with the production D1 ID;
+- replace the local D1 placeholders with private preview and production D1 IDs in the selected environment configuration;
 - keep the all-zero local placeholder unchanged.
 
 Cloudflare Pages supports `env.preview` and `env.production` overrides. The D1 binding name must remain `DB` in every environment.
@@ -33,7 +32,7 @@ npm run db:preview:migrate
 npm run deploy:preview
 ```
 
-Verify the generated preview URL:
+Verify the generated preview origin privately; do not record its hostname or deployment ID in tracked files:
 
 - `/` loads Winstitute of Higher Thinking;
 - `/api/health` returns `status: ok`, `schemaVersion: 1`, and a `request_id`;

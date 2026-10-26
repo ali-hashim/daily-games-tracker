@@ -4,7 +4,7 @@ An invitation-only, iPhone-first tracker for Krillion and MapTap. Players submit
 
 The `/user` page provides the signed-in player view, while `/daily` and `/all-time` retain their existing privacy and ranking rules. The source tree includes the server, client, migrations, service worker, credential-free Shortcut source, and synthetic fixtures used by the automated checks.
 
-Production identity, device credentials, player data, install links, and operational evidence are supplied outside this repository through platform settings or ignored local files. The committed `wrangler.jsonc` keeps the reviewed preview/production D1 bindings, APP_ENV values and preview Access identifiers because they are public resource configuration; private `ADMIN_EMAIL` and `SHORTCUT_INSTALL_URL` are intentionally omitted from tracked `vars` and must be provisioned as per-environment Cloudflare Secrets. `.env.example` contains local placeholders only. It does not contain a configured hosted install link.
+Production identity, device credentials, player data, install links, hosted origins, deployment IDs, project/account IDs, D1 identifiers, Access audiences and operational evidence are supplied outside this repository through private platform settings or ignored local files. The committed `wrangler.jsonc` and `.env.example` contain local placeholders only; they do not publish remote bindings or configured install values.
 
 ## Local verification
 
@@ -18,12 +18,12 @@ npm run test:database
 npm run build
 ```
 
-For a local Pages/Functions/D1 session, run `npm run db:local:migrate`, `npm run build`, and `npm run dev:pages`, then open `http://localhost:8788`. The all-zero D1 identifier in the base binding is a local placeholder. Preview and production use separate reviewed D1 IDs; supply private administrator and install values as Cloudflare Secrets before a remote operation. Remote migrations and deployment are not run by these checks.
+For a local Pages/Functions/D1 session, run `npm run db:local:migrate`, `npm run build`, and `npm run dev:pages`, then open `http://localhost:8788`. The all-zero D1 identifier in the base binding is an inert local placeholder. Supply remote D1 IDs, Access audiences, administrator identities, hosted origins and install values through private platform configuration before a remote operation. Remote migrations and deployment are not run by these checks.
 
 The fixtures use fixed test dates and synthetic values. Tests cover capture validation, parsers, authorization, registration, device login, sessions, user statistics, admin mutations, leaderboards, migrations, and duplicate-safe submissions. Local checks do not establish physical iPhone behavior, native Shortcut acceptance, cloud performance, or production readiness.
 
 ## Shortcut source
 
-Credential-free Cherri source and the pinned toolchain lock are under `shortcut/cherri-migration/`. The pinned GitHub Actions workflow compiles and inspects unsigned probes and the complete client. Signing remains fail-closed: the separate signing workflow retains its permanent `false && inputs.confirm_external_signing` guard and all-zero reviewed-commit sentinel. No configured Shortcut or install link is committed.
+Credential-free Cherri source and the pinned toolchain lock are under `shortcut/cherri-migration/`. The pinned GitHub Actions workflow compiles and inspects unsigned probes and the complete client. The separate signing workflow runs automatically for relevant reviewed pushes to protected `main` and supports optional protected manual recovery; its durable private-worker service contract is implemented, while the protected environment and private configuration remain unprovisioned. It validates the exact reviewed source, package digests and durable receipt before any authorized transfer. No operational CI signing run or signed delivery is claimed here, and no configured Shortcut or install link is committed.
 
-The full client source uses the reviewed preview origin as its runtime destination. That endpoint is a public application setting in the source; credentials and per-user device codes remain runtime inputs and are never stored in the repository.
+The full client source receives its runtime destination from private external configuration. Hosted origins, deployment identities, credentials and per-user device codes remain runtime inputs and are never stored in this public repository.

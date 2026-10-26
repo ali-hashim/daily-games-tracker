@@ -8,9 +8,11 @@ maintained Shortcut source and its pinned build and inspection tooling.
 - Source: `shortcut/cherri-migration/source/upload-to-wht.cherri`
 - Toolchain lock: `shortcut/cherri-migration/toolchain.lock.json`
 - Pinned CI workflow: `.github/workflows/cherri-alert-experiment.yml`
-- Source and artifact checks: `scripts/phase5a-*.mjs`,
-  `scripts/inspect_phase5a_shortcut.py`, and the focused tests under
-  `scripts/tests/`
+- Maintained full-client inspector: `scripts/phase5a_inspect_upload.py`
+- Source and artifact checks: `scripts/phase5a-*.mjs` and the focused tests
+  under `scripts/tests/`
+- Retained legacy synthetic-fixture inspector: `scripts/inspect_phase5a_shortcut.py`
+  with its historical two-request JSON-body contract and mutation tests
 
 The CI workflow is the authoritative compiler environment. The public tree
 contains source, contracts, and synthetic fixtures only. Configured

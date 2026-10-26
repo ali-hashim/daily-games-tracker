@@ -7,7 +7,7 @@
 
 This file is the complete, self-contained implementation plan for Winstitute of Higher Thinking. It does not rely on another plan or on the prior conversation. Where an implementation detail remains dependent on real-device behavior, this file states the required proof test and the fallback.
 
-**Current status — October 25, 2026:** Core features through Phase 8 and Phase 9 hardening are implemented and preview-deployed (944ff1a6). Production remains undeployed. Phase 5B closed under bounded acceptance; Phase 5A formal closeout and Phase 9 launch gates remain open. **Phase 10 User page/tab is implemented, independently reviewed, and preview-deployed at `3e7e7979`; physical-device/native evidence remains open.** See [PROJECT_STATUS.md](daily-games-tracker/PROJECT_STATUS.md) and [Phase 10 evidence](daily-games-tracker/reports/phase10-user-page-verification.md).
+**Current status — October 25, 2026:** Core features through Phase 8 and Phase 9 hardening are implemented in the reviewed source; hosted preview identity is retained in private evidence. Production remains undeployed. Phase 5B closed under bounded acceptance; Phase 5A formal closeout and Phase 9 launch gates remain open. **Phase 10 User page/tab is implemented and independently reviewed in the source; physical-device/native evidence remains open.** See [PROJECT_STATUS.md](daily-games-tracker/PROJECT_STATUS.md) and [Phase 10 evidence](daily-games-tracker/reports/phase10-user-page-verification.md).
 
 ---
 
@@ -387,7 +387,7 @@ Every API response may include:
 {
   "shortcut_support": "supported | update_available | update_required",
   "latest_version": 2,
-  "install_url": "https://www.icloud.com/shortcuts/…"
+  "install_url": "<private-hosted-shortcut-url>"
 }
 ```
 
@@ -1545,7 +1545,7 @@ Acceptance:
 
 ### Phase 9 — Hardening and launch
 
-**Current status:** Engineering reviewed clean and preview-deployed to 944ff1a6. Full launch readiness remains open: see daily-games-tracker/PHASE_9_LAUNCH_GATES.md and daily-games-tracker/PROJECT_STATUS.md.
+**Current status:** Engineering reviewed clean in the source; hosted preview identity is retained in private evidence. Full launch readiness remains open: see daily-games-tracker/PHASE_9_LAUNCH_GATES.md and daily-games-tracker/PROJECT_STATUS.md.
 
 Deliverables:
 
@@ -1566,7 +1566,7 @@ Acceptance:
 
 ### Phase 10 — User page/tab (final additional phase)
 
-**Implemented, independently reviewed, and preview-deployed.** [Requirements and evidence](daily-games-tracker/PHASE_10_USER_PAGE_PLAN.md): canonical `/user` with `/login` alias; permanent fourth dock tile after All-Time; 401-only logged-out Daily redirect with safe dated return; no signed-in Daily identity/logout card; polished Login with Device; signed-in per-game stats, supported Shortcut redownload and logout. Metrics/layout decisions are recorded in the Phase 10 design. Physical-device/native evidence and existing Phase 5A/Phase 9 launch gates remain open. Preview alias: `https://preview.example.invalid`; latest deployment: `3e7e7979`.
+**Implemented and independently reviewed in the source.** [Requirements and evidence](daily-games-tracker/PHASE_10_USER_PAGE_PLAN.md): canonical `/user` with `/login` alias; permanent fourth dock tile after All-Time; 401-only logged-out Daily redirect with safe dated return; no signed-in Daily identity/logout card; polished Login with Device; signed-in per-game stats, supported Shortcut redownload and logout. Metrics/layout decisions are recorded in the Phase 10 design. Physical-device/native evidence and existing Phase 5A/Phase 9 launch gates remain open. Hosted preview origin and deployment identity are retained in private evidence and intentionally omitted from this public plan.
 
 ## 20. Launch checklist
 

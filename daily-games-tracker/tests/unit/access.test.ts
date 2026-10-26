@@ -4,9 +4,10 @@ import { requireAdmin, verifyAdminToken } from "../../functions/_lib/access";
 import type { AppEnv } from "../../functions/_lib/runtime";
 
 const config = {
-  issuer: "https://team.example.invalid",
+  issuer: "https://access.test.invalid",
   audience: "wht-admin",
   email: "admin@example.test",
+  APP_ENV: "test" as const,
 };
 let privateKey: CryptoKey;
 let keys: JWTVerifyGetKey;
@@ -85,6 +86,38 @@ describe("Cloudflare Access security boundary", () => {
       requireAdmin(new Request("https://wht.test/api/admin/players"), {} as AppEnv),
     ).rejects.toMatchObject({ errorCode: "ADMIN_NOT_CONFIGURED" });
   });
+
+  it.each([
+    ["unset", undefined],
+    ["local", "local"],
+    ["preview", "preview"],
+    ["production", "production"],
+  ] as const)(
+    "rejects a synthetic issuer outside the test environment (%s) before JWKS fetch",
+    async (_name, appEnv) => {
+      const fetchSpy = vi.spyOn(globalThis, "fetch");
+      const env = {
+        CLOUDFLARE_ACCESS_DOMAIN: config.issuer,
+        CLOUDFLARE_ACCESS_AUD: config.audience,
+        ADMIN_EMAIL: config.email,
+        APP_ENV: appEnv,
+      } as AppEnv;
+
+      await expect(
+        requireAdmin(
+          new Request("https://wht.test/api/admin/players", {
+            headers: { "Cf-Access-Jwt-Assertion": "synthetic-token" },
+          }),
+          env,
+          "req_invalid_issuer_environment",
+        ),
+      ).rejects.toMatchObject({
+        statusCode: 503,
+        errorCode: "ADMIN_NOT_CONFIGURED",
+      });
+      expect(fetchSpy).not.toHaveBeenCalled();
+    },
+  );
 
   it("does not trust identity headers without a signed assertion", async () => {
     const request = new Request("https://wht.test/api/admin/players", {

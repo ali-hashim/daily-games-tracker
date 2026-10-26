@@ -1,25 +1,28 @@
-name: Full upload signing (permanently disabled preparation)
+name: Full upload signing (protected automation)
 
-# Canonical local signing preparation. No pull_request trigger and no PR inputs.
-# Activation/export/dispatch require separate authorization. Standing HubSign
-# approval does not authorize those operations. See PHASE5A_FULL_CLIENT_CI_SIGNING.md.
+# Protected-environment operation for reviewed main pushes, with manual
+# recovery dispatch. It never runs for pull requests or uploads origin-bearing
+# or signed payload artifacts.
 on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/cherri-alert-experiment.yml
+      - .github/workflows/shortcut-sign-disabled.yml
+      - daily-games-tracker/shortcut/cherri-migration/source/**
+      - daily-games-tracker/shortcut/cherri-migration/build/upload-native-contract.json
+      - daily-games-tracker/shortcut/cherri-migration/toolchain.lock.json
+      - daily-games-tracker/shortcut/capture-safari.js
+      - daily-games-tracker/scripts/phase5a*.py
+      - daily-games-tracker/scripts/phase5a-*.mjs
+      - daily-games-tracker/scripts/inspect_phase5*.py
+      - daily-games-tracker/scripts/tests/test_phase5a*.py
+      - daily-games-tracker/scripts/tests/phase5a*.test.mjs
+      - daily-games-tracker/scripts/tests/fixtures/**
   workflow_dispatch:
     inputs:
-      trusted_application_commit:
-        description: Exact reviewed sanitized source commit (40 lowercase hex)
-        required: true
-        type: string
-      approved_manifest_sha256:
-        description: Exact previously reviewed unsigned full-client package manifest
-        required: true
-        type: string
-      approved_wire_sha256:
-        description: Exact previously reviewed HubSign JSON wire payload
-        required: true
-        type: string
       confirm_external_signing:
-        description: Confirm the reviewed exact payload transfer to HubSign
+        description: Confirm the reviewed exact payload transfer to the private signing worker
         required: true
         type: boolean
         default: false
@@ -28,50 +31,75 @@ permissions:
   contents: read
 
 concurrency:
-  group: full-upload-sign-${{ github.ref }}
+  group: full-upload-sign-${{ github.ref }}-${{ github.sha }}
   cancel-in-progress: false
 
 jobs:
   sign:
-    # Permanent safety stop; preparation must never weaken this guard.
-    if: ${{ false && inputs.confirm_external_signing }}
+    if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.confirm_external_signing == true) }}
     runs-on: ubuntu-24.04
+    environment: wht-shortcut-signing
     timeout-minutes: 30
     env:
-      # No clean reviewed source commit exists for this dirty local preparation.
-      # A later separately authorized export review must pin it here. Fail closed.
-      REVIEWED_APPLICATION_COMMIT: "0000000000000000000000000000000000000000"
+      REVIEWED_APPLICATION_COMMIT: ${{ secrets.WHT_REVIEWED_APPLICATION_COMMIT }}
+      WHT_RUNTIME_ORIGIN: ${{ secrets.WHT_RUNTIME_ORIGIN }}
+      WHT_SIGNING_RECEIPT_URL: ${{ secrets.WHT_SIGNING_RECEIPT_URL }}
+      WHT_SIGNING_RECEIPT_TOKEN: ${{ secrets.WHT_SIGNING_RECEIPT_TOKEN }}
       CHERRI_COMMIT: d2072c62ea708e7727099fab94fa28b0bcec747b
       PYTHONUTF8: "1"
       PYTHONOPTIMIZE: "0"
     steps:
-      - name: Require the reviewed main-source identity before checkout
+      - name: Require protected reviewed source and private delivery configuration
         shell: bash
-        env:
-          TRUSTED_APPLICATION_COMMIT: ${{ inputs.trusted_application_commit }}
-          APPROVED_MANIFEST_SHA256: ${{ inputs.approved_manifest_sha256 }}
-          APPROVED_WIRE_SHA256: ${{ inputs.approved_wire_sha256 }}
         run: |
           set -euo pipefail
-          test "$GITHUB_EVENT_NAME" = workflow_dispatch
+          if [ "$GITHUB_EVENT_NAME" = push ]; then
+            test "$GITHUB_REF" = refs/heads/main
+          elif [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
+            test "$GITHUB_REF" = refs/heads/main
+            [[ "$REVIEWED_APPLICATION_COMMIT" =~ ^[0-9a-f]{40}$ ]]
+            test "$REVIEWED_APPLICATION_COMMIT" != '0000000000000000000000000000000000000000'
+            test "$REVIEWED_APPLICATION_COMMIT" = "$GITHUB_SHA"
+          else
+            false
+          fi
           test "$GITHUB_REF" = refs/heads/main
-          [[ "$TRUSTED_APPLICATION_COMMIT" =~ ^[0-9a-f]{40}$ ]]
-          test "$REVIEWED_APPLICATION_COMMIT" != '0000000000000000000000000000000000000000'
-          test "$TRUSTED_APPLICATION_COMMIT" = "$REVIEWED_APPLICATION_COMMIT"
-          [[ "$APPROVED_MANIFEST_SHA256" =~ ^[0-9a-f]{64}$ ]]
-          [[ "$APPROVED_WIRE_SHA256" =~ ^[0-9a-f]{64}$ ]]
+          [[ "$GITHUB_SHA" =~ ^[0-9a-f]{40}$ ]]
+          test -n "$WHT_RUNTIME_ORIGIN"
+          test -n "$WHT_SIGNING_RECEIPT_URL"
+          test -n "$WHT_SIGNING_RECEIPT_TOKEN"
+          python3 - <<'PY'
+          import os
+          from urllib.parse import urlsplit
+          origin = os.environ["WHT_RUNTIME_ORIGIN"]
+          receipt = os.environ["WHT_SIGNING_RECEIPT_URL"]
+          def https_origin(value):
+              parsed = urlsplit(value)
+              assert value == value.strip() and parsed.scheme == "https" and parsed.hostname
+              assert parsed.username is None and parsed.password is None
+              assert parsed.path in ("", "/") and not parsed.query and not parsed.fragment and not value.endswith("/")
+          def https_endpoint(value):
+              parsed = urlsplit(value)
+              assert value == value.strip() and parsed.scheme == "https" and parsed.hostname
+              assert parsed.username is None and parsed.password is None and not parsed.query and not parsed.fragment
+          https_origin(origin)
+          host = urlsplit(origin).hostname.lower().rstrip(".")
+          assert host != "localhost" and not host.endswith((".invalid", ".example", ".test"))
+          https_endpoint(receipt)
+          print("protected signing configuration shape passed")
+          PY
 
-      - name: Check out only the reviewed source commit
+      - name: Check out only the protected reviewed source commit
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          ref: ${{ inputs.trusted_application_commit }}
+          ref: ${{ github.sha }}
           persist-credentials: false
 
       - name: Confirm checkout and locked unsigned build policy
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "$REVIEWED_APPLICATION_COMMIT"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           node daily-games-tracker/scripts/phase5a-verify-toolchain.mjs --lock daily-games-tracker/shortcut/cherri-migration/toolchain.lock.json --workflow .github/workflows/cherri-alert-experiment.yml
 
       - name: Set up pinned Go
@@ -99,39 +127,67 @@ jobs:
           go -C "$source_dir" build -mod=readonly -trimpath -buildvcs=false -ldflags='-s -w' -o "$RUNNER_TEMP/cherri" .
           test -s "$RUNNER_TEMP/cherri"
 
-      - name: Build inspect compare and freeze complete client offline
+      - name: Build, inspect, compare, and freeze the private package twice
         shell: bash
         run: |
           set -euo pipefail
-          python3 daily-games-tracker/scripts/phase5a_build_upload.py --compiler "$RUNNER_TEMP/cherri" --output "$RUNNER_TEMP/upload-first"
-          python3 daily-games-tracker/scripts/phase5a_build_upload.py --compiler "$RUNNER_TEMP/cherri" --output "$RUNNER_TEMP/upload-second"
-          python3 daily-games-tracker/scripts/phase5a_compare_upload.py "$RUNNER_TEMP/upload-first/Upload to WHT_unsigned.shortcut" "$RUNNER_TEMP/upload-second/Upload to WHT_unsigned.shortcut" > "$RUNNER_TEMP/upload-first/reproducibility.json"
-          python3 daily-games-tracker/scripts/phase5a_upload_signing.py prepare --build-directory "$RUNNER_TEMP/upload-first" --output "$RUNNER_TEMP/upload-review-package"
+          python3 daily-games-tracker/scripts/phase5a_build_upload.py --compiler "$RUNNER_TEMP/cherri" --runtime-origin "$WHT_RUNTIME_ORIGIN" --require-nonreserved-origin --output "$RUNNER_TEMP/upload-first"
+          python3 daily-games-tracker/scripts/phase5a_build_upload.py --compiler "$RUNNER_TEMP/cherri" --runtime-origin "$WHT_RUNTIME_ORIGIN" --require-nonreserved-origin --output "$RUNNER_TEMP/upload-second"
+          python3 daily-games-tracker/scripts/phase5a_compare_upload.py "$RUNNER_TEMP/upload-first/Upload To WHT_unsigned.shortcut" "$RUNNER_TEMP/upload-second/Upload To WHT_unsigned.shortcut" > "$RUNNER_TEMP/upload-first/reproducibility.json"
+          python3 daily-games-tracker/scripts/phase5a_upload_signing.py prepare --build-directory "$RUNNER_TEMP/upload-first" --runtime-origin "$WHT_RUNTIME_ORIGIN" --output "$RUNNER_TEMP/upload-review-package"
 
-      - name: Send only the exact reviewed full-client package once
+      - name: Ask the durable private worker to sign the frozen package once
         shell: bash
-        env:
-          APPROVED_MANIFEST_SHA256: ${{ inputs.approved_manifest_sha256 }}
-          APPROVED_WIRE_SHA256: ${{ inputs.approved_wire_sha256 }}
         run: |
           set -euo pipefail
-          # send rechecks every package file, native contract, XML and wire hash
-          # before any POST. Byte drift fails closed; never approve from this run.
-          python3 daily-games-tracker/scripts/phase5a_upload_signing.py send \
+          readarray -t digests < <(PYTHONPATH=daily-games-tracker/scripts python3 - "$RUNNER_TEMP/upload-review-package" <<'PY'
+          import hashlib, json, pathlib, sys
+          package = pathlib.Path(sys.argv[1])
+          manifest_bytes = (package / "approval-manifest.json").read_bytes()
+          manifest = json.loads(manifest_bytes)
+          print(hashlib.sha256(manifest_bytes).hexdigest())
+          print(manifest["futureSigningPayload"]["jsonWireSha256"])
+          PY
+          )
+          manifest_sha256="${digests[0]}"
+          wire_sha256="${digests[1]}"
+          test "$manifest_sha256" = "$(sha256sum "$RUNNER_TEMP/upload-review-package/approval-manifest.json" | awk '{print $1}')"
+          PYTHONPATH=daily-games-tracker/scripts python3 daily-games-tracker/scripts/phase5a_private_receipt.py \
+            --endpoint "$WHT_SIGNING_RECEIPT_URL" \
+            sign \
+            --source-commit "$GITHUB_SHA" \
+            --runtime-origin "$WHT_RUNTIME_ORIGIN" \
             --package "$RUNNER_TEMP/upload-review-package" \
-            --output "$RUNNER_TEMP/upload-signing-evidence" \
-            --expected-manifest-sha256 "$APPROVED_MANIFEST_SHA256" \
-            --expected-wire-sha256 "$APPROVED_WIRE_SHA256"
+            --expected-manifest-sha256 "$manifest_sha256" \
+            --expected-wire-sha256 "$wire_sha256" \
+            > "$RUNNER_TEMP/private-signing-receipt.json"
+          test -s "$RUNNER_TEMP/private-signing-receipt.json"
 
-      - name: Retain request intent and response evidence even on failure
-        if: ${{ always() }}
-        uses: actions/upload-artifact@615b319bd27bb32c3d64dca6b6ed6974d5fbe653 # v6.0.0
-        with:
-          name: full-upload-signing-evidence-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/upload-signing-evidence/
-          if-no-files-found: warn
-          retention-days: 1
-
-      - name: Require a nonempty signed candidate on success
+      - name: Recover signed Shortcut to private runner storage
         shell: bash
-        run: test -s "$RUNNER_TEMP/upload-signing-evidence/Upload to WHT_signed.shortcut"
+        run: |
+          set -euo pipefail
+          readarray -t receipt_fields < <(python3 - "$RUNNER_TEMP/private-signing-receipt.json" <<'PY'
+          import json, pathlib, sys
+          receipt = json.loads(pathlib.Path(sys.argv[1]).read_text())
+          print(receipt["idempotencyKey"])
+          print(receipt["signedShortcutSha256"])
+          PY
+          )
+          idempotency_key="${receipt_fields[0]}"
+          signed_sha256="${receipt_fields[1]}"
+          signed_output="$RUNNER_TEMP/Upload To WHT_signed.shortcut"
+          PYTHONPATH=daily-games-tracker/scripts python3 daily-games-tracker/scripts/phase5a_private_receipt.py \
+            --endpoint "$WHT_SIGNING_RECEIPT_URL" \
+            recover \
+            --idempotency-key "$idempotency_key" \
+            --expected-signed-sha256 "$signed_sha256" \
+            --output "$signed_output" \
+            > "$RUNNER_TEMP/private-signing-recovery.json"
+          test -s "$signed_output"
+          python3 - "$signed_output" "$signed_sha256" <<'PY'
+          import hashlib, pathlib, sys
+          signed = pathlib.Path(sys.argv[1]).read_bytes()
+          assert hashlib.sha256(signed).hexdigest() == sys.argv[2]
+          assert signed[:4] == b"AEA1"
+          PY

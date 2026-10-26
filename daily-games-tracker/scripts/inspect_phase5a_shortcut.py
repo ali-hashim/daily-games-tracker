@@ -1,10 +1,18 @@
-"""Credential-free structural inspection for the Phase 5A Shortcut candidate.
+"""Legacy credential-free inspection for synthetic Phase 5A fixtures.
 
-This module reads an unsigned Shortcut plist from disk.  It never downloads a
-Shortcut, resolves an iCloud URL, executes a native action, or contacts an API.
-The checks intentionally describe static evidence only; iPhone behavior,
-transport failures, and Copy to Clipboard permission failures remain runtime
-acceptance items.
+This module retains the historical two-request import contract: validate and
+submit use JSON bodies attached to one native request-body variable.  It reads
+an unsigned Shortcut plist from disk and never downloads a Shortcut, resolves
+an iCloud URL, executes a native action, or contacts an API.  The synthetic
+fixtures and mutation tests that exercise this contract remain useful
+historical coverage.
+
+The maintained Upload to WHT full-client source uses three approval/validate/
+submit requests with File bodies and an explicit exit/open-app completion
+route.  Inspect that current artifact with ``phase5a_inspect_upload.py``;
+this legacy inspector is not its authoritative contract.  Both tools report
+static evidence only; iPhone behavior, transport failures, and Copy to
+Clipboard permission failures remain runtime acceptance items.
 """
 
 from __future__ import annotations
@@ -610,8 +618,15 @@ def inspect_path(path: Path, require_signed: bool = False) -> dict[str, Any]:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("shortcut", type=Path, help="local unsigned Shortcut plist/export")
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        epilog="Maintained Upload to WHT full-client inspection: phase5a_inspect_upload.py PATH",
+    )
+    parser.add_argument(
+        "shortcut",
+        type=Path,
+        help="local unsigned synthetic legacy-contract plist/export",
+    )
     parser.add_argument("--require-signed", action="store_true", help="accept an AEA1 header as header-only evidence")
     args = parser.parse_args()
     print(json.dumps(inspect_path(args.shortcut, args.require_signed), ensure_ascii=False, indent=2, sort_keys=True))

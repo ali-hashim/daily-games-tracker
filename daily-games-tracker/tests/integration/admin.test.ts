@@ -22,7 +22,7 @@ import { readAllTimeLeaderboard } from "../../functions/_lib/leaderboards";
 let runtime: Miniflare;
 let env: AppEnv;
 const admin = "admin@example.test";
-const issuer = "https://team.example.invalid";
+const issuer = "https://integration.test.invalid";
 const audience = "integration-admin";
 let privateKey: CryptoKey;
 let publicKey: CryptoKey;
@@ -38,6 +38,7 @@ beforeAll(async () => {
   );
   env = {
     DB: (await runtime.getD1Database("DB")) as unknown as D1Database,
+    APP_ENV: "test",
     CLOUDFLARE_ACCESS_DOMAIN: issuer,
     CLOUDFLARE_ACCESS_AUD: audience,
     ADMIN_EMAIL: admin,

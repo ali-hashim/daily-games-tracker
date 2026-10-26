@@ -105,8 +105,8 @@ expect(has('daily-games-tracker/scripts/inspect_phase5a_shortcut.py'), 'workflow
 expect(has('daily-games-tracker/scripts/tests/**'), 'workflow must trigger on inspector regression fixture changes');
 expect(has('daily-games-tracker/scripts/tests/fixtures/**'), 'workflow must trigger on Phase 5A fixture changes');
 expect(has('inspector_flags+=(--strict-current)'), 'workflow must pass --strict-current to the maintained 06/07 inspector checks');
-expect(has('phase5a_build_upload.py --compiler "$RUNNER_TEMP/cherri" --output "$RUNNER_TEMP/upload-first"'), 'workflow must build the first complete unsigned client');
-expect(has('phase5a_build_upload.py --compiler "$RUNNER_TEMP/cherri" --output "$RUNNER_TEMP/upload-second"'), 'workflow must build the second complete unsigned client');
+expect(has('phase5a_build_upload.py --compiler "$RUNNER_TEMP/cherri" --runtime-origin "https://runtime.example.invalid" --output "$RUNNER_TEMP/upload-first"'), 'workflow must build the first complete unsigned client with a sanitized origin');
+expect(has('phase5a_build_upload.py --compiler "$RUNNER_TEMP/cherri" --runtime-origin "https://runtime.example.invalid" --output "$RUNNER_TEMP/upload-second"'), 'workflow must build the second complete unsigned client with a sanitized origin');
 expect(has('phase5a_compare_upload.py "$RUNNER_TEMP/upload-first/Upload To WHT_unsigned.shortcut" "$RUNNER_TEMP/upload-second/Upload To WHT_unsigned.shortcut"'), 'workflow must compare the complete-client native contract');
 expect(has('phase5a_upload_signing.py prepare --build-directory "$RUNNER_TEMP/upload-first"'), 'workflow must freeze the inspected complete-client review package offline');
 expect(!has('phase5a_upload_signing.py send'), 'routine workflow must not send a signing payload');

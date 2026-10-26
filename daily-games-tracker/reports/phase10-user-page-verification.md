@@ -1,6 +1,6 @@
 # Phase 10 User page verification
 
-Verified October 25, 2026 (`America/Los_Angeles`) in the intentionally dirty WHT worktree. The reviewed Phase 10 build, including the User-route fix, is deployed to the preview branch at [preview.example.invalid](https://preview.example.invalid), with latest unique deployment URL [preview.example.invalid](https://preview.example.invalid). No production deployment, public publication, Shortcut compilation/distribution, workflow activation, WHT API write, or install-link change was performed.
+Verified October 25, 2026 (`America/Los_Angeles`) in the intentionally dirty WHT worktree. The reviewed Phase 10 build, including the User-route fix, was checked against a privately configured preview origin and deployment identity; those values are omitted from this public report. No production deployment, public publication, Shortcut compilation/distribution, workflow activation, WHT API write, or install-link change was performed.
 
 ## Implemented scope
 

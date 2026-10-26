@@ -1,15 +1,15 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "example-project",
+  "name": "example-pages-project",
   "compatibility_date": "2026-10-20",
   "pages_build_output_dir": "./dist",
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "example-database",
-      // Local placeholder. Wrangler persists a local database and does not contact this UUID.
-      "database_id": "00000000000000000000000000000000",
-      "preview_database_id": "00000000000000000000000000000000",
+      "database_name": "example-local-db",
+      // Inert local placeholder. Provision private runtime IDs before any deployment.
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "preview_database_id": "DB",
       "migrations_dir": "migrations",
     },
   ],
@@ -21,25 +21,23 @@
       "d1_databases": [
         {
           "binding": "DB",
-          "database_name": "example-database",
-          // Replace after creating the preview database.
-          "database_id": "00000000000000000000000000000000",
+          "database_name": "example-preview-db",
+          // Inert placeholder. Keep real runtime IDs outside the public repository.
+          "database_id": "00000000-0000-0000-0000-000000000000",
           "migrations_dir": "migrations",
         },
       ],
       "vars": {
         "APP_ENV": "preview",
-        "CLOUDFLARE_ACCESS_DOMAIN": "team.example.invalid",
-        "CLOUDFLARE_ACCESS_AUD": "EXAMPLE_ACCESS_AUDIENCE",
       },
     },
     "production": {
       "d1_databases": [
         {
           "binding": "DB",
-          "database_name": "example-database",
-          // Replace after creating the production database.
-          "database_id": "00000000000000000000000000000000",
+          "database_name": "example-production-db",
+          // Inert placeholder. Keep real runtime IDs outside the public repository.
+          "database_id": "00000000-0000-0000-0000-000000000000",
           "migrations_dir": "migrations",
         },
       ],

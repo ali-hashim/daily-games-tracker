@@ -55,7 +55,8 @@ beforeAll(async () => {
   );
   env = {
     DB: (await runtime.getD1Database("DB")) as unknown as D1Database,
-    SHORTCUT_INSTALL_URL: "https://www.icloud.com/shortcuts/EXAMPLE_SHORTCUT",
+    APP_ENV: "test",
+      SHORTCUT_INSTALL_URL: "https://example.invalid/shortcuts/EXAMPLE_SHORTCUT",
   };
   const sql = readdirSync("migrations")
     .filter((name) => name.endsWith(".sql"))
@@ -73,7 +74,7 @@ afterAll(async () => {
   await runtime?.dispose();
 });
 beforeEach(async () => {
-  env.SHORTCUT_INSTALL_URL = "https://www.icloud.com/shortcuts/EXAMPLE_SHORTCUT";
+  env.SHORTCUT_INSTALL_URL = "https://example.invalid/shortcuts/EXAMPLE_SHORTCUT";
   for (const table of [
     "round_results",
     "submissions",
@@ -772,11 +773,11 @@ describe("device authenticated D1 imports", () => {
     undefined,
     "",
     "not a URL",
-    "http://www.icloud.com/shortcuts/EXAMPLE_SHORTCUT",
-    "https://www.icloud.com.attacker.test/shortcuts/0123456789abcdef0123456789abcdef",
-    "https://www.icloud.com/shortcuts/EXAMPLE_SHORTCUT",
-    "https://www.icloud.com/shortcuts/EXAMPLE_SHORTCUT?secret=do-not-echo",
-    "https://user:do-not-echo@www.icloud.com/shortcuts/0123456789abcdef0123456789abcdef",
+    "http://example.invalid/shortcuts/0123456789abcdef0123456789abcdef",
+    "https://example.invalid.attacker.test/shortcuts/0123456789abcdef0123456789abcdef",
+    "https://example.invalid/shortcuts/not-a-shortcut",
+    "https://example.invalid/shortcuts/0123456789abcdef0123456789abcdef?secret=do-not-echo",
+    "https://user:do-not-echo@example.invalid/shortcuts/0123456789abcdef0123456789abcdef",
   ])(
     "returns safe update recovery without writes for an unusable install link (%s)",
     async (url) => {

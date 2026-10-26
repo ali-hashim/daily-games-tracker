@@ -4,7 +4,7 @@
   "generated_at": "2026-10-25",
   "preview": {
     "alias": "https://preview.example.invalid",
-    "deployment_url": "https://preview.example.invalid",
+    "deployment_url": "https://unique-preview.example.invalid",
     "health_observed_at": "2026-10-25"
   },
   "candidate": {
@@ -167,7 +167,7 @@
       "id": "phase5a.protected-signing-workflow",
       "title": "Operational signing workflow activation",
       "disposition": "pending",
-      "evidence": "Static preparation is retained, but the workflow remains protected by its permanent false guard and all-zero reviewed-commit sentinel; no activation, dispatch, or operational CI signing is claimed.",
+      "evidence": "The signing workflow and durable private-worker service contract are implemented with an automatic relevant-reviewed-main trigger, optional protected manual recovery, stable-operation and receipt safeguards; the protected environment/configuration remain unprovisioned, so no operational CI signing run or signed delivery is claimed.",
       "references": ["../shortcut/PHASE_5A_HANDOFF.md", "PHASE_5A_PLAN.md"]
     },
     {
@@ -209,9 +209,9 @@
     },
     {
       "id": "phase5a.operational-signing-activation",
-      "limitation": "The formal limitation is operational signing activation; it remains pending while the protected workflow stays disabled.",
+      "limitation": "The formal limitation is operational signing activation; it remains pending until an independently recorded protected automatic or manual-recovery CI signing run and signed delivery exist.",
       "disposition": "pending",
-      "evidence": "The protected signing workflow has not been activated or dispatched.",
+      "evidence": "The protected automatic/manual-recovery signing workflow and durable private-worker service contract are implemented, but the protected environment/configuration remain unprovisioned and no operational CI signing run or signed delivery has been independently recorded.",
       "references": ["../shortcut/PHASE_5A_HANDOFF.md", "PHASE_5A_PLAN.md"]
     },
     {
@@ -257,21 +257,21 @@
       "id": "operational.preview-health-alias",
       "title": "Read-only preview alias health",
       "disposition": "pass",
-      "evidence": "On 2026-10-25, read-only GET https://preview.example.invalid/api/health returned HTTP 200, schemaVersion 2, and gameDay 2026-10-25.",
+      "evidence": "On 2026-10-25, a read-only GET against the privately configured preview origin returned HTTP 200, schemaVersion 2, and gameDay 2026-10-25; the origin and deployment identity are retained in private evidence.",
       "references": ["EXECUTION_PLAN.md"]
     },
     {
       "id": "operational.preview-health-deployment",
       "title": "Read-only unique preview deployment health",
       "disposition": "pass",
-      "evidence": "On 2026-10-25, read-only GET https://preview.example.invalid/api/health returned HTTP 200, schemaVersion 2, and gameDay 2026-10-25.",
+      "evidence": "On 2026-10-25, a read-only GET against the privately configured unique preview origin returned HTTP 200, schemaVersion 2, and gameDay 2026-10-25; the origin and deployment identity are retained in private evidence.",
       "references": ["EXECUTION_PLAN.md"]
     },
     {
       "id": "operational.preview-boundaries",
       "title": "Read-only preview boundary checks",
       "disposition": "pass",
-      "evidence": "On 2026-10-25, read-only checks against https://preview.example.invalid confirmed security headers and request IDs on API responses; GET /api/not-real returned 404 NOT_FOUND; POST /api/health returned 405 with Allow: GET; an oversized POST /api/import/validate returned 413 PAYLOAD_TOO_LARGE before authentication; and anonymous GET /api/admin/players reached the Cloudflare Access sign-in boundary. No valid submission or WHT API write was sent.",
+      "evidence": "On 2026-10-25, read-only checks against the privately configured unique preview origin confirmed security headers and request IDs on API responses; GET /api/not-real returned 404 NOT_FOUND; POST /api/health returned 405 with Allow: GET; an oversized POST /api/import/validate returned 413 PAYLOAD_TOO_LARGE before authentication; and anonymous GET /api/admin/players reached the Cloudflare Access sign-in boundary. No valid submission or WHT API write was sent; exact origin and deployment identity remain private.",
       "references": ["EXECUTION_PLAN.md"]
     },
     {
