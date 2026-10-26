@@ -11,7 +11,8 @@ export const PARSER_MESSAGES = {
     "The expected rounds are missing, repeated, or out of order. Share the completed game again.",
   SCORE_MISMATCH:
     "The round scores do not reproduce the final total. Share the completed game again.",
-  WRONG_GAME_DAY: "Only today’s Pacific-day puzzle can be imported. Share today’s completed game.",
+  WRONG_GAME_DAY:
+    "This challenge is outside its worldwide submission window. Share the completed game while its worldwide window is open.",
 } as const;
 
 export type ParserErrorCode = keyof typeof PARSER_MESSAGES;

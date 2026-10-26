@@ -11,14 +11,11 @@ import { onRequest as middleware } from "../../functions/_middleware";
 let runtime: Miniflare;
 let env: AppEnv;
 let code: string;
-// Synthetic ID exercises URL validation; it is not a configured installation link.
-const syntheticInstallUrl = `https://${"www.icloud.com"}/shortcuts/${"0123456789abcdef".repeat(2)}`;
-
 const now = new Date("2026-10-21T20:00:00Z");
 const fixture = (name: string) =>
   JSON.parse(readFileSync(`tests/fixtures/capture/${name}.json`, "utf8"));
 const map = () => fixture("2026-10-21-maptap-810.iphone");
-const krill = () => fixture("2026-10-21-dive-198-285.refreshed.iphone");
+const krill = () => fixture("2026-10-21-dive-98-285.refreshed.iphone");
 async function call(
   mode: "validate" | "submit",
   capture: unknown = map(),
@@ -58,7 +55,7 @@ beforeAll(async () => {
   );
   env = {
     DB: (await runtime.getD1Database("DB")) as unknown as D1Database,
-    SHORTCUT_INSTALL_URL: syntheticInstallUrl,
+    SHORTCUT_INSTALL_URL: "https://www.icloud.com/shortcuts/EXAMPLE_SHORTCUT",
   };
   const sql = readdirSync("migrations")
     .filter((name) => name.endsWith(".sql"))
@@ -76,7 +73,7 @@ afterAll(async () => {
   await runtime?.dispose();
 });
 beforeEach(async () => {
-  env.SHORTCUT_INSTALL_URL = syntheticInstallUrl;
+  env.SHORTCUT_INSTALL_URL = "https://www.icloud.com/shortcuts/EXAMPLE_SHORTCUT";
   for (const table of [
     "round_results",
     "submissions",
@@ -140,7 +137,7 @@ describe("device authenticated D1 imports", () => {
     const wrongKrillion = {
       capture_schema: "dgt.capture.v1",
       source_kind: "shared_text",
-      shared_text: "KRILLION DIVE #198 COMPLETE 285",
+      shared_text: "KRILLION DIVE #98 COMPLETE 285",
     };
     const wrongMap = {
       ...krill(),
@@ -170,8 +167,8 @@ describe("device authenticated D1 imports", () => {
   it("returns clipboard-ready server text and completion-menu values after a new save", async () => {
     const result = await submit();
     expect(result.body.status).toBe("submitted");
-    expect(result.body.scoreboard_text).toContain("KRILLION");
     expect(result.body.scoreboard_text).toContain("MAPTAP");
+    expect(result.body.scoreboard_text).not.toContain("KRILLION");
     expect(result.body.scoreboard_text).toContain("72 · 98 · 86 · 77 · 79");
     expect(result.body.scoreboard_text).not.toContain("🎓");
     expect(result.body.wht_url).toBe("https://wht.test/daily/2026-10-21");
@@ -387,10 +384,46 @@ describe("device authenticated D1 imports", () => {
     });
     try {
       const capture = krill();
-      expect((await call("submit", capture)).body.error_code).toBe("WRONG_GAME_DAY");
+      expect((await call("submit", capture)).body.error_code).toBe("IDENTITY_CONFLICT");
       expect(await count("submissions")).toBe(0);
       expect(await count("round_results")).toBe(0);
       expect(await count("game_days")).toBe(1);
+    } finally {
+      env.DB = original;
+    }
+  });
+  it("rejects a conflicting recovered duplicate instead of returning already submitted", async () => {
+    const original = env.DB;
+    let intercepted = false;
+    env.DB = new Proxy(original, {
+      get(target, key) {
+        if (key === "batch")
+          return async (statements: D1PreparedStatement[]) => {
+            if (!intercepted) {
+              intercepted = true;
+              await original
+                .prepare(
+                  "INSERT INTO game_days(id,game_id,game_date,external_puzzle_key) VALUES ('conflict','maptap','2026-10-21','other-puzzle')",
+                )
+                .run();
+              await original
+                .prepare(
+                  "INSERT INTO submissions(id,player_id,game_id,game_day_id,final_score,parser_version,source_kind) VALUES ('conflict-submission','p','maptap','conflict',999,'maptap.v1','admin')",
+                )
+                .run();
+            }
+            return target.batch(statements);
+          };
+        const value = Reflect.get(target, key);
+        return typeof value === "function" ? value.bind(target) : value;
+      },
+    });
+    try {
+      const result = await call("submit", map());
+      expect(result.response.status).toBe(409);
+      expect(result.body.error_code).toBe("IDENTITY_CONFLICT");
+      expect(result.body.status).toBe("error");
+      expect(await count("submissions")).toBe(1);
     } finally {
       env.DB = original;
     }
@@ -523,11 +556,27 @@ describe("device authenticated D1 imports", () => {
       final_score: 811,
     });
   });
-  it("still rejects a dated MapTap result when Pacific midnight passes after validation", async () => {
+  it("accepts a dated MapTap result after Pacific midnight while its worldwide window is open", async () => {
     const capture = map();
     expect((await call("validate", capture)).body.status).toBe("valid");
     const next = await call("submit", capture, {}, code, new Date("2026-10-22T07:00:00Z"));
+    expect(next.body).toMatchObject({ status: "submitted", game_date: "2026-10-21" });
+    expect(await count("submissions")).toBe(1);
+  });
+  it("does not save a result validated before the worldwide close when submit crosses it", async () => {
+    const capture = map();
+    expect((await call("validate", capture)).body.status).toBe("valid");
+    const next = await call("submit", capture, {}, code, new Date("2026-10-22T12:00:00Z"));
     expect(next.body.error_code).toBe("WRONG_GAME_DAY");
+    expect(await count("submissions")).toBe(0);
+  });
+  it.each([
+    [new Date("2026-10-20T09:59:59.999Z"), "before opening"],
+    [new Date("2026-10-22T12:00:00.000Z"), "after closing"],
+  ])("rejects a MapTap capture with no pre-existing row %s", async (date) => {
+    const result = await call("submit", map(), {}, code, date);
+    expect(result.body.error_code).toBe("WRONG_GAME_DAY");
+    expect(await count("game_days")).toBe(0);
     expect(await count("submissions")).toBe(0);
   });
   it("hashes only device credentials, never game results, through validation, save and repeats", async () => {
@@ -572,7 +621,7 @@ describe("device authenticated D1 imports", () => {
   it("permits one winner for concurrent different results", async () => {
     const a = map(),
       b = map();
-    b.shared_text = b.shared_text.replace("72", "73").replace("810", "811");
+      b.shared_text = b.shared_text.replace("72", "73").replace("810", "811");
     const results = await Promise.all([a, b].map((capture) => call("submit", capture)));
     expect(results.map((r) => r.body.status).sort()).toEqual(["already_submitted", "submitted"]);
     expect(
@@ -603,11 +652,11 @@ describe("device authenticated D1 imports", () => {
     )
       .bind(r.gameDate, "different")
       .run();
-    expect((await call("validate", krill())).body.error_code).toBe("WRONG_GAME_DAY");
+    expect((await call("validate", krill())).body.error_code).toBe("IDENTITY_CONFLICT");
     await env.DB.prepare("UPDATE game_days SET game_date = '2026-10-20', external_puzzle_key = ?")
       .bind(r.externalPuzzleKey)
       .run();
-    expect((await call("validate", krill())).body.error_code).toBe("WRONG_GAME_DAY");
+    expect((await call("validate", krill())).body.error_code).toBe("IDENTITY_CONFLICT");
     expect(await count("submissions")).toBe(0);
   });
   it("reads game and version policy freshly on repeat requests", async () => {
@@ -723,11 +772,11 @@ describe("device authenticated D1 imports", () => {
     undefined,
     "",
     "not a URL",
-    syntheticInstallUrl.replace("https:", "http:"),
+    "http://www.icloud.com/shortcuts/EXAMPLE_SHORTCUT",
     "https://www.icloud.com.attacker.test/shortcuts/0123456789abcdef0123456789abcdef",
-    syntheticInstallUrl.replace("0123456789abcdef".repeat(2), "not-a-shortcut"),
-    `${syntheticInstallUrl}?secret=do-not-echo`,
-    syntheticInstallUrl.replace("https://", "https://user:do-not-echo@"),
+    "https://www.icloud.com/shortcuts/EXAMPLE_SHORTCUT",
+    "https://www.icloud.com/shortcuts/EXAMPLE_SHORTCUT?secret=do-not-echo",
+    "https://user:do-not-echo@www.icloud.com/shortcuts/0123456789abcdef0123456789abcdef",
   ])(
     "returns safe update recovery without writes for an unusable install link (%s)",
     async (url) => {
@@ -788,6 +837,22 @@ describe("device authenticated D1 imports", () => {
       });
       expect(result.body.error_message).toContain("Nothing was submitted.");
     }
+    for (const table of ["game_days", "submissions", "round_results"])
+      expect(await count(table)).toBe(0);
+    expect(
+      await env.DB.prepare("SELECT last_used_at FROM device_credentials").first("last_used_at"),
+    ).toBeNull();
+  });
+  it("rejects the Phase 5A synthetic compatibility sentinel before score or activity writes", async () => {
+    const sentinel = {
+      capture_schema: "dgt.capture.v1",
+      source_kind: "shared_text",
+      shared_text: "WHT compatibility test",
+    };
+    const result = await call("validate", sentinel);
+    expect(result.response.status).toBe(422);
+    expect(result.body).toMatchObject({ status: "error", error_code: "PARSER_UNSUPPORTED" });
+    expect(result.body.error_message).toContain("Nothing was submitted");
     for (const table of ["game_days", "submissions", "round_results"])
       expect(await count(table)).toBe(0);
     expect(

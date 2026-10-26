@@ -1,5 +1,6 @@
 import { createRemoteJWKSet, jwtVerify, type JWTVerifyGetKey } from "jose";
 import { ApiError } from "./http";
+import { logAdminAccessDenied, type AdminDenialReason } from "./logging";
 import type { AppEnv } from "./runtime";
 
 const keySets = new Map<string, JWTVerifyGetKey>();
@@ -8,7 +9,7 @@ export function isAdminPath(path: string): boolean {
   return path.startsWith("/admin") || path === "/api/admin" || path.startsWith("/api/admin/");
 }
 
-export async function requireAdmin(request: Request, env: AppEnv) {
+export async function requireAdmin(request: Request, env: AppEnv, requestId = "unknown") {
   const {
     CLOUDFLARE_ACCESS_DOMAIN: issuer,
     CLOUDFLARE_ACCESS_AUD: audience,
@@ -23,7 +24,8 @@ export async function requireAdmin(request: Request, env: AppEnv) {
     throw new ApiError(503, "ADMIN_NOT_CONFIGURED", "Administrator access is not configured yet.");
   }
   const token = request.headers.get("Cf-Access-Jwt-Assertion");
-  if (!token || token.length > 16_384) throw denied();
+  if (!token) throw deny(request, requestId, "missing_assertion", false);
+  if (token.length > 16_384) throw deny(request, requestId, "assertion_too_large", true);
 
   let keys = keySets.get(issuer);
   if (!keys) {
@@ -32,7 +34,19 @@ export async function requireAdmin(request: Request, env: AppEnv) {
     });
     keySets.set(issuer, keys);
   }
-  return verifyAdminToken(token, { issuer, audience, email }, keys);
+  try {
+    return await verifyAdminToken(token, { issuer, audience, email }, keys);
+  } catch (error) {
+    if (error instanceof AdminAccessDenied) {
+      logAdminAccessDenied({
+        requestId,
+        request,
+        reason: error.adminDenialReason,
+        assertionPresent: true,
+      });
+    }
+    throw error;
+  }
 }
 
 /** The resolver argument permits signed-key tests; request data never controls the trusted key set. */
@@ -55,18 +69,41 @@ export async function verifyAdminToken(
       !payload.sub ||
       payload.email.toLowerCase() !== configuration.email.toLowerCase()
     ) {
-      throw denied();
+      throw denied("identity_mismatch");
     }
     return { email: payload.email.toLowerCase(), subject: payload.sub };
-  } catch {
-    throw denied();
+  } catch (error) {
+    if (error instanceof AdminAccessDenied) throw error;
+    throw denied("invalid_assertion");
   }
 }
 
-function denied() {
-  return new ApiError(
+function deny(
+  request: Request,
+  requestId: string,
+  reason: AdminDenialReason,
+  assertionPresent: boolean,
+): AdminAccessDenied {
+  logAdminAccessDenied({ requestId, request, reason, assertionPresent });
+  return denied(reason);
+}
+
+function denied(reason: AdminDenialReason): AdminAccessDenied {
+  return new AdminAccessDenied(
     403,
     "ADMIN_ACCESS_DENIED",
     "Sign in with the authorized administrator account.",
+    reason,
   );
+}
+
+class AdminAccessDenied extends ApiError {
+  constructor(
+    statusCode: number,
+    errorCode: string,
+    publicMessage: string,
+    readonly adminDenialReason: AdminDenialReason,
+  ) {
+    super(statusCode, errorCode, publicMessage);
+  }
 }

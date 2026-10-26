@@ -17,10 +17,11 @@ function problem(code: string, message: string, status = 422): ApiError {
   return new ApiError(status, code, `${message}\n\nNothing was submitted.`);
 }
 const alreadySavedMessage = "You already have a result saved for this game today.";
-const wrongDay = () =>
+const identityConflict = () =>
   problem(
-    "WRONG_GAME_DAY",
-    "This puzzle does not match today’s game. Share today’s completed game again.",
+    "IDENTITY_CONFLICT",
+    "The saved challenge identity conflicts with this capture. Contact the administrator.",
+    409,
   );
 
 export function confirmationText(player: string, r: NormalizedGameResult): string {
@@ -57,7 +58,7 @@ async function checkDay(env: AppEnv, r: NormalizedGameResult) {
       (d) => d.game_date !== r.gameDate || d.external_puzzle_key !== r.externalPuzzleKey,
     )
   )
-    throw wrongDay();
+    throw identityConflict();
 }
 
 async function gameState(env: AppEnv, player: string, r: NormalizedGameResult) {
@@ -68,7 +69,7 @@ async function gameState(env: AppEnv, player: string, r: NormalizedGameResult) {
        WHERE s.player_id = ? AND d.game_id = g.id AND d.game_date = ?) AS submission_id,
       EXISTS (SELECT 1 FROM game_days d WHERE d.game_id = g.id
         AND (d.game_date = ? OR d.external_puzzle_key = ?)
-        AND (d.game_date != ? OR d.external_puzzle_key != ?)) AS puzzle_conflict
+        AND (d.game_date != ? OR d.external_puzzle_key != ?)) AS identity_conflict
     FROM games g WHERE g.id = ?
   `,
   )
@@ -81,7 +82,7 @@ async function gameState(env: AppEnv, player: string, r: NormalizedGameResult) {
       r.externalPuzzleKey,
       r.gameKey,
     )
-    .first<{ active: number; submission_id: string | null; puzzle_conflict: number }>();
+    .first<{ active: number; submission_id: string | null; identity_conflict: number }>();
 }
 
 function activity(env: AppEnv, device: DeviceIdentity, now: Date) {
@@ -170,9 +171,9 @@ async function save(
   } catch (error) {
     // The uniqueness guard may have rejected a race, or a committed response may have been lost.
     // Both are the same already-saved outcome; never compare or overwrite the existing result.
+    await checkDay(env, r);
     const saved = await existing(env, device.player_id, r);
     if (saved) return { id: saved.id, created: false };
-    await checkDay(env, r);
     const active = await env.DB.prepare(
       `SELECT c.id FROM device_credentials c JOIN players p ON p.id = c.player_id
       WHERE c.id = ? AND c.revoked_at IS NULL AND p.active = 1`,
@@ -206,7 +207,6 @@ async function completion(
     const scoreboard = await submissionScoreboard(
       env,
       result.gameDate,
-      whtUrl,
       device.player_id,
       result.gameKey,
     );
@@ -326,6 +326,7 @@ export async function importRequest(
         "PARSER_UNSUPPORTED",
         "This game is temporarily unavailable. Contact the administrator.",
       );
+    if (game.identity_conflict) throw identityConflict();
     if (game.submission_id)
       return completion(
         request,
@@ -336,7 +337,6 @@ export async function importRequest(
         { id: game.submission_id, created: false },
         support,
       );
-    if (game.puzzle_conflict) throw wrongDay();
     if (mode === "validate") {
       await refreshActivity(env, device, now);
       return apiJson(requestId, {

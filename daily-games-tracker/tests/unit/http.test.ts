@@ -94,4 +94,18 @@ describe("bounded JSON bodies", () => {
       errorCode: "UNSUPPORTED_MEDIA_TYPE",
     });
   });
+
+  it("rejects malformed JSON without exposing parser details", async () => {
+    const request = new Request("https://wht.example/api/import/validate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: '{"shortcut_version":',
+    });
+
+    await expect(readJsonBody(request)).rejects.toMatchObject({
+      statusCode: 400,
+      errorCode: "INVALID_JSON",
+      publicMessage: "The request body must contain valid JSON.",
+    });
+  });
 });

@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { createLocalJWKSet, exportJWK, generateKeyPair, SignJWT, type JWTVerifyGetKey } from "jose";
 import { requireAdmin, verifyAdminToken } from "../../functions/_lib/access";
 import type { AppEnv } from "../../functions/_lib/runtime";
@@ -29,6 +29,8 @@ async function sign(overrides: Record<string, unknown> = {}) {
     .setExpirationTime("10m")
     .sign(privateKey);
 }
+
+afterEach(() => vi.restoreAllMocks());
 
 describe("Cloudflare Access security boundary", () => {
   it("accepts the signed administrator identity", async () => {
@@ -88,13 +90,88 @@ describe("Cloudflare Access security boundary", () => {
     const request = new Request("https://wht.test/api/admin/players", {
       headers: { "Cf-Access-Authenticated-User-Email": config.email },
     });
-    await expect(
-      requireAdmin(request, {
+    const error = await requireAdmin(
+      request,
+      {
         ...config,
         CLOUDFLARE_ACCESS_DOMAIN: config.issuer,
         CLOUDFLARE_ACCESS_AUD: config.audience,
         ADMIN_EMAIL: config.email,
-      } as unknown as AppEnv),
-    ).rejects.toMatchObject({ statusCode: 403 });
+      } as unknown as AppEnv,
+      "req_missing",
+    ).catch((value: unknown) => value);
+    expect(error).toMatchObject({
+      statusCode: 403,
+      errorCode: "ADMIN_ACCESS_DENIED",
+      publicMessage: "Sign in with the authorized administrator account.",
+      adminDenialReason: "missing_assertion",
+    });
+  });
+
+  it("logs a bounded missing-assertion category with request correlation and no credentials", async () => {
+    const output: string[] = [];
+    vi.spyOn(console, "warn").mockImplementation((value) => output.push(String(value)));
+    const request = new Request("https://wht.test/api/admin/players?token=query-secret", {
+      headers: { Cookie: "session=cookie-secret" },
+    });
+
+    await expect(
+      requireAdmin(
+        request,
+        {
+          ...config,
+          CLOUDFLARE_ACCESS_DOMAIN: config.issuer,
+          CLOUDFLARE_ACCESS_AUD: config.audience,
+          ADMIN_EMAIL: config.email,
+        } as unknown as AppEnv,
+        "req_missing",
+      ),
+    ).rejects.toMatchObject({ statusCode: 403, errorCode: "ADMIN_ACCESS_DENIED" });
+
+    expect(JSON.parse(output[0])).toEqual({
+      level: "warn",
+      event: "admin_access_denied",
+      request_id: "req_missing",
+      method: "GET",
+      path: "/api/admin/players",
+      reason: "missing_assertion",
+      assertion_present: false,
+    });
+    expect(output[0]).not.toContain("query-secret");
+    expect(output[0]).not.toContain("cookie-secret");
+  });
+
+  it("classifies bounded assertion and identity denial reasons without changing the public error", async () => {
+    const env = {
+      ...config,
+      CLOUDFLARE_ACCESS_DOMAIN: config.issuer,
+      CLOUDFLARE_ACCESS_AUD: config.audience,
+      ADMIN_EMAIL: config.email,
+    } as unknown as AppEnv;
+    await expect(
+      requireAdmin(
+        new Request("https://wht.test/api/admin/dashboard", {
+          headers: { "Cf-Access-Jwt-Assertion": "x".repeat(16_385) },
+        }),
+        env,
+        "req_oversized",
+      ),
+    ).rejects.toMatchObject({
+      statusCode: 403,
+      publicMessage: "Sign in with the authorized administrator account.",
+      adminDenialReason: "assertion_too_large",
+    });
+    await expect(verifyAdminToken("not-a-jwt", config, keys)).rejects.toMatchObject({
+      statusCode: 403,
+      publicMessage: "Sign in with the authorized administrator account.",
+      adminDenialReason: "invalid_assertion",
+    });
+    await expect(
+      verifyAdminToken(await sign({ email: "other@example.test" }), config, keys),
+    ).rejects.toMatchObject({
+      statusCode: 403,
+      publicMessage: "Sign in with the authorized administrator account.",
+      adminDenialReason: "identity_mismatch",
+    });
   });
 });

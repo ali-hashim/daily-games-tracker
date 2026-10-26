@@ -57,7 +57,7 @@ try {
   const healthJson = await health.json();
   assert.equal(health.status, 200);
   assert.equal(healthJson.status, "ok");
-  assert.equal(healthJson.schemaVersion, 2);
+  assert.equal(healthJson.schemaVersion, 3);
   assert.equal(healthJson.request_id, health.headers.get("X-Request-ID"));
   assert.equal(health.headers.get("Cache-Control"), "no-store");
 
@@ -152,7 +152,9 @@ try {
   const loginBody = await loginStart.json();
   const flowCookie = loginStart.headers.getSetCookie()[0].split(";")[0];
   const launchUrl = new URL(loginBody.shortcut_url);
-  assert.equal(launchUrl.searchParams.get("name"), "Upload to WHT");
+  assert.match(loginBody.shortcut_url, /name=Upload%20To%20WHT/);
+  assert.doesNotMatch(loginBody.shortcut_url, /name=Upload\+/);
+  assert.equal(launchUrl.searchParams.get("name"), "Upload To WHT");
   const challenge = launchUrl.searchParams.get("text").slice("DGT_LOGIN_V1:".length);
   assert.equal((await browserPost("/api/auth/device/complete", flowCookie)).status, 202);
   const approval = await fetch(`${origin}/api/auth/device/approve`, {
@@ -165,7 +167,7 @@ try {
   });
   assert.equal(approval.status, 200);
   assert.equal(approval.headers.get("Set-Cookie"), null);
-  assert.equal((await approval.json()).return_url, `${origin}/login`);
+  assert.equal((await approval.json()).return_url, `${origin}/user`);
   assert.equal((await browserPost("/api/auth/device/complete")).status, 410);
   const completion = await browserPost("/api/auth/device/complete", flowCookie);
   assert.equal(completion.status, 200);
@@ -198,7 +200,7 @@ try {
   const capture = {
     capture_schema: "dgt.capture.v1",
     source_kind: "shared_text",
-    shared_text: `www.maptap.gg ${date}\n72🫢 99🔥 87🎓 78😁 80👏\nFinal score: 810`,
+    shared_text: `www.maptap.gg ${date}\n73🫢 99🔥 87🎓 78😁 80👏\nFinal score: 820`,
   };
   const sendImport = (mode, extra = {}) =>
     fetch(`${origin}/api/import/${mode}`, {
@@ -220,8 +222,8 @@ try {
   assert.equal(savedResponse.status, 200, "Confirmed import must save atomically");
   const saved = await savedResponse.json();
   assert.equal(saved.status, "submitted");
-  assert.equal(saved.final_score, 810);
-  assert.match(saved.scoreboard_text, /KRILLION/);
+  assert.equal(saved.final_score, 820);
+  assert.doesNotMatch(saved.scoreboard_text, /KRILLION/);
   assert.match(saved.scoreboard_text, /MAPTAP/);
   assert.match(saved.scoreboard_text, /73 · 99 · 87 · 78 · 80/);
   assert.equal(saved.wht_url, `${origin}/daily/${valid.game_date}`);
