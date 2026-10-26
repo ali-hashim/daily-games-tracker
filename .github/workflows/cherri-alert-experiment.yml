@@ -23,6 +23,7 @@ on:
       - daily-games-tracker/shortcut/cherri-migration/toolchain.lock.json
       - daily-games-tracker/scripts/phase5a-verify-toolchain.mjs
       - daily-games-tracker/scripts/phase5a-verify-signing-workflow.mjs
+      - daily-games-tracker/scripts/phase5a_actions_signing.mjs
       - daily-games-tracker/scripts/phase5a-verify-manifest.mjs
       - daily-games-tracker/scripts/phase5a_prepare_signing_package.py
       - daily-games-tracker/scripts/phase5a-compile-runtime-fixtures.mjs
@@ -256,21 +257,11 @@ jobs:
           python3 daily-games-tracker/scripts/phase5a_compare_upload.py "$RUNNER_TEMP/upload-first/Upload To WHT_unsigned.shortcut" "$RUNNER_TEMP/upload-second/Upload To WHT_unsigned.shortcut" > "$RUNNER_TEMP/upload-first/reproducibility.json"
           python3 daily-games-tracker/scripts/phase5a_upload_signing.py prepare --build-directory "$RUNNER_TEMP/upload-first" --output "$RUNNER_TEMP/upload-review-package"
 
-      - name: Upload unsigned complete client and frozen review package
-        uses: actions/upload-artifact@615b319bd27bb32c3d64dca6b6ed6974d5fbe653 # v6.0.0
-        with:
-          name: cherri-upload-unsigned-${{ github.sha }}
-          path: |
-            ${{ runner.temp }}/upload-first/
-            ${{ runner.temp }}/upload-second/
-            ${{ runner.temp }}/upload-review-package/
-          if-no-files-found: error
-          retention-days: 1
-
-      - name: Upload unsigned probes and verification reports
-        uses: actions/upload-artifact@615b319bd27bb32c3d64dca6b6ed6974d5fbe653 # v6.0.0
-        with:
-          name: cherri-unsigned-probes-01-07-${{ github.sha }}
-          path: ${{ runner.temp }}/alert-output/
-          if-no-files-found: error
-          retention-days: 1
+      - name: Confirm private runner-only outputs are not uploaded
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -d "$RUNNER_TEMP/alert-output"
+          test -d "$RUNNER_TEMP/upload-review-package"
+          test ! -f "$RUNNER_TEMP/public-artifact-upload"
+          echo "unsigned Cherri outputs remain runner-temporary and are not public artifacts"

@@ -5,7 +5,7 @@
 
 **Current status — October 25, 2026:** Core features through Phase 8 and Phase 9 hardening are implemented in the reviewed source; hosted preview identity is retained in private evidence. Production remains undeployed. Phase 5B closed under bounded acceptance; Phase 5A formal closeout and Phase 9 launch gates remain open. **Phase 10 User page/tab is implemented and independently reviewed in the source; physical-device/native evidence remains open.** See [PROJECT_STATUS.md](PROJECT_STATUS.md) and [Phase 10 evidence](reports/phase10-user-page-verification.md).
 
-**Sequence:** Phases 0–9 retain numbering, Phase 5 is 5A/5B, and Phase 10 is the final additional User phase. Reviewed one-time HubSign sends have standing authorization; protected automated signing remains disabled. New/modified Shortcuts compile through pinned CI, never locally.
+**Sequence:** Phases 0–9 retain numbering, Phase 5 is 5A/5B, and Phase 10 is the final additional User phase. Reviewed one-time HubSign sends have standing authorization; protected Actions-only signing remains pending operational activation. New/modified Shortcuts compile and inspect through pinned CI, never locally; ambiguous signing responses stop permanently and artifact expiry never authorizes a resend.
 
 ## 1. Alignment rules
 
@@ -159,7 +159,7 @@ The final plan requires admin-created players here, although the full dashboard 
 1. Preserve evidence/reference backup; consolidate the reviewed source tree and make workflow/lock settings agree.
 2. Import/run the existing signed alert, then prove native inputs/Safari binding/capture, JSON types, Import Question header and all routing/clipboard cases with approved credential-free probes.
 3. Implement the complete upload source with exact capture embedding, numeric version 1, nested capture and one guarded shared completion section; keep the manual pilot unchanged.
-4. Finish complete-client unsigned checks/manifests and the reviewed-payload signing workflow covered by universal standing HubSign authorization; explicitly disposition reproducibility.
+4. Finish complete-client unsigned checks/manifests and the protected Actions-only signing workflow covered by universal standing HubSign authorization: pinned compile/inspect, GitHub pending lease, one exact HubSign POST, and AES-256-GCM encrypted intent/result artifacts with bounded expiry. Explicitly disposition reproducibility and the lost-response limitation.
 5. Privately accept both game flows, failure/update/cancel/clipboard behavior and saved-result integrity. Prepare clean release/rollback and hand the accepted source/artifacts to 5B. Sharing/install-URL/version/production decisions remain separate.
 
 **Exit:** a traceable compiler-built upload candidate passes generated-artifact checks and actual signing/install/native acceptance; exact evidence and rollback are retained. A compiled probe or signed-container header is insufficient.

@@ -43,11 +43,11 @@ jobs:
       - name: Install locked dependencies
         run: npm ci
 
-      - name: Typecheck private signing worker
-        run: npx tsc --noEmit --target ES2022 --lib ES2022,WebWorker --types @cloudflare/workers-types --module ESNext --moduleResolution Bundler --strict --skipLibCheck scripts/private-signing-worker/src/index.ts
+      - name: Test Actions-only signing contract
+        run: node --test scripts/tests/phase5a-actions-signing.test.mjs scripts/tests/phase5a-signing-workflow.test.mjs
 
-      - name: Test private signing worker workerd SQLite integration
-        run: node --test scripts/private-signing-worker/tests/worker.test.mjs
+      - name: Verify Actions-only signing workflow
+        run: node scripts/phase5a-verify-signing-workflow.mjs --workflow ../.github/workflows/shortcut-sign-disabled.yml --lock shortcut/cherri-migration/toolchain.lock.json
 
       - name: Run application tests
         run: npm test

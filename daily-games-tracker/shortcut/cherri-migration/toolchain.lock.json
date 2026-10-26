@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "status": "candidate; probes 01-07 compiled and structurally inspected; alert-only sample returned from HubSign; Apple signature and native execution unproven",
+  "status": "candidate; probes 01-07 compiled and structurally inspected; historical signing evidence retained privately; Apple signature and native execution unproven",
   "compiler": {
     "name": "Cherri",
     "version": "v2.3.0",
@@ -15,7 +15,10 @@
   },
   "build": {
     "runner": "ubuntu-24.04",
-    "flags": ["--skip-sign", "--derive-uuids"],
+    "flags": [
+      "--skip-sign",
+      "--derive-uuids"
+    ],
     "byteReproducibility": "not reproducible in initial probe; default input-content metadata array ordering differed between clean builds"
   },
   "actions": {
@@ -42,39 +45,9 @@
     "verifiedEmbeddedByteEquality": true
   },
   "latestUnsignedExperiment": {
-    "runNumber": 17,
-    "runId": 39805988409,
-    "applicationCommit": "e82c5b2b60546d743db344a65deb51663e8b1aba",
-    "artifact": "cherri-unsigned-probes-01-07",
-    "artifactId": 12436853411,
-    "artifactBytes": 18298,
-    "artifactSha256": "6f1d014bbe269125470745eea9109d92dc1b10e6c80ee84ab3f4749f9477d518",
-    "expiresAt": "2026-10-23T15:34:27Z",
-    "alertSampleFile": "Cherri-alert-probe_unsigned.shortcut",
-    "alertSampleSha256": "cbd15b5930b42120bec49b7cf363952d1a87f04f12eacd3b25f5a5584b9f070c",
-    "secondAlertSampleSha256": "72797d02917f6dd0a89405c6b6bbfd9a45242e5b4f9ffc35b68681ef4e42a8b0",
-    "byteReproducibility": "not established; alert byte checksums differ and plist comparison detects input-content-class ordering differences"
+    "status": "historical unsigned CI evidence retained in private migration evidence; public artifact metadata omitted"
   },
   "hubSignSampleExperiment": {
-    "date": "2026-10-22",
-    "approval": "explicit approval for this alert-only sample",
-    "sourceRunId": 39805988409,
-    "sourceArtifactId": 12436853411,
-    "sourceArtifactSha256": "6f1d014bbe269125470745eea9109d92dc1b10e6c80ee84ab3f4749f9477d518",
-    "shortcutName": "Cherri-alert-probe",
-    "inputFile": "Cherri-alert-probe_unsigned.shortcut",
-    "inputBytes": 1878,
-    "inputSha256": "cbd15b5930b42120bec49b7cf363952d1a87f04f12eacd3b25f5a5584b9f070c",
-    "plistSerialization": "Python 3.12.14 plistlib binary-to-XML; parse/serialize/parse equality passed; byte equivalence with Cherri's Go serializer not asserted",
-    "signer": "RoutineHub HubSign",
-    "endpoint": "https://hubsign.routinehub.services/sign",
-    "httpStatus": 200,
-    "responseContentType": "application/octet-stream",
-    "responseBytes": 21954,
-    "responseSha256": "272366791cc5b74ed3799c036dbffee9a615d4192f14f8d635ae7deee2716607",
-    "responseContainerHeader": "AEA1",
-    "appleSignatureValidation": "not performed",
-    "iphoneImport": "not performed",
-    "iphoneExecution": "not performed"
+    "status": "historical signing evidence retained in private migration evidence; public payload and response metadata omitted"
   }
 }

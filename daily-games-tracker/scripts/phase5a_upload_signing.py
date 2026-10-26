@@ -1,7 +1,8 @@
 """Freeze and validate an inspected full-client package offline.
 
-The package contains unsigned provenance only. Protected signing is performed
-by the durable private worker after this package has been validated.
+The package contains unsigned provenance only. Protected Actions signing is
+performed after this package has been validated; this module never transfers
+or signs a package.
 """
 from __future__ import annotations
 import argparse
@@ -87,6 +88,16 @@ if __name__=='__main__':
     p.add_argument('--output',type=Path,required=True)
     p.add_argument('--runtime-origin',default=None,
                    help='HTTPS origin used to inspect the private rendered package')
+    v=sub.add_parser('validate')
+    v.add_argument('--package',type=Path,required=True)
+    v.add_argument('--expected-manifest-sha256',required=True)
+    v.add_argument('--expected-wire-sha256',required=True)
+    v.add_argument('--runtime-origin',required=True,
+                   help='HTTPS origin used to inspect the private rendered package')
     a=parser.parse_args()
-    result=freeze(a.build_directory, a.output, a.runtime_origin)
+    if a.mode == 'prepare':
+        result=freeze(a.build_directory, a.output, a.runtime_origin)
+    else:
+        validate(a.package, a.expected_manifest_sha256, a.expected_wire_sha256, a.runtime_origin)
+        result={'status':'unsigned package validation passed'}
     print(json.dumps(result,indent=2))
