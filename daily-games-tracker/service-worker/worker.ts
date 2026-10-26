@@ -5,7 +5,7 @@ import { isAppShellAsset, isNetworkOnlyPath } from "../shared/cache-policy";
 declare const self: ServiceWorkerGlobalScope;
 
 const CACHE_PREFIX = "wht-app-shell-";
-const CACHE_NAME = `${CACHE_PREFIX}v1`;
+const CACHE_NAME = `${CACHE_PREFIX}v3`;
 const CORE_ASSETS = [
   "/",
   "/manifest.webmanifest",
@@ -37,10 +37,14 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const { request } = event;
-  if (request.method !== "GET") return;
-
   const url = new URL(request.url);
-  if (url.origin !== self.location.origin || isNetworkOnlyPath(url.pathname)) return;
+  if (url.origin !== self.location.origin) return;
+  if (isNetworkOnlyPath(url.pathname)) {
+    // Bypass the HTTP cache too, including entries from an older deployment.
+    event.respondWith(fetch(request, { cache: "no-store" }));
+    return;
+  }
+  if (request.method !== "GET") return;
 
   if (request.mode === "navigate") {
     event.respondWith(networkFirstNavigation(request));
@@ -55,7 +59,8 @@ self.addEventListener("fetch", (event) => {
 async function networkFirstNavigation(request: Request): Promise<Response> {
   try {
     const response = await fetch(request);
-    if (response.ok) {
+    // A shell navigation may redirect to login or another protected endpoint.
+    if (response.ok && !response.redirected) {
       const cache = await caches.open(CACHE_NAME);
       await cache.put("/", withoutRequestId(response));
     }
@@ -71,7 +76,7 @@ async function cacheFirst(request: Request): Promise<Response> {
   if (cached) return cached;
 
   const response = await fetch(request);
-  if (response.ok) {
+  if (response.ok && !response.redirected) {
     const cache = await caches.open(CACHE_NAME);
     await cache.put(request, withoutRequestId(response));
   }

@@ -4,6 +4,8 @@ import { applyResponsePolicy } from "./_lib/policy";
 import { createRequestId, type AppData, type AppEnv } from "./_lib/runtime";
 import { isAdminPath, requireAdmin } from "./_lib/access";
 import { importRequest } from "./_lib/import";
+import { checkRequestRateLimit } from "./_lib/rate-limit";
+import { isNetworkOnlyPath } from "../shared/cache-policy";
 
 export const onRequest: PagesFunction<AppEnv, string, AppData> = async (context) => {
   const requestId = createRequestId();
@@ -12,8 +14,16 @@ export const onRequest: PagesFunction<AppEnv, string, AppData> = async (context)
   context.data.requestId = requestId;
 
   try {
+    if (isNetworkOnlyPath(url.pathname)) {
+      const rateLimit = checkRequestRateLimit(context.request);
+      if (!rateLimit.allowed) {
+        throw new ApiError(429, "RATE_LIMITED", "Too many requests. Please try again later.", {
+          headers: { "Retry-After": String(rateLimit.retryAfterSeconds) },
+        });
+      }
+    }
     if (isAdminPath(url.pathname)) {
-      context.data.admin = await requireAdmin(context.request, context.env);
+      context.data.admin = await requireAdmin(context.request, context.env, requestId);
     }
     if (isApi && declaredBodyTooLarge(context.request)) {
       throw new ApiError(
@@ -52,14 +62,14 @@ export const onRequest: PagesFunction<AppEnv, string, AppData> = async (context)
       return applyResponsePolicy(apiErrorResponse(requestId, apiError), requestId, url.pathname);
     }
 
+    const headers = new Headers(error instanceof ApiError ? error.headers : undefined);
+    headers.set("Cache-Control", "no-store");
+    headers.set("Content-Type", "text/plain; charset=utf-8");
+    headers.set("X-Request-ID", requestId);
     return applyResponsePolicy(
       new Response(error instanceof ApiError ? error.publicMessage : "Internal Server Error", {
         status: error instanceof ApiError ? error.statusCode : 500,
-        headers: {
-          "Cache-Control": "no-store",
-          "Content-Type": "text/plain; charset=utf-8",
-          "X-Request-ID": requestId,
-        },
+        headers,
       }),
       requestId,
       url.pathname,

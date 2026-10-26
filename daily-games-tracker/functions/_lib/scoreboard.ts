@@ -47,7 +47,6 @@ const separator = "━━━━━━━━━━━━━━━━━━━━"
 export async function submissionScoreboard(
   env: AppEnv,
   date: string,
-  whtUrl: string,
   playerId: string,
   submittedGame: GameKey,
 ) {
@@ -104,6 +103,8 @@ export async function submissionScoreboard(
     const players = games.get(gameKey);
     if (!players) continue;
     const values = [...players.values()];
+    const submitted = values.filter((p) => p.score !== null);
+    if (submitted.length === 0) continue;
     const current = new Map(
       rankPlayers(values.map((p) => ({ ...p, score: p.played ? p.total : null }))).map((p) => [
         p.id,
@@ -115,7 +116,7 @@ export async function submissionScoreboard(
         values.map((p) => ({ ...p, score: p.previousPlayed ? p.previousTotal : null })),
       ).map((p) => [p.id, p.rank]),
     );
-    const lines = rankPlayers(values).map((p) => {
+    const lines = rankPlayers(submitted).map((p) => {
       if (gameKey === submittedGame && p.id === playerId) dailyRank = p.rank;
       const rank = current.get(p.id) ?? null;
       const previous = prior.get(p.id) ?? null;
@@ -150,7 +151,7 @@ export async function submissionScoreboard(
     );
   }
   return {
-    scoreboard_text: `📊 WHT Leaderboard — ${dates.format(new Date(`${date}T12:00:00Z`)).toUpperCase()}\n\n${sections.join(`\n\n${separator}\n\n`)}\n\n${separator}\n\n🔗 FULL DAILY LEADERBOARDS\n${whtUrl}`,
+    scoreboard_text: `📊 WHT Leaderboard — ${dates.format(new Date(`${date}T12:00:00Z`)).toUpperCase()}\n\n${sections.join(`\n\n${separator}\n\n`)}`,
     daily_rank: dailyRank,
   };
 }

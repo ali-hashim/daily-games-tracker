@@ -4,6 +4,7 @@
     "lib": ["ES2022", "DOM"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
     "types": ["node", "vitest/globals", "@cloudflare/workers-types"],
     "strict": true,
     "noEmit": true,
@@ -11,5 +12,5 @@
     "resolveJsonModule": true,
     "allowImportingTsExtensions": true
   },
-  "include": ["tests/**/*.ts", "shared/**/*.ts", "parsers/**/*.ts"]
+  "include": ["tests/**/*.ts", "tests/**/*.test.tsx", "shared/**/*.ts", "parsers/**/*.ts"]
 }

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { logRequestFailure } from "../../functions/_lib/logging";
+import { logAdminAccessDenied, logRequestFailure } from "../../functions/_lib/logging";
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -43,5 +43,46 @@ describe("redacted request diagnostics", () => {
     expect(output[0]).not.toContain("header-secret");
     expect(output[0]).not.toContain("body-secret");
     expect(output[0]).not.toContain("error-secret");
+  });
+
+  it("redacts registration tokens from access-denial diagnostics", () => {
+    const spy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const request = new Request(
+      "https://wht.example/api/register/private-invite/redeem?capture=raw-capture",
+      {
+        headers: {
+          Authorization: "Device credential-secret",
+          Cookie: "session=cookie-secret",
+          "Cf-Access-Jwt-Assertion": "jwt-secret",
+        },
+      },
+    );
+
+    logAdminAccessDenied({
+      requestId: "req_denied",
+      request,
+      reason: "invalid_assertion",
+      assertionPresent: true,
+    });
+
+    const output = String(spy.mock.calls[0][0]);
+    expect(JSON.parse(output)).toEqual({
+      level: "warn",
+      event: "admin_access_denied",
+      request_id: "req_denied",
+      method: "GET",
+      path: "/api/register/[redacted]/redeem",
+      reason: "invalid_assertion",
+      assertion_present: true,
+    });
+    for (const secret of [
+      "private-invite",
+      "raw-capture",
+      "credential-secret",
+      "cookie-secret",
+      "jwt-secret",
+    ]) {
+      expect(output).not.toContain(secret);
+    }
   });
 });

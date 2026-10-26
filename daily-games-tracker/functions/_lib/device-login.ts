@@ -6,7 +6,17 @@ import { hashToken, invalid, isToken, objectBody, randomToken, requireSameOrigin
 
 export const LOGIN_TTL_MS = 120_000;
 const FLOW_COOKIE = "dgt_login_flow";
+const SHORTCUT_NAME = "Upload To WHT";
+const DEFAULT_RETURN_URL = "/user";
+const DAILY_RETURN_PATH = /^\/daily\/\d{4}-\d{2}-\d{2}$/;
 const clearFlow = `${FLOW_COOKIE}=; Path=/; Secure; HttpOnly; SameSite=Lax; Max-Age=0`;
+
+function shortcutLaunchUrl(challenge: string): string {
+  // Shortcuts on iOS treats '+' in the name query value literally. Use the
+  // exact installed name and percent-encode spaces instead of URLSearchParams,
+  // whose form encoding emits '+'.
+  return `shortcuts://run-shortcut?name=${encodeURIComponent(SHORTCUT_NAME)}&input=text&text=${encodeURIComponent(`DGT_LOGIN_V1:${challenge}`)}`;
+}
 
 function unavailable() {
   return new ApiError(
@@ -14,6 +24,34 @@ function unavailable() {
     "LOGIN_UNAVAILABLE",
     "This login expired or was already used. Start Login with Device again.",
   );
+}
+
+function validCalendarDay(value: string): boolean {
+  const date = new Date(`${value.slice("/daily/".length)}T12:00:00.000Z`);
+  return (
+    !Number.isNaN(date.getTime()) &&
+    date.toISOString().slice(0, 10) === value.slice("/daily/".length)
+  );
+}
+
+function normalizeReturnUrl(value: unknown, requestUrl: string): string {
+  if (typeof value !== "string" || !value) return DEFAULT_RETURN_URL;
+
+  let parsed: URL;
+  try {
+    parsed = new URL(value, requestUrl);
+  } catch {
+    return DEFAULT_RETURN_URL;
+  }
+  if (parsed.origin !== new URL(requestUrl).origin || parsed.search || parsed.hash) {
+    return DEFAULT_RETURN_URL;
+  }
+
+  if (parsed.pathname === DEFAULT_RETURN_URL) return DEFAULT_RETURN_URL;
+  if (DAILY_RETURN_PATH.test(parsed.pathname) && validCalendarDay(parsed.pathname)) {
+    return parsed.pathname;
+  }
+  return DEFAULT_RETURN_URL;
 }
 
 function flowToken(request: Request): string {
@@ -37,7 +75,7 @@ export async function deviceLoginRequest(
   const device = mode === "approve" ? await authenticateDevice(request, env) : null;
   const body = objectBody(
     await readJsonBody(request, 2048),
-    mode === "approve" ? ["challenge"] : [],
+    mode === "approve" ? ["challenge"] : mode === "start" ? ["return_url"] : [],
   );
   const now = new Date();
   const stamp = now.toISOString();
@@ -46,19 +84,24 @@ export async function deviceLoginRequest(
     const challenge = randomToken();
     const flow = randomToken();
     const expires = new Date(now.getTime() + LOGIN_TTL_MS).toISOString();
+    const returnUrl = normalizeReturnUrl(body.return_url, request.url);
     await env.DB.prepare(
       `INSERT INTO login_challenges
-      (id, challenge_hash, browser_flow_hash, expires_at, created_at) VALUES (?, ?, ?, ?, ?)`,
+      (id, challenge_hash, browser_flow_hash, return_url, expires_at, created_at)
+      VALUES (?, ?, ?, ?, ?, ?)`,
     )
-      .bind(crypto.randomUUID(), await hashToken(challenge), await hashToken(flow), expires, stamp)
+      .bind(
+        crypto.randomUUID(),
+        await hashToken(challenge),
+        await hashToken(flow),
+        returnUrl,
+        expires,
+        stamp,
+      )
       .run();
-    const shortcut = new URL("shortcuts://run-shortcut");
-    shortcut.searchParams.set("name", "Upload to WHT");
-    shortcut.searchParams.set("input", "text");
-    shortcut.searchParams.set("text", `DGT_LOGIN_V1:${challenge}`);
     return apiJson(
       requestId,
-      { status: "pending", shortcut_url: shortcut.href, expires_at: expires },
+      { status: "pending", shortcut_url: shortcutLaunchUrl(challenge), expires_at: expires },
       {
         status: 201,
         headers: {
@@ -70,6 +113,7 @@ export async function deviceLoginRequest(
 
   if (mode === "approve" && device) {
     if (!isToken(body.challenge)) throw invalid();
+    const challengeHash = await hashToken(body.challenge);
     const results = await env.DB.batch([
       env.DB.prepare(
         `UPDATE login_challenges SET approved_player_id = ?, approved_device_id = ?
@@ -77,14 +121,7 @@ export async function deviceLoginRequest(
         AND consumed_at IS NULL AND expires_at > ?
         AND EXISTS (SELECT 1 FROM device_credentials d JOIN players p ON p.id = d.player_id
           WHERE d.id = ? AND d.player_id = ? AND d.revoked_at IS NULL AND p.active = 1)`,
-      ).bind(
-        device.player_id,
-        device.id,
-        await hashToken(body.challenge),
-        stamp,
-        device.id,
-        device.player_id,
-      ),
+      ).bind(device.player_id, device.id, challengeHash, stamp, device.id, device.player_id),
       env.DB.prepare(
         `UPDATE device_credentials SET last_used_at = ? WHERE id = ? AND changes() = 1 AND EXISTS
         (SELECT 1 FROM login_challenges WHERE challenge_hash = ? AND approved_device_id = ?
@@ -92,10 +129,15 @@ export async function deviceLoginRequest(
       ).bind(stamp, device.id, await hashToken(body.challenge), device.id, stamp),
     ]);
     if (results[0].meta.changes !== 1) throw unavailable();
+    const challenge = await env.DB.prepare(
+      "SELECT return_url FROM login_challenges WHERE challenge_hash = ?",
+    )
+      .bind(challengeHash)
+      .first<{ return_url: string }>();
     // Return no flow cookie, challenge, identity, or reusable browser credential to Shortcuts.
     return apiJson(requestId, {
       status: "approved",
-      return_url: new URL("/login", request.url).href,
+      return_url: new URL(challenge?.return_url ?? DEFAULT_RETURN_URL, request.url).href,
       message:
         "Login approved. Return to the Safari page or WHT Home Screen window where you started, then tap Check login.",
     });

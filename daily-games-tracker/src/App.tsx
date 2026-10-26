@@ -2,8 +2,10 @@ import { useEffect, useState, type ReactNode } from "react";
 import AdminPage from "./pages/AdminPage";
 import RegistrationPage from "./pages/RegistrationPage";
 import DeviceLogin from "./pages/DeviceLogin";
+import UserPage from "./pages/UserPage";
+import { AllTimeLeaderboardPage, DailyLeaderboardPage } from "./pages/LeaderboardPages";
 
-type Page = "home" | "daily" | "all-time" | "admin" | "register" | "login";
+type Page = "home" | "daily" | "all-time" | "admin" | "register" | "user";
 type GameId = "krillion" | "maptap";
 interface Game {
   id: GameId;
@@ -37,13 +39,14 @@ function PacificDate({ iso }: { iso?: string }) {
   );
 }
 
-function getPage(): Page {
-  if (window.location.pathname === "/login") return "login";
-  if (window.location.pathname === "/daily") return "daily";
-  if (window.location.pathname.startsWith("/daily/")) return "daily";
-  if (window.location.pathname === "/all-time") return "all-time";
-  if (window.location.pathname === "/admin") return "admin";
-  if (window.location.pathname.startsWith("/register/")) return "register";
+// eslint-disable-next-line react-refresh/only-export-components -- exported for route classification tests
+export function getPage(pathname = window.location.pathname): Page {
+  if (pathname === "/user" || pathname === "/user/" || pathname === "/login" || pathname === "/login/") return "user";
+  if (pathname === "/daily") return "daily";
+  if (pathname.startsWith("/daily/")) return "daily";
+  if (pathname === "/all-time" || pathname === "/all-time/") return "all-time";
+  if (pathname === "/admin") return "admin";
+  if (pathname.startsWith("/register/")) return "register";
   return "home";
 }
 
@@ -141,49 +144,6 @@ function GameBadge({ game }: { game: Game }) {
   );
 }
 
-function EmptyLeaderboard({ game, kind }: { game: Game; kind: "daily" | "all-time" }) {
-  return (
-    <section className="leaderboard-card">
-      <div className="flex items-center gap-3">
-        <GameBadge game={game} />
-        <div className="flex-1">
-          <h3 className="game-title">{game.title}</h3>
-          <p className="subtle">
-            {kind === "daily"
-              ? `${game.rounds} rounds · Today's leaderboard`
-              : "Cumulative scores · Latest date first"}
-          </p>
-        </div>
-        <span className="pill neutral">Not live yet</span>
-      </div>
-      <div className="empty-grid" aria-hidden="true">
-        <div className="empty-grid-head">
-          <span> {kind === "daily" ? "Round" : "Date"} </span>
-          <span>Player</span>
-          <span>Player</span>
-          <span>Player</span>
-        </div>
-        {Array.from({ length: kind === "daily" ? 3 : 2 }, (_, i) => (
-          <div key={i} className="empty-grid-row">
-            <span>{kind === "daily" ? i + 1 : "—"}</span>
-            <span className="fake-line" />
-            <span className="fake-line shorter" />
-            <span className="fake-line" />
-          </div>
-        ))}
-      </div>
-      <div className="tip-line">
-        <Icon name={kind === "daily" ? "lock" : "info"} size={15} />
-        <span>
-          {kind === "daily"
-            ? "Today's detailed results will unlock per game after submitting."
-            : "All-time standings will be public, including today's results."}
-        </span>
-      </div>
-    </section>
-  );
-}
-
 function PlayHelpPage({ games }: { games: Game[] }) {
   const gameUrls: Record<GameId, string> = {
     krillion: "https://krillion.io/",
@@ -240,6 +200,9 @@ function PlayHelpPage({ games }: { games: Game[] }) {
           Choose <strong>Upload to WHT</strong>, review the native confirmation, then submit.
         </li>
       </ol>
+      <a className="primary-action" href="/user">
+        Login with Device <Icon name="arrow" size={20} />
+      </a>
       <button
         type="button"
         className="primary-action"
@@ -260,71 +223,12 @@ function PlayHelpPage({ games }: { games: Game[] }) {
   );
 }
 
-function DailyPage({ games, gameDay }: { games: Game[]; gameDay?: string }) {
-  return (
-    <>
-      <div className="eyebrow">
-        <span className="tiny-dot" /> DAILY RANKINGS
-      </div>
-      <h1>
-        Today's
-        <br />
-        <span className="accent-italic">standings.</span>
-      </h1>
-      <p className="page-intro">Two games. One friendly rivalry.</p>
-      <div className="date-strip">
-        <Icon name="calendar" size={19} />
-        <PacificDate iso={gameDay} />
-        <span className="date-right">Pacific Time</span>
-      </div>
-      {games.map((game) => (
-        <EmptyLeaderboard key={game.id} game={game} kind="daily" />
-      ))}
-      <div className="info-strip">
-        <Icon name="info" size={18} />
-        <span>
-          The Copy Leaderboard button will be enabled once real submissions are supported.
-        </span>
-      </div>
-    </>
-  );
-}
-
-function AllTimePage({ games }: { games: Game[] }) {
-  return (
-    <>
-      <div className="eyebrow">
-        <span className="tiny-dot" /> THE LONG GAME
-      </div>
-      <h1>
-        All-time
-        <br />
-        <span className="accent-italic">greatness.</span>
-      </h1>
-      <p className="page-intro">Every point counts. Every day adds up.</p>
-      <div className="stats-strip">
-        <div>
-          <span>02</span>
-          <small>Games tracked</small>
-        </div>
-        <div className="stats-divider" />
-        <div>
-          <span>∞</span>
-          <small>Bragging rights</small>
-        </div>
-      </div>
-      {games.map((game) => (
-        <EmptyLeaderboard key={game.id} game={game} kind="all-time" />
-      ))}
-    </>
-  );
-}
-
 function BottomNav({ page }: { page: Page }) {
   const items = [
     { id: "home", label: "Play", href: "/", icon: "send" },
     { id: "daily", label: "Daily", href: "/daily", icon: "calendar" },
     { id: "all-time", label: "All-Time", href: "/all-time", icon: "trophy" },
+    { id: "user", label: "User", href: "/user", icon: "shield" },
   ] as const;
   return (
     <nav className="bottom-nav" aria-label="Main navigation">
@@ -350,6 +254,14 @@ export default function App() {
   const [games, setGames] = useState<Game[]>(suggestedGames);
   const [health, setHealth] = useState<Health | null>(null);
   const [checked, setChecked] = useState(false);
+
+  useEffect(() => {
+    if (window.location.pathname !== "/daily") return;
+    const date = new URLSearchParams(window.location.search).get("date");
+    if (/^\d{4}-\d{2}-\d{2}$/.test(date ?? "")) {
+      window.history.replaceState({}, "", `/daily/${date}`);
+    }
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -393,12 +305,12 @@ export default function App() {
         <main>
           {page === "home" && <PlayHelpPage games={games} />}
           {page === "daily" && (
-            <DeviceLogin>
-              <DailyPage games={games} gameDay={health?.gameDay} />
+            <DeviceLogin redirectWhenSignedOut dailyReturnDate={health?.gameDay}>
+              {() => <DailyLeaderboardPage currentDay={health?.gameDay} />}
             </DeviceLogin>
           )}
-          {page === "login" && <DeviceLogin />}
-          {page === "all-time" && <AllTimePage games={games} />}
+          {page === "user" && <DeviceLogin>{(auth) => <UserPage {...auth} />}</DeviceLogin>}
+          {page === "all-time" && <AllTimeLeaderboardPage />}
           {page === "admin" && <AdminPage />}
           {page === "register" && <RegistrationPage />}
         </main>
@@ -409,7 +321,7 @@ export default function App() {
               ? `Cloudflare D1 connected · Schema v${health.schemaVersion}`
               : "Local UI preview · connect D1 to enable backend"
             : "Checking connection…"}
-          <span className="phase-label">PHASE 5</span>
+          <span className="phase-label">PHASE 6</span>
         </footer>
         <BottomNav page={page} />
       </div>

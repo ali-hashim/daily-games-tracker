@@ -1,6 +1,7 @@
 import type { NormalizedGameResult, SharedTextCapture } from "../shared/types";
 import { MAPTAP_WEIGHTS, PARSER_VERSIONS } from "../shared/game-config";
 import { normalizeLineEndings } from "../shared/capture";
+import { isValidMonthDay, resolveOpenCalendarDate } from "../shared/day";
 import { fail } from "./errors";
 
 const MONTHS = [
@@ -30,20 +31,15 @@ function isEmoji(value: string): boolean {
   );
 }
 
-export function parseMapTap(capture: SharedTextCapture, today: string): NormalizedGameResult {
+export function parseMapTap(capture: SharedTextCapture, now: Date): NormalizedGameResult {
   const lines = normalizeLineEndings(capture.shared_text).trim().split("\n");
   const header = /^www\.maptap\.gg ([A-Za-z]+) (\d{1,2})$/.exec(lines[0]);
   if (!header) fail("PARSER_UNSUPPORTED");
   const month = MONTHS.indexOf(header[1]) + 1;
   const day = Number(header[2]);
-  if (
-    !month ||
-    day < 1 ||
-    day > new Date(Date.UTC(Number(today.slice(0, 4)), month, 0)).getUTCDate()
-  )
-    fail("CAPTURE_INVALID");
-  const gameDate = `${today.slice(0, 4)}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-  if (gameDate !== today) fail("WRONG_GAME_DAY");
+  if (!isValidMonthDay(month, day)) fail("CAPTURE_INVALID");
+  const gameDate = resolveOpenCalendarDate(month, day, now);
+  if (!gameDate) fail("WRONG_GAME_DAY");
   if (lines.length < 3 || !lines.some((line) => /^Final score:/.test(line)))
     fail("GAME_NOT_COMPLETE");
   if (lines.length !== 3) fail("PARSER_UNSUPPORTED");

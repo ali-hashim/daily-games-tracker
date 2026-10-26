@@ -1,0 +1,302 @@
+{
+  "schema_version": 1,
+  "phase": "Phase 9",
+  "generated_at": "2026-10-25",
+  "preview": {
+    "alias": "https://preview.example.invalid",
+    "deployment_url": "https://preview.example.invalid",
+    "health_observed_at": "2026-10-25"
+  },
+  "candidate": {
+    "name": "Upload to WHT",
+    "signed_sha256": "19b4be2bd3c920ff6061e416d364bf53c8e2cd2d6161d0330a430dd0274b90cd",
+    "source": "shortcut/PHASE_5A_HANDOFF.md"
+  },
+  "references": [
+    "shortcut/PHASE_5A_HANDOFF.md",
+    "shortcut/PHASE_5A_NATIVE_ACCEPTANCE.md",
+    "PHASE_5A_PLAN.md",
+    "EXECUTION_PLAN.md",
+    "../Daily_Games_Tracker_Final_Implementation_Plan.md#20-launch-checklist",
+    "../Daily_Games_Tracker_Final_Implementation_Plan.md#21-definition-of-done"
+  ],
+  "gates": [
+    {
+      "id": "launch.terms-compatibility",
+      "title": "Confirm current Krillion and MapTap terms are compatible with intended private use",
+      "disposition": "pending",
+      "evidence": "MapTap terms and the current official-looking Krillion terms page were reviewed on 2026-10-25. The compatibility decision still requires owner confirmation; the review is not authorization.",
+      "references": ["EXECUTION_PLAN.md"]
+    },
+    {
+      "id": "launch.pages-d1",
+      "title": "Create or confirm Cloudflare Pages project and D1 binding",
+      "disposition": "pending",
+      "evidence": "Read-only preview health checks are recorded below. Production project/binding creation is not claimed.",
+      "references": ["EXECUTION_PLAN.md"]
+    },
+    {
+      "id": "launch.production-secrets",
+      "title": "Configure production secrets and environment separation",
+      "disposition": "pending",
+      "evidence": "Production is not deployed and no production secret configuration was inspected or changed.",
+      "references": ["EXECUTION_PLAN.md"]
+    },
+    {
+      "id": "launch.access-admin",
+      "title": "Configure Cloudflare Access for admin paths",
+      "disposition": "pass",
+      "evidence": "Existing preview documentation records Access-protected admin onboarding and authenticated route verification; this ledger does not extend that evidence to production.",
+      "references": ["EXECUTION_PLAN.md"]
+    },
+    {
+      "id": "launch.migrations",
+      "title": "Apply and verify migrations",
+      "disposition": "pass",
+      "evidence": "Focused local rehearsal command passed: npm test -- tests/integration/migrations.test.ts tests/integration/import.test.ts tests/integration/admin.test.ts; 3 files and 62 tests passed with loopback access.",
+      "references": ["EXECUTION_PLAN.md", "PHASE_5A_PLAN.md"]
+    },
+    {
+      "id": "launch.seed-config",
+      "title": "Seed game, scoring, and rank configuration",
+      "disposition": "pending",
+      "evidence": "No new seed operation was run for this ledger; no unsupported seed result is claimed.",
+      "references": ["EXECUTION_PLAN.md"]
+    },
+    {
+      "id": "launch.shortcut-release",
+      "title": "Publish universal Shortcut and record version/install URL",
+      "disposition": "pending",
+      "evidence": "The signed candidate identity is retained, but public installation-link creation, sharing, and version changes remain separate release decisions.",
+      "references": ["../shortcut/PHASE_5A_HANDOFF.md"]
+    },
+    {
+      "id": "launch.ios-version-matrix",
+      "title": "Test both games on at least two iOS versions",
+      "disposition": "pending",
+      "evidence": "A user-reported device report is retained as private evidence for specified flows; no second iOS version result is claimed.",
+      "references": ["PHASE_5A_PLAN.md"]
+    },
+    {
+      "id": "launch.safari-pwa-login",
+      "title": "Test Safari and Home Screen PWA Login with Device",
+      "disposition": "pending",
+      "evidence": "No new Safari/PWA matrix was run in this task and no unsupported device-version result is claimed.",
+      "references": ["EXECUTION_PLAN.md"]
+    },
+    {
+      "id": "launch.admin-recovery",
+      "title": "Create administrator recovery documentation",
+      "disposition": "pending",
+      "evidence": "The repeatable local recovery rehearsal now invokes the real correctSubmission application path against a restored disposable D1 binding and verifies atomic round replacement plus a generated redacted audit; complete operational documentation and account recovery remain open.",
+      "references": ["EXECUTION_PLAN.md"]
+    },
+    {
+      "id": "launch.device-invitations",
+      "title": "Create players and send one-use device invitations",
+      "disposition": "pending",
+      "evidence": "No new player invitation or external account action was performed for this ledger.",
+      "references": ["EXECUTION_PLAN.md"]
+    },
+    {
+      "id": "launch.seven-player-pilot",
+      "title": "Run seven-player pilot",
+      "disposition": "pending",
+      "evidence": "No seven-player pilot result is available in this task; no pilot completion is claimed.",
+      "references": ["../Daily_Games_Tracker_Final_Implementation_Plan.md#20-launch-checklist"]
+    },
+    {
+      "id": "launch.clipboard-privacy",
+      "title": "Verify clipboard output contains no Krillion answers",
+      "disposition": "pending",
+      "evidence": "Existing native reports describe bounded clipboard behavior, but the complete current launch matrix was not independently rerun here.",
+      "references": ["PHASE_5A_PLAN.md"]
+    },
+    {
+      "id": "launch.backup-restore",
+      "title": "Verify backup/export and restore",
+      "disposition": "pending",
+      "evidence": "node scripts/phase9-rehearse-recovery.mjs passed the disposable local D1 SQL export/restore and comparisons, but external D1 Time Travel and production restore remain pending and the private backup has no independent identifier/hash.",
+      "references": ["../shortcut/PHASE_5A_HANDOFF.md", "PHASE_5A_PLAN.md"]
+    },
+    {
+      "id": "launch.monitoring-free-tier",
+      "title": "Enable monitoring and review free-tier usage",
+      "disposition": "pending",
+      "evidence": "Official Workers, D1 limits, and D1 pricing sources were reviewed; current account usage margin and production monitoring are not established.",
+      "references": ["EXECUTION_PLAN.md"]
+    }
+  ],
+  "phase5a": [
+    {
+      "id": "phase5a.accepted-source-revision",
+      "title": "Retain accepted source revision and toolchain evidence",
+      "disposition": "pass",
+      "evidence": "The handoff records the accepted public revision, maintained source, compiler, Go toolchain, capture hash, and candidate identity.",
+      "references": ["../shortcut/PHASE_5A_HANDOFF.md", "PHASE_5A_PLAN.md"]
+    },
+    {
+      "id": "phase5a.compiler-lock-and-build",
+      "title": "Retain build, inspection, and artifact evidence",
+      "disposition": "pass",
+      "evidence": "The Phase 5A plan records pinned compiler/build evidence, unsigned artifact inspection, and bounded comparison results.",
+      "references": ["PHASE_5A_PLAN.md", "../shortcut/PHASE_5A_HANDOFF.md"]
+    },
+    {
+      "id": "phase5a.signed-candidate",
+      "title": "Preserve the exact signed candidate identity",
+      "disposition": "pass",
+      "evidence": "Upload to WHT signed candidate SHA-256 is exactly 19b4be2bd3c920ff6061e416d364bf53c8e2cd2d6161d0330a430dd0274b90cd.",
+      "references": ["../shortcut/PHASE_5A_HANDOFF.md", "PHASE_5A_PLAN.md"]
+    },
+    {
+      "id": "phase5a.native-core-flows",
+      "title": "Record the bounded user-reported core device flows",
+      "disposition": "pass",
+      "evidence": "The handoff records user-reported setup, already-saved Text/Safari completion, scoreboard/returned-link, unsupported-input, Cancel, new-save, website readback, and repeat behavior for the exact candidate.",
+      "references": ["../shortcut/PHASE_5A_HANDOFF.md", "PHASE_5A_PLAN.md"]
+    },
+    {
+      "id": "phase5a.saved-result-integrity",
+      "title": "Independently verify saved-result integrity",
+      "disposition": "pending",
+      "evidence": "Current preview consistency and read-only zero-write evidence are bounded; no pretest baseline, historical timestamp proof, exact phone request count, or native race proof is claimed.",
+      "references": ["../shortcut/PHASE_5A_HANDOFF.md", "PHASE_5A_PLAN.md"]
+    },
+    {
+      "id": "phase5a.protected-signing-workflow",
+      "title": "Operational signing workflow activation",
+      "disposition": "pending",
+      "evidence": "Static preparation is retained, but the workflow remains protected by its permanent false guard and all-zero reviewed-commit sentinel; no activation, dispatch, or operational CI signing is claimed.",
+      "references": ["../shortcut/PHASE_5A_HANDOFF.md", "PHASE_5A_PLAN.md"]
+    },
+    {
+      "id": "phase5a.rollback-reference",
+      "title": "Independently identified and hashed rollback reference",
+      "disposition": "pending",
+      "evidence": "The unchanged private manual-pilot backup is recorded as SAVED by user report, but its identifier and hash were not recorded and bytes were not independently verified.",
+      "references": ["../shortcut/PHASE_5A_HANDOFF.md", "PHASE_5A_PLAN.md"]
+    },
+    {
+      "id": "phase5a.phase5b-handoff",
+      "title": "Phase 5B source/toolchain handoff",
+      "disposition": "pending",
+      "evidence": "The handoff document is prepared, but the incomplete rollback and operational signing gates keep accepted-baseline closeout pending.",
+      "references": ["../shortcut/PHASE_5A_HANDOFF.md", "PHASE_5A_PLAN.md"]
+    }
+  ],
+  "limitations": [
+    {
+      "id": "phase5a.native-edge-case-matrix",
+      "limitation": "The native edge-case matrix remains an explicit waived limitation; it is not a passing test result.",
+      "disposition": "waived",
+      "evidence": "The user explicitly waived the remaining native edge-case matrix for Phase 5A.",
+      "references": ["../shortcut/PHASE_5A_HANDOFF.md", "PHASE_5A_PLAN.md"]
+    },
+    {
+      "id": "phase5a.native-race-concurrency",
+      "limitation": "The native race/concurrency exercise remains an explicit waived limitation; it is not a passing test result.",
+      "disposition": "waived",
+      "evidence": "The user explicitly waived the remaining native race/concurrency exercise for Phase 5A.",
+      "references": ["../shortcut/PHASE_5A_HANDOFF.md", "PHASE_5A_PLAN.md"]
+    },
+    {
+      "id": "phase5a.general-reproducibility",
+      "limitation": "The formal limitation is general byte/semantic reproducibility; it remains waived and is not an unqualified reproducibility claim.",
+      "disposition": "waived",
+      "evidence": "The Phase 5A records preserve bounded artifact comparisons and explicitly do not claim general reproducibility.",
+      "references": ["../shortcut/PHASE_5A_HANDOFF.md", "PHASE_5A_PLAN.md"]
+    },
+    {
+      "id": "phase5a.operational-signing-activation",
+      "limitation": "The formal limitation is operational signing activation; it remains pending while the protected workflow stays disabled.",
+      "disposition": "pending",
+      "evidence": "The protected signing workflow has not been activated or dispatched.",
+      "references": ["../shortcut/PHASE_5A_HANDOFF.md", "PHASE_5A_PLAN.md"]
+    },
+    {
+      "id": "phase5a.user-reported-backup",
+      "limitation": "The formal limitation is the user-reported-only backup without independent identifier/hash; it remains pending and private.",
+      "disposition": "pending",
+      "evidence": "The backup is recorded as saved by user report, without an independently recorded identifier/hash or byte verification.",
+      "references": ["../shortcut/PHASE_5A_HANDOFF.md", "PHASE_5A_PLAN.md"]
+    }
+  ],
+  "rehearsal": [
+    {
+      "id": "rehearsal.local-migration-import-admin",
+      "title": "Local migration, import rollback, and administrator route rehearsal",
+      "disposition": "pass",
+      "evidence": "npm test -- tests/integration/migrations.test.ts tests/integration/import.test.ts tests/integration/admin.test.ts passed 3 files and 62 tests with loopback access on 2026-10-25.",
+      "references": ["EXECUTION_PLAN.md", "PHASE_5A_PLAN.md"]
+    },
+    {
+      "id": "rehearsal.forward-migration",
+      "title": "Forward migration preserves populated records and constraints",
+      "disposition": "pass",
+      "evidence": "node scripts/phase9-rehearse-recovery.mjs passed the forward migration check while dropping only the obsolete result hash and preserving the populated submission and constraints.",
+      "references": ["EXECUTION_PLAN.md"]
+    },
+    {
+      "id": "rehearsal.d1-export-restore",
+      "title": "D1 export and restore rehearsal",
+      "disposition": "pass",
+      "evidence": "node scripts/phase9-rehearse-recovery.mjs exported a disposable local Wrangler D1 database to SQL, restored it into a separate disposable state, and matched key rows and constraints with duplicate/orphan probes.",
+      "references": ["../Daily_Games_Tracker_Final_Implementation_Plan.md#20-launch-checklist"]
+    },
+    {
+      "id": "rehearsal.admin-recovery",
+      "title": "Administrator recovery from a parser or incorrect-submission failure",
+      "disposition": "pass",
+      "evidence": "node scripts/phase9-rehearse-recovery.mjs invokes the real correctSubmission path against the restored disposable D1 binding for a valid seven-round Krillion submission, verifies a forced mid-batch failure leaves rounds, score, and audit count unchanged, then replaces all seven round rows atomically, updates the score from 300 to 310, and verifies protected prompt/answer sentinels are absent from the generated redacted submission.correct audit before/after snapshots.",
+      "references": ["../Daily_Games_Tracker_Final_Implementation_Plan.md#21-definition-of-done"]
+    }
+  ],
+  "operational_evidence": [
+    {
+      "id": "operational.preview-health-alias",
+      "title": "Read-only preview alias health",
+      "disposition": "pass",
+      "evidence": "On 2026-10-25, read-only GET https://preview.example.invalid/api/health returned HTTP 200, schemaVersion 2, and gameDay 2026-10-25.",
+      "references": ["EXECUTION_PLAN.md"]
+    },
+    {
+      "id": "operational.preview-health-deployment",
+      "title": "Read-only unique preview deployment health",
+      "disposition": "pass",
+      "evidence": "On 2026-10-25, read-only GET https://preview.example.invalid/api/health returned HTTP 200, schemaVersion 2, and gameDay 2026-10-25.",
+      "references": ["EXECUTION_PLAN.md"]
+    },
+    {
+      "id": "operational.preview-boundaries",
+      "title": "Read-only preview boundary checks",
+      "disposition": "pass",
+      "evidence": "On 2026-10-25, read-only checks against https://preview.example.invalid confirmed security headers and request IDs on API responses; GET /api/not-real returned 404 NOT_FOUND; POST /api/health returned 405 with Allow: GET; an oversized POST /api/import/validate returned 413 PAYLOAD_TOO_LARGE before authentication; and anonymous GET /api/admin/players reached the Cloudflare Access sign-in boundary. No valid submission or WHT API write was sent.",
+      "references": ["EXECUTION_PLAN.md"]
+    },
+    {
+      "id": "operational.terms-source-review",
+      "title": "Current third-party terms source review",
+      "disposition": "pending",
+      "evidence": "MapTap terms https://maptap.gg/terms and Krillion terms https://krillion.to/en/terms were reviewed. Compatibility still requires owner confirmation, and the review is not authorization.",
+      "references": ["../Daily_Games_Tracker_Final_Implementation_Plan.md#20-launch-checklist"],
+      "sources": ["https://maptap.gg/terms", "https://krillion.to/en/terms"]
+    },
+    {
+      "id": "operational.cloudflare-limits-review",
+      "title": "Current Cloudflare Workers and D1 limits source review",
+      "disposition": "pending",
+      "evidence": "Official limits and pricing sources were reviewed on 2026-10-25. They record platform limits, not an account-specific free-tier margin or production monitoring pass.",
+      "references": ["../Daily_Games_Tracker_Final_Implementation_Plan.md#20-launch-checklist"],
+      "sources": [
+        "https://developers.cloudflare.com/workers/platform/limits/",
+        "https://developers.cloudflare.com/d1/platform/limits/",
+        "https://developers.cloudflare.com/d1/platform/pricing/"
+      ],
+      "reported_facts": [
+        "Workers Free: 100,000 requests/day, 10 ms CPU/request, 128 MB memory, 100 MB request body.",
+        "D1 Free: 500 MB database, 7-day Time Travel, 5 million rows/day read and 100,000 rows/day write via pricing, 50 queries/invocation."
+      ]
+    }
+  ]
+}

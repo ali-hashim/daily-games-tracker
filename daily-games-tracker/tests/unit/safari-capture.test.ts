@@ -177,7 +177,7 @@ describe("Safari capture script in a controlled DOM model", () => {
     expect((result as SafariWebpageCapture).visible_text).toBe("summary\nvisible text");
   });
   it("captures and parses the full current Krillion sample through one script", () => {
-    const raw = readFileSync("tests/fixtures/krillion/2026-10-20-dive-197-365.txt", "utf8");
+    const raw = readFileSync("tests/fixtures/krillion/2026-10-21-dive-98-365.txt", "utf8");
     const result = capture(
       new Element(
         "BODY",
@@ -185,9 +185,9 @@ describe("Safari capture script in a controlled DOM model", () => {
       ),
     );
     assertCapture(result);
-    expect(parseCapture(result, new Date("2026-10-20T20:00:00Z"))).toMatchObject({
+    expect(parseCapture(result, new Date("2026-10-21T20:00:00Z"))).toMatchObject({
       finalScore: 365,
-      externalPuzzleKey: "197",
+      externalPuzzleKey: "98",
     });
     expect(utf8Bytes(JSON.stringify(result))).toBeLessThan(256 * 1024);
   });

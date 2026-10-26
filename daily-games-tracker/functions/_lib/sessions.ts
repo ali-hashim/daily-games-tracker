@@ -36,7 +36,8 @@ export async function authenticateSession(request: Request, env: AppEnv): Promis
     LEFT JOIN device_credentials d ON d.id = s.source_device_id
     WHERE s.session_hash = ? AND s.revoked_at IS NULL AND p.active = 1
       AND s.idle_expires_at > ? AND s.absolute_expires_at > ?
-      AND (s.source_device_id IS NULL OR (d.id IS NOT NULL AND d.revoked_at IS NULL))
+      AND (s.source_device_id IS NULL OR
+        (d.id IS NOT NULL AND d.player_id = s.player_id AND d.revoked_at IS NULL))
   `,
   )
     .bind(hash, now, now)
@@ -56,7 +57,8 @@ export async function refreshSession(env: AppEnv, session: SessionIdentity): Pro
     WHERE id = ? AND revoked_at IS NULL AND idle_expires_at > ? AND absolute_expires_at > ?
       AND EXISTS (SELECT 1 FROM players WHERE id = web_sessions.player_id AND active = 1)
       AND (source_device_id IS NULL OR EXISTS (
-        SELECT 1 FROM device_credentials WHERE id = source_device_id AND revoked_at IS NULL
+        SELECT 1 FROM device_credentials WHERE id = source_device_id
+          AND player_id = web_sessions.player_id AND revoked_at IS NULL
       ))
   `,
   )

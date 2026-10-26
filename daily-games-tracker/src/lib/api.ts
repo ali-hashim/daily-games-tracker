@@ -18,7 +18,7 @@ export async function apiRequest<T>(path: string, init: RequestInit = {}): Promi
   if (!response.headers.get("Content-Type")?.includes("application/json")) {
     throw new Error("Open this page again and sign in to continue.");
   }
-  const body = await response.json();
+  const body = (await response.json()) as Record<string, unknown>;
   if (!response.ok) {
     throw new ApiRequestError(
       `${body.error_message ?? "The request could not be completed."}${body.request_id ? ` (${body.request_id})` : ""}`,
