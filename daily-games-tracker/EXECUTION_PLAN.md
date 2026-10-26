@@ -5,7 +5,7 @@
 
 **Current status — October 25, 2026:** Core features through Phase 8 and Phase 9 hardening are implemented in the reviewed source; hosted preview identity is retained in private evidence. Production remains undeployed. Phase 5B closed under bounded acceptance; Phase 5A formal closeout and Phase 9 launch gates remain open. **Phase 10 User page/tab is implemented and independently reviewed in the source; physical-device/native evidence remains open.** See [PROJECT_STATUS.md](PROJECT_STATUS.md) and [Phase 10 evidence](reports/phase10-user-page-verification.md).
 
-**Sequence:** Phases 0–9 retain numbering, Phase 5 is 5A/5B, and Phase 10 is the final additional User phase. Reviewed one-time HubSign sends have standing authorization; protected Actions-only signing remains pending operational activation. New/modified Shortcuts compile and inspect through pinned CI, never locally; ambiguous signing responses stop permanently and artifact expiry never authorizes a resend.
+**Sequence:** Phases 0–9 retain numbering, Phase 5 is 5A/5B, and Phase 10 is the final additional User phase. Reviewed HubSign sends and user-directed retries of previously ambiguous outcomes have standing authorization when exact package/source/digest/state checks pass; protected Actions-only signing remains pending operational activation. New/modified Shortcuts compile and inspect through pinned CI, never locally.
 
 ## 1. Alignment rules
 
