@@ -5,9 +5,15 @@ description: Safely publish reviewed WHT changes to the public GitHub repository
 
 # Sanitized pushes
 
-Use this skill before a GitHub push from WHT. It governs publication only; ordinary local edits do not need it.
+This skill governs the one-time migration from the private WHT workspace into
+`ali-hashim/daily-games-tracker`. After that migration is reviewed and merged,
+the canonical checkout is the sole maintained source tree. Future changes use
+ordinary branches, commits, pull requests, and CI from that checkout; do not
+recreate a second export, recopy the private workspace, or run a sanitization
+build for every push. Read this skill before the migration push and whenever a
+future change materially affects publication safety.
 
-1. **Use the public checkout.** Never push the private workspace or its Git history. Work from the clean public checkout of `ali-hashim/daily-games-tracker`, copy in only reviewed changes, and preserve its existing public files. Never use broad private staging, `--mirror`, all-ref pushes, force-pushes, or history rewrites.
+1. **Use the canonical public checkout.** For the initial migration, never push the private workspace or its Git history: work from the clean public checkout of `ali-hashim/daily-games-tracker`, copy in only reviewed changes, and preserve its existing public files. After cutover, work directly from that canonical checkout. Never use broad private staging, `--mirror`, all-ref pushes, force-pushes, or history rewrites.
 
 2. **Confirm scope and remote.** An explicit request to push authorizes that reviewed push; do not ask for redundant approval. Verify the checkout remote is exactly `ali-hashim/daily-games-tracker` before writing. This does not authorize deployment, Shortcut signing, or unrelated changes.
 

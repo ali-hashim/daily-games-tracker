@@ -30,7 +30,7 @@ it("drops only the obsolete result hash while preserving populated scores, round
       .run();
     await db
       .prepare(
-        "INSERT INTO submissions(id,player_id,game_id,game_day_id,final_score,result_hash,parser_version,source_kind) VALUES ('s','p','maptap','day',810,'obsolete-hash','maptap.v1','shared_text')",
+        "INSERT INTO submissions(id,player_id,game_id,game_day_id,final_score,result_hash,parser_version,source_kind) VALUES ('s','p','maptap','day',820,'obsolete-hash','maptap.v1','shared_text')",
       )
       .run();
     await db.batch(
@@ -80,7 +80,7 @@ it("drops only the obsolete result hash while preserving populated scores, round
     await expect(
       db
         .prepare(
-          "INSERT INTO submissions(id,player_id,game_id,game_day_id,final_score,parser_version,source_kind) VALUES ('duplicate','p','maptap','day',811,'maptap.v1','shared_text')",
+          "INSERT INTO submissions(id,player_id,game_id,game_day_id,final_score,parser_version,source_kind) VALUES ('duplicate','p','maptap','day',821,'maptap.v1','shared_text')",
         )
         .run(),
     ).rejects.toThrow();

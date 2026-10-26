@@ -1,4 +1,4 @@
-const NETWORK_ONLY_ROOTS = ["/api", "/admin", "/register", "/login"] as const;
+const NETWORK_ONLY_ROOTS = ["/api", "/admin", "/register", "/login", "/user"] as const;
 const APP_SHELL_FILES = new Set([
   "/",
   "/index.html",

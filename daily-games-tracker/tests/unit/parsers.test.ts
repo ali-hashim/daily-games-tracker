@@ -7,8 +7,8 @@ import { ParserError } from "../../parsers/errors";
 
 const now = new Date("2026-10-21T01:00:00Z"); // October 20 in Los Angeles
 const raw = (file: string) => readFileSync(`tests/fixtures/${file}`, "utf8");
-const current = raw("krillion/2026-10-20-dive-197-365.txt");
-const archived = raw("krillion/2026-10-15-day-192-360.txt");
+const current = raw("krillion/2026-10-21-dive-98-365.txt");
+const archived = raw("krillion/2026-10-15-day-92-360.txt");
 const map = raw("maptap/2026-10-20-835.txt");
 const safari = (
   visible_text = current,
@@ -54,17 +54,17 @@ describe("golden parser results", () => {
     expect(JSON.stringify(capture)).toBe(before);
     expect(capture.shared_text).toBe(raw("maptap/2026-10-21-810.txt").replace(/\n$/, ""));
   });
-  it("parses the synthetic fixture Dive #198 with original prompt and answer case", () => {
-    const capture = JSON.parse(raw("capture/2026-10-21-dive-198-285.iphone.json"));
-    const expected = JSON.parse(raw("capture/2026-10-21-dive-198-285.normalized.json"));
+  it("parses the synthetic fixture Dive #98 with original prompt and answer case", () => {
+    const capture = JSON.parse(raw("capture/2026-10-21-dive-98-285.iphone.json"));
+    const expected = JSON.parse(raw("capture/2026-10-21-dive-98-285.normalized.json"));
     expect(parseCapture(capture, new Date("2026-10-21T20:00:00Z"))).toEqual(expected);
   });
   it("parses the synthetic refreshed capture with matching native sizes and exclusions", () => {
-    const capture = JSON.parse(raw("capture/2026-10-21-dive-198-285.refreshed.iphone.json"));
-    const expected = JSON.parse(raw("capture/2026-10-21-dive-198-285.normalized.json"));
+    const capture = JSON.parse(raw("capture/2026-10-21-dive-98-285.refreshed.iphone.json"));
+    const expected = JSON.parse(raw("capture/2026-10-21-dive-98-285.normalized.json"));
     expect(parseCapture(capture, new Date("2026-10-21T20:00:00Z"))).toEqual(expected);
-    expect(Buffer.byteLength(JSON.stringify(capture))).toBe(4103);
-    expect(Buffer.byteLength(capture.visible_text)).toBe(849);
+    expect(Buffer.byteLength(JSON.stringify(capture))).toBe(4102);
+    expect(Buffer.byteLength(capture.visible_text)).toBe(848);
     expect(capture.visible_nodes).toHaveLength(52);
     expect(
       capture.visible_nodes.every(
@@ -77,7 +77,7 @@ describe("golden parser results", () => {
   });
   it("rejects disagreement between synthetic fixture leaf hints and visible text", () => {
     const capture = JSON.parse(
-      raw("capture/2026-10-21-dive-198-285.iphone.json"),
+      raw("capture/2026-10-21-dive-98-285.iphone.json"),
     ) as SafariWebpageCapture;
     capture.visible_nodes.find((node) => node.text === "Synthetic native answer 1")!.text =
       "Different answer";
@@ -85,7 +85,7 @@ describe("golden parser results", () => {
   });
   it("rejects missing or extra round hints in the native section", () => {
     const capture = JSON.parse(
-      raw("capture/2026-10-21-dive-198-285.iphone.json"),
+      raw("capture/2026-10-21-dive-98-285.iphone.json"),
     ) as SafariWebpageCapture;
     const first = capture.visible_nodes.findIndex((node) => node.text === "the catch") + 2;
     capture.visible_nodes.splice(first, 7);
@@ -93,7 +93,7 @@ describe("golden parser results", () => {
   });
   it("keeps native answer case even when structural markers change case", () => {
     const capture = JSON.parse(
-      raw("capture/2026-10-21-dive-198-285.iphone.json"),
+      raw("capture/2026-10-21-dive-98-285.iphone.json"),
     ) as SafariWebpageCapture;
     capture.visible_text = capture.visible_text.replace(
       "Synthetic native answer 1",
@@ -131,12 +131,12 @@ describe("golden parser results", () => {
     });
   }
   it("parses every field of the current Krillion sample", () => {
-    const expected = JSON.parse(raw("krillion/2026-10-20-dive-197-365.expected.json"));
+    const expected = JSON.parse(raw("krillion/2026-10-21-dive-98-365.expected.json"));
     const result = parseCapture(safari(), now);
     expect(result).toMatchObject({
       gameKey: "krillion",
-      gameDate: "2026-10-20",
-      externalPuzzleKey: "197",
+      gameDate: "2026-10-21",
+      externalPuzzleKey: "98",
       finalScore: 365,
       parserVersion: "krillion.v1",
     });
@@ -157,9 +157,9 @@ describe("golden parser results", () => {
     // This transformation tests row semantics, never accepts the real archive as current.
     const synthetic = archived
       .replace("THE ARCHIVE", "THE DAILY DIVE")
-      .replace("⟲ DAY #192 RESURFACED", "DIVE #197 COMPLETE")
+      .replace("⟲ DAY #92 RESURFACED", "DIVE #98 COMPLETE")
       .replace(
-        "BETTER THAN 85% OF DAY #192'S ORIGINAL PLAYERS",
+        "BETTER THAN 85% OF DAY #92'S ORIGINAL PLAYERS",
         "BETTER THAN 85% OF TODAY'S PLAYERS",
       )
       .replace("NEXT DAY ⟲", "LOGBOOK");
@@ -283,6 +283,24 @@ describe("strict capture boundary", () => {
 });
 
 describe("MapTap rejection and emoji semantics", () => {
+  it("resolves MapTap identity from the shared month/day during the worldwide window", () => {
+    const result = parseCapture(
+      sharedTextCapture(map.replace("October 20", "October 23")),
+      new Date("2026-10-24T11:00:00Z"),
+    );
+    expect(result).toMatchObject({
+      gameDate: "2026-10-23",
+      externalPuzzleKey: "2026-10-23",
+    });
+  });
+
+  it.each([
+    [new Date("2026-10-22T09:59:59.999Z"), "before the worldwide opening"],
+    [new Date("2026-10-24T12:00:00.000Z"), "after the worldwide close"],
+  ])("rejects MapTap outside its worldwide window %s", (date) => {
+    error(sharedTextCapture(map.replace("October 20", "October 23")), "WRONG_GAME_DAY", date);
+  });
+
   it("preserves the new native share under CRLF/CR normalization only", () => {
     const original = raw("maptap/2026-10-21-810.txt");
     const cr = sharedTextCapture(original.replace(/\n/g, "\r"));
@@ -338,6 +356,27 @@ describe("MapTap rejection and emoji semantics", () => {
 });
 
 describe("Krillion strict sections and rounds", () => {
+  it("derives Krillion game dates from completed Dive numbers", () => {
+    const synthetic92 = raw("krillion/2026-10-15-day-92-360.txt")
+      .replace("THE ARCHIVE", "THE DAILY DIVE")
+      .replace("⟲ DAY #92 RESURFACED", "DIVE #92 COMPLETE")
+      .replace(
+        "BETTER THAN 85% OF DAY #92'S ORIGINAL PLAYERS",
+        "BETTER THAN 85% OF TODAY'S PLAYERS",
+      )
+      .replace("NEXT DAY ⟲", "LOGBOOK");
+    for (const [number, text, date, expectedDate] of [
+      [92, synthetic92, "2026-10-16", "2026-10-15"],
+      [98, current, "2026-10-22", "2026-10-21"],
+      [100, current.replace("DIVE #98 COMPLETE", "DIVE #100 COMPLETE"), "2026-10-24", "2026-10-23"],
+    ] as const) {
+      expect(parseCapture(safari(text), new Date(`${date}T11:00:00Z`))).toMatchObject({
+        gameDate: expectedDate,
+        externalPuzzleKey: String(number),
+      });
+    }
+  });
+
   it.each([0, 10, 15, 30, 60, 85, 100])("accepts the configured score tier %i", (score) => {
     const text = current
       .replace("\n85\n+", `\n${score}\n+`)
@@ -345,7 +384,7 @@ describe("Krillion strict sections and rounds", () => {
     expect(parseCapture(safari(text), now).rounds[0].rawScore).toBe(score);
   });
   it.each([
-    [current.replace("DIVE #197 COMPLETE", "PROMPT 5 OF 7"), "GAME_NOT_COMPLETE"],
+    [current.replace("DIVE #98 COMPLETE", "PROMPT 5 OF 7"), "GAME_NOT_COMPLETE"],
     [current.replace("THE CATCH", "UNRECOGNIZED SECTION"), "INCOMPLETE_KRILLION_SHARE"],
     [current.replace("\n365\n", "\n366\n"), "SCORE_MISMATCH"],
     [current.replace("\n85\n+", "\n61\n+"), "PARSER_UNSUPPORTED"],
@@ -368,16 +407,16 @@ describe("Krillion strict sections and rounds", () => {
       "ROUND_COUNT_MISMATCH",
     ],
     [current.replace("THE CATCH", "THE CATCH\nTHE CATCH"), "PARSER_UNSUPPORTED"],
-    [current.replace("\nLOGBOOK", "\nDIVE #198 COMPLETE\n0\nLOGBOOK"), "PARSER_UNSUPPORTED"],
+    [current.replace("\nLOGBOOK", "\nDIVE #99 COMPLETE\n0\nLOGBOOK"), "PARSER_UNSUPPORTED"],
     [current.replace("TODAY'S PLAYERS", "ORIGINAL PLAYERS"), "PARSER_UNSUPPORTED"],
   ])("rejects malformed/unfinished/ambiguous rows %#", (text, code) => error(safari(text), code));
   it.each([
-    "https://krillion.io/archive/192",
-    "https://krillion.io/?day=192",
-    "https://krillion.io/#archive/192",
+    "https://krillion.io/archive/92",
+    "https://krillion.io/?day=92",
+    "https://krillion.io/#archive/92",
   ])("rejects archive URL %s", (url) => error(safari(current, url), "WRONG_GAME_DAY"));
   it("rejects Krillion's summary share", () =>
-    error(sharedTextCapture("KRILLION\nDIVE #197 COMPLETE\n310"), "INCOMPLETE_KRILLION_SHARE"));
+    error(sharedTextCapture("KRILLION\nDIVE #98 COMPLETE\n365"), "INCOMPLETE_KRILLION_SHARE"));
   it("ignores numbers beyond the section boundary", () =>
     expect(parseCapture(safari(current + "\n8\nNAME X\nsecret\n100\n+"), now).finalScore).toBe(
       365,

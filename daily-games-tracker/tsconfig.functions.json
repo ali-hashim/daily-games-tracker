@@ -10,6 +10,6 @@
     "noEmit": true,
     "skipLibCheck": true
   },
-  "include": ["functions/**/*.ts", "shared/**/*.ts", "parsers/**/*.ts"],
+  "include": ["functions/**/*.ts", "shared/**/*.ts", "parsers/**/*.ts", "diagnostics/**/*.ts"],
   "exclude": ["**/.wrangler/**"]
 }

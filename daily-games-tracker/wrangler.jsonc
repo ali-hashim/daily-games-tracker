@@ -1,12 +1,13 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "wht-local-demo",
+  "name": "winstitute-of-higher-thinking",
   "compatibility_date": "2026-10-20",
   "pages_build_output_dir": "./dist",
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "demo-local-db",
+      "database_name": "wht-local-db",
+      // Local placeholder. Wrangler persists a local database and does not contact this UUID.
       "database_id": "00000000-0000-0000-0000-000000000000",
       "preview_database_id": "DB",
       "migrations_dir": "migrations",
@@ -14,6 +15,37 @@
   ],
   "vars": {
     "APP_ENV": "local",
-    "ADMIN_EMAIL": "admin@example.test",
+  },
+  "env": {
+    "preview": {
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "wht-preview-db",
+          // Replace after creating the preview database.
+          "database_id": "19c5176f-1035-4029-877c-f54a3d1c42d6",
+          "migrations_dir": "migrations",
+        },
+      ],
+      "vars": {
+        "APP_ENV": "preview",
+        "CLOUDFLARE_ACCESS_DOMAIN": "https://winstitute-of-higher-thinking.cloudflareaccess.com",
+        "CLOUDFLARE_ACCESS_AUD": "97285624337f41765cfffdc6f9243042473855adf99a7c273ea82c664b0550e4",
+      },
+    },
+    "production": {
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "wht-production-db",
+          // Replace after creating the production database.
+          "database_id": "4dad6777-1fac-462a-a3a8-d91f5d768dc7",
+          "migrations_dir": "migrations",
+        },
+      ],
+      "vars": {
+        "APP_ENV": "production",
+      },
+    },
   },
 }

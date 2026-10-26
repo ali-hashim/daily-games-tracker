@@ -74,8 +74,8 @@ function request(mode: string, body = {}, headers: Record<string, string> = {}) 
     body: JSON.stringify(body),
   });
 }
-async function start() {
-  const response = await deviceLoginRequest(request("start"), env, "req_test", "start");
+async function start(inputBody: Record<string, unknown> = {}) {
+  const response = await deviceLoginRequest(request("start", inputBody), env, "req_test", "start");
   const body = (await response.json()) as { shortcut_url: string; expires_at: string };
   const url = new URL(body.shortcut_url);
   const challenge = url.searchParams.get("text")!.slice("DGT_LOGIN_V1:".length);
@@ -106,7 +106,9 @@ describe("browser-bound device login", () => {
     const flow = await start();
     const url = new URL(flow.body.shortcut_url);
     expect(url.protocol).toBe("shortcuts:");
-    expect(url.searchParams.get("name")).toBe("Upload to WHT");
+    expect(flow.body.shortcut_url).toContain("name=Upload%20To%20WHT");
+    expect(flow.body.shortcut_url).not.toContain("name=Upload+");
+    expect(url.searchParams.get("name")).toBe("Upload To WHT");
     expect(url.searchParams.get("input")).toBe("text");
     expect(url.searchParams.get("text")).toBe(`DGT_LOGIN_V1:${flow.challenge}`);
     expect(flow.response.headers.get("Set-Cookie")).toContain(
@@ -123,6 +125,45 @@ describe("browser-bound device login", () => {
     expect((await complete(flow.cookie)).status).toBe(202);
   });
 
+  it("defaults and persists only safe login return paths", async () => {
+    const defaultFlow = await start();
+    expect(
+      await env.DB.prepare("SELECT return_url FROM login_challenges WHERE challenge_hash = ?")
+        .bind(await hashToken(defaultFlow.challenge))
+        .first("return_url"),
+    ).toBe("/user");
+
+    const validFlow = await start({ return_url: "/daily/2026-10-23" });
+    expect(
+      await env.DB.prepare("SELECT return_url FROM login_challenges WHERE challenge_hash = ?")
+        .bind(await hashToken(validFlow.challenge))
+        .first("return_url"),
+    ).toBe("/daily/2026-10-23");
+
+    const device = await registered();
+    const approval = await approve(validFlow.challenge, device.device_code);
+    expect(await approval.json()).toMatchObject({
+      status: "approved",
+      return_url: `${origin}/daily/2026-10-23`,
+    });
+  });
+
+  it.each([
+    ["external URL", "https://evil.test/daily/2026-10-23"],
+    ["invalid date", "/daily/2026-02-30"],
+    ["query string", "/daily/2026-10-23?next=https://evil.test"],
+    ["fragment", "/user#private"],
+    ["unsupported path", "/admin"],
+    ["empty path", ""],
+  ])("normalizes %s return_url to /user", async (_label, returnUrl) => {
+    const flow = await start({ return_url: returnUrl });
+    expect(
+      await env.DB.prepare("SELECT return_url FROM login_challenges WHERE challenge_hash = ?")
+        .bind(await hashToken(flow.challenge))
+        .first("return_url"),
+    ).toBe("/user");
+  });
+
   it("issues exactly one hashed session only to the initiating browser and blocks replay", async () => {
     const device = await registered();
     const flow = await start();
@@ -130,7 +171,7 @@ describe("browser-bound device login", () => {
     expect(approval.headers.get("Set-Cookie")).toBeNull();
     expect(await approval.json()).toMatchObject({
       status: "approved",
-      return_url: `${origin}/login`,
+      return_url: `${origin}/user`,
     });
     await expect(approve(flow.challenge, device.device_code)).rejects.toMatchObject({
       errorCode: "LOGIN_UNAVAILABLE",
@@ -252,6 +293,32 @@ describe("browser-bound device login", () => {
     });
   });
 
+  it("rejects a source device belonging to another player at authentication and refresh", async () => {
+    const device = await registered("Alex");
+    const other = await registered("Blair");
+    const req = sessionRequest(`dgt_session=${device.sessionToken}`);
+    const identity = await authenticateSession(req, env);
+    const before = await env.DB.prepare("SELECT * FROM web_sessions WHERE id = ?")
+      .bind(identity.id)
+      .first();
+    await env.DB.prepare("UPDATE device_credentials SET player_id = ? WHERE id = ?")
+      .bind(other.player.id, device.device_id)
+      .run();
+
+    await expect(authenticateSession(req, env)).rejects.toMatchObject({
+      errorCode: "SESSION_REQUIRED",
+    });
+    await expect(refreshSession(env, identity)).rejects.toMatchObject({
+      errorCode: "SESSION_REQUIRED",
+    });
+    expect(
+      await env.DB.prepare("SELECT * FROM web_sessions WHERE id = ?").bind(identity.id).first(),
+    ).toEqual(before);
+    await expect(
+      authenticateSession(sessionRequest(`dgt_session=${other.sessionToken}`), env),
+    ).resolves.toMatchObject({ player_id: other.player.id });
+  });
+
   it("enforces method, origin, body, and device authentication through routed middleware", async () => {
     async function invoke(handler: typeof startApi, req: Request) {
       const context = { request: req, env, data: { requestId: "" } } as Parameters<
@@ -290,7 +357,7 @@ describe("browser-bound device login", () => {
     ).toBe(400);
     expect(
       (await invoke(startApi, request("start", { return_url: "https://evil.test" }))).status,
-    ).toBe(400);
+    ).toBe(201);
     const response = await invoke(startApi, request("start"));
     expect(response.headers.get("Cache-Control")).toBe("no-store");
     expect(response.headers.get("Referrer-Policy")).toBe("no-referrer");

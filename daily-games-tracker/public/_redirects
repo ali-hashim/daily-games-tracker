@@ -2,3 +2,7 @@
 /daily /index.html 200
 /daily/* /index.html 200
 /all-time /index.html 200
+/user /index.html 200
+/user/* /index.html 200
+/login /index.html 200
+/login/* /index.html 200

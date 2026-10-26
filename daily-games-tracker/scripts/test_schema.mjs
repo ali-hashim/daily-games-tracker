@@ -105,7 +105,7 @@ try {
     "DB",
     ...localArgs,
     "--command",
-    "INSERT INTO game_days(id, game_id, game_date, external_puzzle_key) VALUES('krillion:2026-10-20', 'krillion', '2026-10-20', '97'); INSERT INTO submissions(id, player_id, game_id, game_day_id, final_score, parser_version, source_kind) VALUES('s1', 'p1', 'krillion', 'krillion:2026-10-20', 365, 'krillion.v1', 'admin'); INSERT INTO round_results(id, submission_id, round_number, prompt, answer, raw_score) VALUES('r1', 's1', 1, 'Prompt', 'Answer', 60);",
+    "INSERT INTO game_days(id, game_id, game_date, external_puzzle_key) VALUES('krillion:2026-10-20', 'krillion', '2026-10-20', '97'); INSERT INTO submissions(id, player_id, game_id, game_day_id, final_score, parser_version, source_kind) VALUES('s1', 'p1', 'krillion', 'krillion:2026-10-20', 310, 'krillion.v1', 'admin'); INSERT INTO round_results(id, submission_id, round_number, prompt, answer, raw_score) VALUES('r1', 's1', 1, 'Prompt', 'Answer', 60);",
   ]);
 
   runWrangler(
@@ -120,7 +120,7 @@ try {
     { expectFailure: true },
   );
 
-  console.log("PASS: current D1 schema (v2), seeds, foreign keys, and uniqueness constraints");
+console.log("PASS: current D1 schema (v3), seeds, foreign keys, and uniqueness constraints");
 } finally {
   await rm(state, { recursive: true, force: true });
 }

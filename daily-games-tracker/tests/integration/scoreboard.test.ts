@@ -7,7 +7,6 @@ import type { GameKey } from "../../shared/types";
 let runtime: Miniflare;
 let env: AppEnv;
 const date = "2026-10-21";
-const url = "https://wht.test/daily/2026-10-21";
 beforeAll(async () => {
   runtime = new Miniflare(
     convertV4MiniflareOptions({
@@ -98,7 +97,7 @@ it("renders the canonical score-only combined board from one consistent read, wi
       return typeof value === "function" ? value.bind(target) : value;
     },
   });
-  const result = await submissionScoreboard({ ...env, DB: db }, date, url, "alex", "krillion");
+  const result = await submissionScoreboard({ ...env, DB: db }, date, "alex", "krillion");
   expect(statements).toHaveLength(1);
   expect(statements[0]).not.toMatch(/\b(prompt|answer|original_emoji|credential_hash)\b/);
   expect(result.daily_rank).toBe(1);
@@ -112,10 +111,6 @@ it("renders the canonical score-only combined board from one consistent read, wi
 #2 · 60 — Sam [#2 · 260 📉]
 🦑 ⬛ ⬛ ⬛ ⬛ ⬛ ⬛
 
-Not played — New [— · 0 NEW]
-
-Not played — Zoe [#3 · 100 📉]
-
 ━━━━━━━━━━━━━━━━━━━━
 
 🌎 MAPTAP — OCT 21
@@ -124,38 +119,45 @@ Not played — Zoe [#3 · 100 📉]
 50 · 50 · 50 · 50 · 50
 
 #2 · 0 — Alex [#1 · 1,000 ➖]
-0 · 0 · 0 · 0 · 0
-
-Not played — New [— · 0 NEW]
-
-Not played — Sam [#3 · 500 📉]
-
-━━━━━━━━━━━━━━━━━━━━
-
-🔗 FULL DAILY LEADERBOARDS
-https://wht.test/daily/2026-10-21`);
+0 · 0 · 0 · 0 · 0`);
   expect(result.scoreboard_text).not.toMatch(/SECRET_|🎓|Hidden player/);
+  expect(result.scoreboard_text).not.toContain("🔗 FULL DAILY LEADERBOARDS");
+  expect(result.scoreboard_text).not.toContain("https://wht.test/daily/2026-10-21");
   await env.DB.prepare(
     "UPDATE submissions SET final_score=0 WHERE id='sam-krillion-2026-10-20'",
   ).run();
-  const corrected = await submissionScoreboard(env, date, url, "sam", "krillion");
+  const corrected = await submissionScoreboard(env, date, "sam", "krillion");
   expect(corrected.scoreboard_text).toContain("#2 · 60 — Sam [#3 · 60 ➖]");
 });
 it("keeps zero-score ties played, alphabetical, and ranked ahead of never-played users", async () => {
   await save("sam", "maptap", date, 0, [0, 0, 0, 0, 0]);
   await save("alex", "maptap", date, 0, [0, 0, 0, 0, 0]);
-  const board = await submissionScoreboard(env, date, url, "alex", "maptap");
+  const board = await submissionScoreboard(env, date, "alex", "maptap");
   expect(board.daily_rank).toBe(1);
   expect(board.scoreboard_text).toContain("#1 · 0 — Alex [#1 · 0 NEW]");
   expect(board.scoreboard_text).toContain("#1 · 0 — Sam [#1 · 0 NEW]");
   expect(board.scoreboard_text.indexOf("#1 · 0 — Alex")).toBeLessThan(
     board.scoreboard_text.indexOf("#1 · 0 — Sam"),
   );
-  expect(board.scoreboard_text).toContain("Not played — New [— · 0 NEW]");
+});
+it("includes only submitted players and omits games with no submissions", async () => {
+  await save("alex", "maptap", date, 0, [0, 0, 0, 0, 0]);
+
+  const board = await submissionScoreboard(env, date, "alex", "maptap");
+
+  expect(board.scoreboard_text).toBe(`📊 WHT Leaderboard — OCT 21, 2026
+
+🌎 MAPTAP — OCT 21
+
+#1 · 0 — Alex [#1 · 0 NEW]
+0 · 0 · 0 · 0 · 0`);
+  expect(board.scoreboard_text).not.toContain("KRILLION");
+  expect(board.scoreboard_text).not.toContain("Not played");
+  expect(board.scoreboard_text).not.toContain("━━━━━━━━━━━━━━━━━━━━");
 });
 it("does not label an incomplete round set as a ready-to-copy scoreboard", async () => {
   await save("alex", "krillion", date, 60, [60]);
-  await expect(submissionScoreboard(env, date, url, "alex", "krillion")).rejects.toThrow(
+  await expect(submissionScoreboard(env, date, "alex", "krillion")).rejects.toThrow(
     "Scoreboard round set incomplete",
   );
 });

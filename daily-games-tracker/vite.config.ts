@@ -4,7 +4,6 @@ import tailwindcss from "@tailwindcss/vite";
 import { fileURLToPath } from "node:url";
 
 export default defineConfig({
-  cacheDir: ".cache/vite",
   plugins: [react(), tailwindcss()],
   build: {
     outDir: "dist",

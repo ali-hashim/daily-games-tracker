@@ -6,6 +6,7 @@ import type {
 } from "../shared/types";
 import { KRILLION_ALLOWED_SCORES, PARSER_VERSIONS } from "../shared/game-config";
 import { normalizeLineEndings } from "../shared/capture";
+import { isWorldwideWindowOpen, krillionDateForPuzzle } from "../shared/day";
 import { fail } from "./errors";
 
 const linesOf = (text: string): string[] =>
@@ -34,7 +35,7 @@ function roundBlock(lines: string[]): NormalizedRoundResult {
   return { roundNumber, prompt: lines[1], answer: answer === "—" ? null : answer, rawScore };
 }
 
-// Leaf-node layout observed in the synthetic fixture Dive #198 capture. Parent direct text
+// Leaf-node layout observed in the real iPhone Dive #98 capture. Parent direct text
 // for the popularity note precedes its numeric child, so do not concatenate nodes
 // and pretend they reproduce visible_text. Bind fields inside each '+' row instead.
 function leafRounds(nodes: SafariVisibleNode[]): NormalizedRoundResult[] | null {
@@ -113,7 +114,7 @@ function parseSection(lines: string[]): NormalizedRoundResult[] {
   return rounds;
 }
 
-export function parseKrillion(capture: SafariWebpageCapture, today: string): NormalizedGameResult {
+export function parseKrillion(capture: SafariWebpageCapture, now: Date): NormalizedGameResult {
   const lines = linesOf(capture.visible_text);
   const url = new URL(capture.source_url);
   let archiveQuery = false;
@@ -169,9 +170,12 @@ export function parseKrillion(capture: SafariWebpageCapture, today: string): Nor
       fail("PARSER_UNSUPPORTED");
   }
   if (rounds.reduce((sum, round) => sum + round.rawScore, 0) !== finalScore) fail("SCORE_MISMATCH");
+  const puzzleNumber = Number(match[1]);
+  const gameDate = krillionDateForPuzzle(puzzleNumber);
+  if (!gameDate || !isWorldwideWindowOpen(gameDate, now)) fail("WRONG_GAME_DAY");
   return {
     gameKey: "krillion",
-    gameDate: today,
+    gameDate,
     externalPuzzleKey: match[1],
     finalScore,
     rounds,
