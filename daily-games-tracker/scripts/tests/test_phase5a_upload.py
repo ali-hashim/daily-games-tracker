@@ -250,14 +250,14 @@ class UploadContractTests(unittest.TestCase):
                 manifest_path.write_text(json.dumps(manifest),encoding='utf-8')
                 with self.assertRaises(AssertionError): s.freeze(root/'build',root/'rejected')
 
-    def test_wrong_approved_hashes_stop_before_private_worker(self):
+    def test_wrong_approved_hashes_stop_before_protected_transfer(self):
         with tempfile.TemporaryDirectory(dir=TEST_TMP) as directory:
             root=Path(directory);package,info=self.package(root)
             for name,manifest,wire in (('manifest','0'*64,info['wireSha256']),('wire',info['manifestSha256'],'0'*64)):
                 with self.subTest(name=name), self.assertRaises(AssertionError):
                     s.validate(package,manifest,wire)
 
-    def test_package_tampering_is_rejected_before_private_worker(self):
+    def test_package_tampering_is_rejected_before_protected_transfer(self):
         with tempfile.TemporaryDirectory(dir=TEST_TMP) as directory:
             root=Path(directory);package,info=self.package(root)
             (package/'hubsign-request.json').write_bytes(b'changed')

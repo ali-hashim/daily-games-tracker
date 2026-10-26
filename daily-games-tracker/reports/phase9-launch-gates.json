@@ -167,7 +167,7 @@
       "id": "phase5a.protected-signing-workflow",
       "title": "Operational signing workflow activation",
       "disposition": "pending",
-      "evidence": "The signing workflow and durable private-worker service contract are implemented with an automatic relevant-reviewed-main trigger, optional protected manual recovery, stable-operation and receipt safeguards; the protected environment/configuration remain unprovisioned, so no operational CI signing run or signed delivery is claimed.",
+      "evidence": "The Actions-only workflow compiles and inspects through pinned CI, records a GitHub pending lease, sends one exact HubSign POST, and stores only AES-256-GCM encrypted intent/result artifacts with bounded expiry; private inputs and protected configuration remain unprovisioned, so no operational CI signing run or signed delivery is claimed. The migrated WHT_AMBIGUOUS_SIGNING_RECORD permanently blocks the prior logical package even if wire bytes vary; ambiguous responses are permanent stops and expiry never authorizes a resend.",
       "references": ["../shortcut/PHASE_5A_HANDOFF.md", "PHASE_5A_PLAN.md"]
     },
     {
@@ -211,7 +211,7 @@
       "id": "phase5a.operational-signing-activation",
       "limitation": "The formal limitation is operational signing activation; it remains pending until an independently recorded protected automatic or manual-recovery CI signing run and signed delivery exist.",
       "disposition": "pending",
-      "evidence": "The protected automatic/manual-recovery signing workflow and durable private-worker service contract are implemented, but the protected environment/configuration remain unprovisioned and no operational CI signing run or signed delivery has been independently recorded.",
+      "evidence": "The protected Actions-only signing workflow is implemented, but its protected configuration remains unprovisioned and no operational CI signing run or signed delivery has been independently recorded; a lost signed response may not be recoverable.",
       "references": ["../shortcut/PHASE_5A_HANDOFF.md", "PHASE_5A_PLAN.md"]
     },
     {

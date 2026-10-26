@@ -1,10 +1,18 @@
 # Credential-free experiment sources
 
-These files are proposed Cherri v2.3.0 inputs. All seven probes compiled and passed their current structural checks in [GitHub Actions run 17](https://github.com/ali-hashim/daily-games-tracker/actions/runs/39805988409), for source commit `e82c5b2b60546d743db344a65deb51663e8b1aba`. The one-day artifact is `cherri-unsigned-probes-01-07` (SHA-256 `6f1d014bbe269125470745eea9109d92dc1b10e6c80ee84ab3f4749f9477d518`). The two harmless alert builds were not byte-identical; deterministic output remains unresolved. With explicit approval, the credential-free alert-only probe 01 was sent to RoutineHub HubSign on 2026-10-22. The input file matched SHA-256 `cbd15b5930b42120bec49b7cf363952d1a87f04f12eacd3b25f5a5584b9f070c` (1,878 bytes); its binary plist was converted to XML with Python 3.12.14 `plistlib` and a parse/serialize/parse equality check passed. This does not establish byte-equivalence with Cherri's Go plist serializer. HubSign returned HTTP 200, `application/octet-stream`, 21,954 bytes, SHA-256 `272366791cc5b74ed3799c036dbffee9a615d4192f14f8d635ae7deee2716607`, with the `AEA1` container header. The inspector confirms only that header; it does not validate Apple's signature. No probe has been installed or executed on iPhone. Probe 05 established that JSON body literals are parsed as static JSON and cannot contain a bare runtime variable. Its narrow custom action definitions emit native Shortcut variable attachments for the assembled request body and nested capture. That plist structure is verified; native iPhone JSON serialization is still unproven.
+These files are proposed Cherri v2.3.0 inputs. The probes have passed their
+current structural checks in credential-free CI, but the two harmless alert
+builds were not byte-identical and deterministic output remains unresolved.
+No signed payload, install, or iPhone execution claim is made here. Probe 05
+established that JSON body literals are parsed as static JSON and cannot
+contain a bare runtime variable. Its narrow custom action definitions emit
+native Shortcut variable attachments for the assembled request body and
+nested capture. That plist structure is verified; native iPhone JSON
+serialization is still unproven.
 
 | Source                        | Purpose                                                                  | Evidence still required                                                             |
 | ----------------------------- | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
-| `01-alert.cherri`             | Harmless compiler/signer sample; no input, credential, or network        | CI compile and structural checks passed; HubSign returned an `AEA1` container; Apple signature validation and iPhone import/run remain |
+| `01-alert.cherri`             | Harmless compiler sample; no input, credential, or network               | CI compile and structural checks passed; Apple signature validation and iPhone import/run remain |
 | `02-input.cherri`             | Safari/Text Share Sheet metadata, saved input and type detection         | CI structure passed; native Safari and text runs remain                             |
 | `03-safari.cherri`             | Narrow custom JavaScript action with explicit saved webpage binding      | CI structure passed; correct behavior on iPhone remains                            |
 | Generated `04-capture.cherri` | Embed the maintained capture source as a rawtext literal                 | CI confirms exact source bytes; native capture remains                             |
@@ -32,6 +40,10 @@ Use `--python /absolute/path/to/python` when Python is not on PATH. The caller i
 
 Byte-reproducibility comparison remains a separate check because UUID derivation alone does not guarantee stable ordering of map-derived fields. This scaffold never produces an accepted complete `Upload to WHT` candidate. Routing/clipboard experiments follow the Safari and JSON compatibility proofs. `--sign` intentionally rejects every invocation; the one-off alert sample was signed outside this harness under a one-sample approval, which does not authorize signing another payload.
 
-The signed sample recorded in `toolchain.lock.json` contains no personal data, credentials, import question, network action, or WHT reference. The pinned Cherri v2.3.0 implementation sends the full serialized Shortcut and its name in a POST request to `https://hubsign.routinehub.services/sign`; private GitHub visibility does not cover that service. The alert-only sample was sent with explicit approval. Any later template or other payload requires its own approval before external signing.
+The pinned Cherri v2.3.0 implementation can serialize a reviewed Shortcut for
+the fixed HubSign provider; protected Actions performs the one-shot transfer
+only after the exact package and provenance checks pass. The source harness
+does not send, install, activate, or distribute a Shortcut. Any later payload
+requires the protected workflow's reviewed package and ambiguity guards.
 
 `inspect-shortcut.py --require-signed` checks only the `AEA1` container header. It does not decrypt the archive, validate an Apple signature, or establish iPhone acceptance.

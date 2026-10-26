@@ -90,7 +90,7 @@ deployment, production configuration, or current account-wide usage margin.
 | Exact signed candidate identity                         | `pass`      | SHA-256 is `19b4be2bd3c920ff6061e416d364bf53c8e2cd2d6161d0330a430dd0274b90cd`.                                                                             |
 | Bounded user-reported core device flows                 | `pass`      | Handoff records setup, Text/Safari, scoreboard/returned-link, unsupported-input, Cancel, new-save, readback, and repeat flows for this candidate.          |
 | Independent saved-result integrity                      | `pending`   | Current consistency and zero-write evidence are bounded; no pretest baseline, historical timestamp proof, exact phone request count, or native race proof. |
-| Protected operational signing workflow                  | `pending`   | The signing workflow and durable private-worker service contract are implemented with an automatic relevant-reviewed-`main` trigger, optional protected manual recovery, stable-operation and receipt safeguards; the protected environment/configuration remain unprovisioned, so no operational CI signing run or signed delivery is claimed. |
+| Protected operational signing workflow                  | `pending`   | The Actions-only workflow compiles/inspects through pinned CI, records a GitHub pending lease, sends one exact HubSign POST, and stores only AES-256-GCM encrypted intent/result artifacts with bounded expiry; private inputs and the protected configuration remain unprovisioned, so no operational CI signing run or signed delivery is claimed. The migrated `WHT_AMBIGUOUS_SIGNING_RECORD` permanently blocks the prior logical package even if wire bytes vary; ambiguous responses are permanent stops and expiry never authorizes a resend. |
 | Independently identified and hashed rollback reference  | `pending`   | Private backup is `SAVED` by user report; identifier/hash and independent byte verification are absent.                                                    |
 | Phase 5B source/toolchain handoff                       | `pending`   | Handoff document is prepared, but incomplete rollback and operational-signing gates keep accepted-baseline closeout pending.                               |
 
@@ -104,7 +104,7 @@ ledger:
 | Native edge-case matrix                                       | `waived`    | Explicitly waived by the user; no native test pass is implied.                     |
 | Native race/concurrency exercise                              | `waived`    | Explicitly waived by the user; backend tests do not become native race evidence.   |
 | General byte/semantic reproducibility                         | `waived`    | Bounded artifact comparisons do not become a general reproducibility claim.        |
-| Operational signing activation                                | `pending`   | The protected automatic/manual-recovery workflow is implemented but no operational CI signing run or signed delivery has been independently recorded.                  |
+| Operational signing activation                                | `pending`   | The protected Actions-only workflow is implemented but no operational CI signing run or signed delivery has been independently recorded; a lost signed response may not be recoverable.                  |
 | User-reported-only backup without independent identifier/hash | `pending`   | The private backup remains user-held and unverified; do not inspect or publish it. |
 
 ## Local recovery and rehearsal checks

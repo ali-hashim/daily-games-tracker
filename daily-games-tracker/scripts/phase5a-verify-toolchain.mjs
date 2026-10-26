@@ -52,7 +52,7 @@ for (const flag of lock.build?.flags ?? []) {
   expect(has(flag), `workflow is missing required compiler flag ${flag}`);
 }
 
-for (const action of ['checkout', 'setupGo', 'uploadArtifact']) {
+for (const action of ['checkout', 'setupGo']) {
   const entry = lock.actions?.[action];
   expect(entry?.repository && entry?.commit, `lock action ${action} is incomplete`);
   if (entry?.repository && entry?.commit) {
@@ -86,9 +86,10 @@ for (const line of compilerInvocations) {
   expect(flags.every(flag => lock.build.flags.includes(flag)), `compiler invocation includes an unlocked flag: ${line.trim()}`);
 }
 
-expect(has('permissions:\n  contents: read'), 'workflow must grant contents: read only');
+expect(has('permissions:\n  contents: read'), 'workflow must grant contents: read');
 expect(has('persist-credentials: false'), 'checkout must not persist credentials');
-expect(has('retention-days: 1'), 'unsigned artifacts must retain for one day');
+expect(!has('actions/upload-artifact@'), 'unsigned routine workflow must not upload artifacts');
+expect(has('unsigned Cherri outputs remain runner-temporary and are not public artifacts'), 'workflow must keep unsigned outputs runner-temporary');
 expect(has('timeout-minutes: 15'), 'build job must have a bounded timeout');
 expect(!has('--sign'), 'routine unsigned workflow must not invoke --sign');
 expect(!/\bsecrets\./i.test(workflow), 'routine unsigned workflow must not reference repository secrets');

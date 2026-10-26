@@ -5,36 +5,47 @@ import { verifySigningWorkflow } from '../phase5a-verify-signing-workflow.mjs';
 
 const workflow = await readFile(new URL('../../../.github/workflows/shortcut-sign-disabled.yml', import.meta.url), 'utf8');
 const lock = JSON.parse(await readFile(new URL('../../shortcut/cherri-migration/toolchain.lock.json', import.meta.url), 'utf8'));
-test('protected full-client workflow retains all boundaries', () => {
+
+test('protected Actions-only workflow retains all boundaries', () => {
   assert.equal(verifySigningWorkflow(workflow, lock), true);
 });
+
+const expression = '$' + '{{';
 const mutations = [
   ['automatic main trigger', '  push:\n    branches: [main]', '  removed-trigger:\n    branches: [main]'],
-  ['main/manual job guard', "github.event_name == 'workflow_dispatch'", "github.event_name == 'push'"],
   ['environment protection', 'environment: wht-shortcut-signing', 'environment: unprotected'],
   ['source allowlist', 'test "$REVIEWED_APPLICATION_COMMIT" = "$GITHUB_SHA"', 'true'],
   ['unset source stop', 'test "$REVIEWED_APPLICATION_COMMIT" !=', 'test "$REVIEWED_APPLICATION_COMMIT" ='],
-  ['reviewed commit secret', 'REVIEWED_APPLICATION_COMMIT: ${{ secrets.WHT_REVIEWED_APPLICATION_COMMIT }}', 'REVIEWED_APPLICATION_COMMIT: https://runtime.example.invalid'],
-  ['runtime origin secret', 'WHT_RUNTIME_ORIGIN: ${{ secrets.WHT_RUNTIME_ORIGIN }}', 'WHT_RUNTIME_ORIGIN: https://runtime.example.invalid'],
-  ['private receipt secret', 'WHT_SIGNING_RECEIPT_URL: ${{ secrets.WHT_SIGNING_RECEIPT_URL }}', 'WHT_SIGNING_RECEIPT_URL: https://private.example.invalid/receipt'],
-['reserved origin guard', 'assert host != "localhost" and not host.endswith((".invalid", ".example", ".test"))', 'assert True'],
+  ['reviewed commit secret', 'REVIEWED_APPLICATION_COMMIT: ' + expression + ' secrets.WHT_REVIEWED_APPLICATION_COMMIT }}', 'REVIEWED_APPLICATION_COMMIT: https://runtime.example.invalid'],
+  ['runtime origin secret', 'WHT_RUNTIME_ORIGIN: ' + expression + ' secrets.WHT_RUNTIME_ORIGIN }}', 'WHT_RUNTIME_ORIGIN: https://runtime.example.invalid'],
+  ['output encryption secret', 'WHT_SIGNING_OUTPUT_KEY: ' + expression + ' secrets.WHT_SIGNING_OUTPUT_KEY }}', 'WHT_SIGNING_OUTPUT_KEY: unset'],
+  ['migrated ambiguity secret', 'WHT_AMBIGUOUS_SIGNING_RECORD: ' + expression + ' secrets.WHT_AMBIGUOUS_SIGNING_RECORD }}', 'WHT_AMBIGUOUS_SIGNING_RECORD: unset'],
+  ['status permission', '  statuses: write', '  statuses: read'],
+  ['serialized protected run', 'cancel-in-progress: false', 'cancel-in-progress: true'],
+  ['reserved origin guard', 'assert host != "localhost" and not host.endswith((".invalid", ".example", ".test"))', 'assert True'],
   ['action pin', '11bd71901bbe5b1630ceea73d27597364c9af683', 'v4'],
+  ['stable status anchor', 'fetch-depth: 0', 'fetch-depth: 1'],
   ['Python assertion enforcement', 'PYTHONOPTIMIZE: "0"', 'PYTHONOPTIMIZE: "1"'],
   ['compiler checkout identity', 'test "$(git -C "$source_dir" rev-parse HEAD)" = "$CHERRI_COMMIT"', 'true'],
   ['module verification', 'go -C "$source_dir" mod verify', 'true'],
   ['nonreserved first build', '--require-nonreserved-origin --output "$RUNNER_TEMP/upload-first"', '--output "$RUNNER_TEMP/upload-first"'],
   ['nonreserved second build', '--require-nonreserved-origin --output "$RUNNER_TEMP/upload-second"', '--output "$RUNNER_TEMP/upload-second"'],
   ['fresh freeze', 'phase5a_upload_signing.py prepare', 'echo prepare'],
-  ['durable sign operation', '            sign', '            claim'],
-  ['runtime origin binding', '--runtime-origin "$WHT_RUNTIME_ORIGIN"', '--runtime-origin "https://runtime.example.invalid"'],
-  ['wire approval', '--expected-wire-sha256 "$wire_sha256"', ''],
-  ['manifest approval', '--expected-manifest-sha256 "$manifest_sha256"', ''],
-  ['private receipt persistence', '> "$RUNNER_TEMP/private-signing-receipt.json"', ''],
-  ['public artifact', 'actions/checkout@', 'actions/upload-artifact@'],
+  ['strict package validation', 'phase5a_upload_signing.py validate', 'echo validate'],
+  ['encrypted intent', 'phase5a_actions_signing.mjs prepare', 'echo prepare'],
+  ['direct HubSign send', 'phase5a_actions_signing.mjs send', 'echo send'],
+  ['encrypted result upload', 'name: ' + expression + ' steps.prepare.outputs.result_artifact }}', 'name: signed.shortcut'],
+  ['public package upload', 'path: ' + expression + ' steps.prepare.outputs.intent_path }}', 'path: ' + expression + ' runner.temp }}/upload-review-package'],
 ];
+
 for (const [name, before, after] of mutations) {
-  test(`refuses removed or changed ${name}`, () => {
+  test('refuses removed or changed ' + name, () => {
     assert.ok(workflow.includes(before));
     assert.throws(() => verifySigningWorkflow(workflow.replace(before, after), lock));
   });
 }
+
+test('workflow has no legacy service or plaintext payload configuration', () => {
+  assert.doesNotMatch(workflow, /private-signing-worker|WHT_SIGNING_RECEIPT_(URL|TOKEN)|phase5a_private_receipt/);
+  assert.match(workflow, /actions\/upload-artifact@[0-9a-f]{40}/);
+});

@@ -130,7 +130,20 @@ def build(compiler: Path, output: Path, origin: str | None = None, *, allow_fixt
     inspection = inspect(workflow, runtime_origin=origin)
     artifacts[0].write_bytes(plistlib.dumps(workflow,fmt=plistlib.FMT_BINARY))
     (output/'toolchain.lock.json').write_bytes(LOCK.read_bytes())
-    manifest = {'schemaVersion':1,'status':'unsigned full client compiled; native acceptance pending','sourceSha256':digest(SOURCE.read_bytes()),'renderedSourceSha256':digest(source.read_bytes()),'captureSha256':digest(CAPTURE.read_bytes()),'lockSha256':digest(LOCK.read_bytes()),'compilerSha256':digest(compiler.read_bytes()),'compilerCommit':lock['compiler']['commit'],'goVersion':lock['go']['version'],'flags':flags,'rawArtifactSha256':digest(raw),'artifactSha256':digest(artifacts[0].read_bytes()),'normalizerSha256':digest(Path(__file__).read_bytes()),'inspectorSha256':digest((Path(__file__).parent/'phase5a_inspect_upload.py').read_bytes()),'nativeContractSha256':digest((MIGRATION/'build/upload-native-contract.json').read_bytes()),'runtimeOrigin':'injected at build time; value intentionally omitted','transformation':'runtime origin injected only in runner temporary source; explicit actual Import Question action index; editor note after deviceCode Text; deterministic unique control groups from native nesting; each menu options rebuilt from its own native branch titles; action order preserved','inspection':inspection,'nativeExecution':'not performed','signing':'not performed','reproducibility':'not established; action/control-flow arrays are never sorted'}
+    semantic_actions = {}
+    for name in ('checkout', 'setupGo', 'uploadArtifact'):
+        pin = lock.get('actions', {}).get(name)
+        assert isinstance(pin, dict) and all(isinstance(pin.get(key), str) and pin[key] for key in ('repository', 'version', 'commit'))
+        semantic_actions[name] = {key: pin[key] for key in ('repository', 'version', 'commit')}
+    semantic_toolchain = {
+        'schemaVersion': 1,
+        'compiler': {key: lock['compiler'][key] for key in ('name', 'version', 'commit')},
+        'go': {'version': lock['go']['version']},
+        'runner': lock['build']['runner'],
+        'flags': list(flags),
+        'actions': semantic_actions,
+    }
+    manifest = {'schemaVersion':1,'status':'unsigned full client compiled; native acceptance pending','sourceSha256':digest(SOURCE.read_bytes()),'renderedSourceSha256':digest(source.read_bytes()),'captureSha256':digest(CAPTURE.read_bytes()),'lockSha256':digest(LOCK.read_bytes()),'compilerSha256':digest(compiler.read_bytes()),'compilerCommit':lock['compiler']['commit'],'goVersion':lock['go']['version'],'flags':flags,'toolchainSemantic':semantic_toolchain,'rawArtifactSha256':digest(raw),'artifactSha256':digest(artifacts[0].read_bytes()),'normalizerSha256':digest(Path(__file__).read_bytes()),'inspectorSha256':digest((Path(__file__).parent/'phase5a_inspect_upload.py').read_bytes()),'nativeContractSha256':digest((MIGRATION/'build/upload-native-contract.json').read_bytes()),'runtimeOrigin':'injected at build time; value intentionally omitted','transformation':'runtime origin injected only in runner temporary source; explicit actual Import Question action index; editor note after deviceCode Text; deterministic unique control groups from native nesting; each menu options rebuilt from its own native branch titles; action order preserved','inspection':inspection,'nativeExecution':'not performed','signing':'not performed','reproducibility':'not established; action/control-flow arrays are never sorted'}
     (output/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n',encoding='utf-8')
     return artifacts[0]
 
