@@ -5,7 +5,7 @@ The authoritative workflow is
 ledger reference. The protected job runs automatically for relevant pushes to
 `main` and offers a manual `workflow_dispatch` recovery path. It requires the
 `wht-shortcut-signing` environment, has no pull request trigger, and uploads
-only encrypted private intent/result envelopes. Unsigned packages and signed
+only encrypted private intent, provider-outcome, and result envelopes. Unsigned packages and signed
 Shortcut bytes stay in runner temporary storage unless they are inside those
 authenticated encrypted envelopes.
 
@@ -31,6 +31,12 @@ The protected environment requires these private values:
   encrypted with the output key, containing the private migrated ambiguity
   record. It includes the prior logical source identity and wire digest, and
   may include its target hash. The record is required before any transfer.
+* `WHT_AMBIGUOUS_RECOVERY_AUTH`: an optional, protected base64 JSON
+  authorization for the single manually approved recovery run. Its fields
+  bind the run ID and first attempt to the reviewed source commit, semantic
+  logical identity, protected target hash, migrated wire digest, and derived
+  operation key. It is ignored on automatic pushes and is never a reason to
+  clear or rewrite the migrated record.
 
 The private record plaintext has the bounded shape
 `{"schemaVersion":1,"status":"ambiguous","logicalSourceIdentity":"<sha256>","wireSha256":"<sha256>"}`;
@@ -50,10 +56,15 @@ derived privately from the reviewed historical build and its preserved wire
 evidence; callers cannot supply an arbitrary logical identity to clear it.
 
 The environment also needs an administrator-configured required reviewer. A
-relevant push starts automatically after that protected approval. Manual
-recovery additionally requires `confirm_external_signing=true` and the
-reviewed-commit secret to equal the run SHA. The workflow does not contact a
-separate receipt service or accept a configurable signing endpoint.
+relevant push starts automatically after that protected approval. The migrated
+record blocks the old logical package by default. A bounded exception can be
+requested only by a manually dispatched run with both
+`confirm_external_signing=true` and `confirm_ambiguous_recovery=true`, the
+required reviewer approval, `GITHUB_RUN_ATTEMPT=1`, and a recovery secret whose
+authenticated fields match the exact run and package. The existing pending
+status lease is still authoritative: once written, it blocks every rerun and
+the workflow has no retry path. The workflow does not contact a separate
+receipt service or accept a configurable signing endpoint.
 
 ## Actions-only state machine
 
@@ -92,6 +103,15 @@ response and `AEA1` container, and encrypts the signed bytes together with
 their hashes before the result artifact is uploaded. The complete step marks
 the same status `success`. Recovery verifies the authenticated envelope and
 signed-byte hash locally; it never contacts HubSign.
+
+If HubSign returns a non-accepted response, returns malformed signed bytes, or
+the transport fails after the request is started, the send step writes an
+authenticated encrypted provider-outcome envelope before failing. The envelope
+contains the operation hashes, response status/content type when available,
+body length and digest, and the bounded response body only inside the encrypted
+envelope; it never prints the body or uploads plaintext. A protected cleanup
+step uploads that ciphertext for diagnosis, while the pending status remains
+ambiguous and no retry is enabled.
 
 If the runner loses the response after the provider request, the pending
 status remains ambiguous forever. Artifact retention or a later commit cannot

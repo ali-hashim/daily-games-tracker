@@ -388,6 +388,98 @@ test('prepare and send use the frozen package after a complete status-ledger rea
   }
 });
 
+test('send encrypts provider response metadata before failing without exposing the body', async () => {
+  const packageInfo = await makePackage();
+  const intentPath = join(packageInfo.root, 'intent.enc');
+  const outcomePath = join(packageInfo.root, 'outcome.enc');
+  const outputKey = OUTPUT_KEY;
+  const originalEnv = { ...process.env };
+  const originalFetch = globalThis.fetch;
+  let providerCalls = 0;
+  process.env = {
+    ...process.env,
+    GITHUB_TOKEN: 'synthetic-token',
+    GITHUB_API_URL: 'https://api.github.test',
+    GITHUB_REPOSITORY: 'owner/repo',
+    WHT_SIGNING_STATUS_ANCHOR: '1'.repeat(40),
+    WHT_SIGNING_OUTPUT_KEY: outputKey,
+    WHT_AMBIGUOUS_SIGNING_RECORD: encodeMigratedAmbiguityRecord({ schemaVersion: 1, status: 'ambiguous', logicalSourceIdentity: '0'.repeat(64), wireSha256: 'f'.repeat(64) }, outputKey),
+    RUNNER_TEMP: packageInfo.root,
+  };
+  globalThis.fetch = async (url, options = {}) => {
+    const text = String(url);
+    if (text.startsWith('https://api.github.test')) {
+      if (options.method === 'GET') return responseJson(statusPage('1'.repeat(40), [], 0));
+      const body = JSON.parse(options.body);
+      return responseJson({ state: body.state, context: body.context, id: 8 });
+    }
+    providerCalls += 1;
+    return new Response('provider rejection body', {
+      status: 422,
+      headers: { 'content-type': 'application/json' },
+    });
+  };
+  try {
+    await prepareSigning({ package: packageInfo.root, sourceCommit: SOURCE_COMMIT, runtimeOrigin: 'https://ci-fixture.example.com', manifestSha: packageInfo.manifestSha, wireSha: packageInfo.wireSha, outputKey, intentPath });
+    await assert.rejects(() => sendSigning({ package: packageInfo.root, intentPath, resultPath: join(packageInfo.root, 'result.enc'), outcomePath, outputKey }), /ambiguous/);
+    const outcomeEnvelope = JSON.parse(await readFile(outcomePath, 'utf8'));
+    const outcome = JSON.parse(decryptPrivateEnvelope(outcomeEnvelope, outputKey).toString('utf8'));
+    assert.equal(outcome.status, 'ambiguous');
+    assert.equal(outcome.providerStatus, 422);
+    assert.equal(outcome.providerContentType, 'application/json');
+    assert.equal(outcome.providerBodyLength, Buffer.byteLength('provider rejection body'));
+    assert.match(outcome.providerBodySha256, /^[0-9a-f]{64}$/);
+    assert.equal(Object.hasOwn(outcome, 'providerBody'), false);
+    assert.equal(providerCalls, 1);
+  } finally {
+    process.env = originalEnv;
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('send encrypts a transport-failure marker without retrying', async () => {
+  const packageInfo = await makePackage();
+  const intentPath = join(packageInfo.root, 'intent.enc');
+  const outcomePath = join(packageInfo.root, 'outcome.enc');
+  const outputKey = OUTPUT_KEY;
+  const originalEnv = { ...process.env };
+  const originalFetch = globalThis.fetch;
+  let providerCalls = 0;
+  process.env = {
+    ...process.env,
+    GITHUB_TOKEN: 'synthetic-token',
+    GITHUB_API_URL: 'https://api.github.test',
+    GITHUB_REPOSITORY: 'owner/repo',
+    WHT_SIGNING_STATUS_ANCHOR: '1'.repeat(40),
+    WHT_SIGNING_OUTPUT_KEY: outputKey,
+    WHT_AMBIGUOUS_SIGNING_RECORD: encodeMigratedAmbiguityRecord({ schemaVersion: 1, status: 'ambiguous', logicalSourceIdentity: '0'.repeat(64), wireSha256: 'f'.repeat(64) }, outputKey),
+    RUNNER_TEMP: packageInfo.root,
+  };
+  globalThis.fetch = async (url, options = {}) => {
+    const text = String(url);
+    if (text.startsWith('https://api.github.test')) {
+      if (options.method === 'GET') return responseJson(statusPage('1'.repeat(40), [], 0));
+      const body = JSON.parse(options.body);
+      return responseJson({ state: body.state, context: body.context, id: 8 });
+    }
+    providerCalls += 1;
+    throw new Error('synthetic transport failure');
+  };
+  try {
+    await prepareSigning({ package: packageInfo.root, sourceCommit: SOURCE_COMMIT, runtimeOrigin: 'https://ci-fixture.example.com', manifestSha: packageInfo.manifestSha, wireSha: packageInfo.wireSha, outputKey, intentPath });
+    await assert.rejects(() => sendSigning({ package: packageInfo.root, intentPath, resultPath: join(packageInfo.root, 'result.enc'), outcomePath, outputKey }), /ambiguous/);
+    const outcomeEnvelope = JSON.parse(await readFile(outcomePath, 'utf8'));
+    const outcome = JSON.parse(decryptPrivateEnvelope(outcomeEnvelope, outputKey).toString('utf8'));
+    assert.equal(outcome.status, 'ambiguous');
+    assert.equal(outcome.transportFailure, true);
+    assert.equal(outcome.providerStatus, null);
+    assert.equal(providerCalls, 1);
+  } finally {
+    process.env = originalEnv;
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test('migrated ambiguity record blocks wire variance for the same logical package', () => {
   const sourceIdentity = logicalSourceIdentity(BUILD_MANIFEST);
   const record = {
@@ -449,6 +541,133 @@ test('prepare blocks the migrated logical package before status or provider call
   }
 });
 
+test('migrated ambiguity recovery is default-off, run-bound, and one-use through the pending ledger', async (t) => {
+  const scenarios = [
+    ['automatic execution ignores an authorization secret', { requested: false, runId: 'run-1', runAttempt: 1, authRunId: 'run-1', authAttempt: 1 }],
+    ['mismatched run id is rejected', { requested: true, runId: 'run-1', runAttempt: 1, authRunId: 'run-2', authAttempt: 1 }],
+    ['attempt two is rejected', { requested: true, runId: 'run-1', runAttempt: 2, authRunId: 'run-1', authAttempt: 2 }],
+    ['other logical package is rejected', { requested: true, runId: 'run-1', runAttempt: 1, authRunId: 'run-1', authAttempt: 1, authIdentity: '0'.repeat(64) }],
+    ['target mismatch is rejected', { requested: true, runId: 'run-1', runAttempt: 1, authRunId: 'run-1', authAttempt: 1, authTarget: 'b'.repeat(64) }],
+  ];
+  for (const [name, scenario] of scenarios) {
+    await t.test(name, async () => {
+      const packageInfo = await makePackage();
+      const intentPath = join(packageInfo.root, 'intent.enc');
+      const outputKey = OUTPUT_KEY;
+      const origin = 'https://ci-fixture.example.com';
+      const targetSha = createSha256(Buffer.from(origin));
+      const sourceIdentity = logicalSourceIdentity(BUILD_MANIFEST);
+      const key = operationKey(sourceIdentity, targetSha);
+      const auth = Buffer.from(JSON.stringify({
+        schemaVersion: 1,
+        runId: scenario.authRunId,
+        runAttempt: scenario.authAttempt,
+        sourceCommit: SOURCE_COMMIT,
+        logicalSourceIdentity: scenario.authIdentity || sourceIdentity,
+        targetOriginSha256: scenario.authTarget || targetSha,
+        operationKey: key,
+        migratedWireSha256: 'f'.repeat(64),
+      })).toString('base64');
+      const originalEnv = { ...process.env };
+      const originalFetch = globalThis.fetch;
+      let calls = 0;
+      process.env = {
+        ...process.env,
+        GITHUB_TOKEN: 'synthetic-token',
+        GITHUB_API_URL: 'https://api.github.test',
+        GITHUB_REPOSITORY: 'owner/repo',
+        GITHUB_RUN_ID: scenario.runId,
+        GITHUB_RUN_ATTEMPT: String(scenario.runAttempt),
+        WHT_SIGNING_STATUS_ANCHOR: '1'.repeat(40),
+        WHT_SIGNING_OUTPUT_KEY: outputKey,
+        WHT_AMBIGUOUS_SIGNING_RECORD: encodeMigratedAmbiguityRecord({ schemaVersion: 1, status: 'ambiguous', logicalSourceIdentity: sourceIdentity, wireSha256: 'f'.repeat(64) }, outputKey),
+        RUNNER_TEMP: packageInfo.root,
+      };
+      globalThis.fetch = async () => {
+        calls += 1;
+        throw new Error('recovery guard must stop before status or provider calls');
+      };
+      try {
+        await assert.rejects(() => prepareSigning({
+          package: packageInfo.root,
+          sourceCommit: SOURCE_COMMIT,
+          runtimeOrigin: origin,
+          manifestSha: packageInfo.manifestSha,
+          wireSha: packageInfo.wireSha,
+          outputKey,
+          intentPath,
+          recoveryRequested: scenario.requested,
+          recoveryAuthorization: auth,
+        }), /known ambiguous logical package|recovery authorization/);
+        assert.equal(calls, 0);
+      } finally {
+        process.env = originalEnv;
+        globalThis.fetch = originalFetch;
+      }
+    });
+  }
+
+  await t.test('exact approved run makes one provider call and pending status blocks its rerun', async () => {
+    const packageInfo = await makePackage();
+    const intentPath = join(packageInfo.root, 'intent.enc');
+    const resultPath = join(packageInfo.root, 'result.enc');
+    const outcomePath = join(packageInfo.root, 'outcome.enc');
+    const outputKey = OUTPUT_KEY;
+    const origin = 'https://ci-fixture.example.com';
+    const targetSha = createSha256(Buffer.from(origin));
+    const sourceIdentity = logicalSourceIdentity(BUILD_MANIFEST);
+    const key = operationKey(sourceIdentity, targetSha);
+    const auth = Buffer.from(JSON.stringify({
+      schemaVersion: 1,
+      runId: 'run-1',
+      runAttempt: 1,
+      sourceCommit: SOURCE_COMMIT,
+      logicalSourceIdentity: sourceIdentity,
+      targetOriginSha256: targetSha,
+      operationKey: key,
+      migratedWireSha256: 'f'.repeat(64),
+    })).toString('base64');
+    const originalEnv = { ...process.env };
+    const originalFetch = globalThis.fetch;
+    const ledger = [];
+    let providerCalls = 0;
+    process.env = {
+      ...process.env,
+      GITHUB_TOKEN: 'synthetic-token',
+      GITHUB_API_URL: 'https://api.github.test',
+      GITHUB_REPOSITORY: 'owner/repo',
+      GITHUB_RUN_ID: 'run-1',
+      GITHUB_RUN_ATTEMPT: '1',
+      WHT_SIGNING_STATUS_ANCHOR: '1'.repeat(40),
+      WHT_SIGNING_OUTPUT_KEY: outputKey,
+      WHT_AMBIGUOUS_SIGNING_RECORD: encodeMigratedAmbiguityRecord({ schemaVersion: 1, status: 'ambiguous', logicalSourceIdentity: sourceIdentity, wireSha256: 'f'.repeat(64) }, outputKey),
+      RUNNER_TEMP: packageInfo.root,
+    };
+    globalThis.fetch = async (url, options = {}) => {
+      const text = String(url);
+      if (text.startsWith('https://api.github.test')) {
+        if (options.method === 'GET') return responseJson(statusPage('1'.repeat(40), ledger, ledger.length));
+        const body = JSON.parse(options.body);
+        const status = { id: ledger.length + 1, context: body.context, state: body.state };
+        ledger.push(status);
+        return responseJson(status);
+      }
+      providerCalls += 1;
+      return new Response(Buffer.from('AEA1synthetic-signed'), { status: 200, headers: { 'content-type': 'application/octet-stream' } });
+    };
+    try {
+      await prepareSigning({ package: packageInfo.root, sourceCommit: SOURCE_COMMIT, runtimeOrigin: origin, manifestSha: packageInfo.manifestSha, wireSha: packageInfo.wireSha, outputKey, intentPath, recoveryRequested: true, recoveryAuthorization: auth });
+      await sendSigning({ package: packageInfo.root, intentPath, resultPath, outcomePath, outputKey });
+      assert.equal(providerCalls, 1);
+      await assert.rejects(() => prepareSigning({ package: packageInfo.root, sourceCommit: SOURCE_COMMIT, runtimeOrigin: origin, manifestSha: packageInfo.manifestSha, wireSha: packageInfo.wireSha, outputKey, intentPath: join(packageInfo.root, 'rerun-intent.enc'), recoveryRequested: true, recoveryAuthorization: auth }), /existing signing status/);
+      assert.equal(providerCalls, 1);
+    } finally {
+      process.env = originalEnv;
+      globalThis.fetch = originalFetch;
+    }
+  });
+});
+
 test('signed response validation requires an AEA1 container', () => {
   assert.deepEqual(validateSignedShortcut(Buffer.from('AEA1synthetic')), { valid: true });
   assert.throws(() => validateSignedShortcut(Buffer.from('not-signed')), /AEA1/);
@@ -461,6 +680,7 @@ test('HubSign transport is one fixed direct POST with no credentials or redirect
   assert.equal(options.redirect, 'manual');
   assert.equal(options.headers['content-type'], 'application/json');
   assert.equal(options.headers['content-length'], String(wire.length));
+  assert.equal(options.headers['user-agent'], 'cherri/v2.3.0');
   assert.equal(options.body, wire);
   assert.equal(Object.hasOwn(options.headers, 'authorization'), false);
 });
@@ -468,6 +688,8 @@ test('HubSign transport is one fixed direct POST with no credentials or redirect
 test('unknown, redirected, or non-binary provider responses are permanently unacceptable', () => {
   assert.equal(hubSignResponseAccepted(200, 'application/octet-stream'), true);
   assert.equal(hubSignResponseAccepted(200, 'application/octet-stream; charset=binary'), true);
+  assert.equal(hubSignResponseAccepted(200, 'application/x-plist'), true);
+  assert.equal(hubSignResponseAccepted(200, 'application/x-apple-shortcut'), true);
   assert.equal(hubSignResponseAccepted(202, 'application/octet-stream'), false);
   assert.equal(hubSignResponseAccepted(503, 'application/octet-stream'), false);
   assert.equal(hubSignResponseAccepted(200, 'text/plain'), false);
