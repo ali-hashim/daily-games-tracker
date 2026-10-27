@@ -11,14 +11,16 @@ const fixture = () => ({
   context: {runId: '55', sha, ref: 'refs/heads/main', attempt: '1'},
 });
 
-test('production accepts only an exact approved main run with a main-only environment', async () => {
+test('production accepts an exact current main run with a main-only environment and no required reviewers', async () => {
   const { verifyApproval } = await import(moduleUrl);
   const production = () => {
     const input = fixture();
     input.environment.name = 'wht-shortcut-signing';
+    input.environment.protection_rules = [];
     input.environment.deployment_branch_policy = { protected_branches: false, custom_branch_policies: true };
-    input.approvals[0].environments[0].name = 'wht-shortcut-signing';
+    delete input.approvals;
     input.branchPolicies = { total_count: 1, branch_policies: [{ name: 'main', type: 'branch' }] };
+    input.mainBranch = { protected: true, commit: { sha } };
     input.context.event = 'workflow_dispatch';
     input.mode = 'production';
     return input;
@@ -29,18 +31,14 @@ test('production accepts only an exact approved main run with a main-only enviro
   assert.equal(verifyApproval(pushed), true);
   for (const mutate of [
     x => { x.environment.can_admins_bypass = true; },
-    x => { x.environment.protection_rules = []; },
-    x => { x.environment.protection_rules[0].reviewers[0].type = 'Team'; },
-    x => { x.environment.protection_rules[0].reviewers[0].reviewer.id = 43; },
+    x => { x.environment.protection_rules = [{ type: 'required_reviewers', reviewers: [{ type: 'User', reviewer: { id: 42 } }] }]; },
     x => { x.environment.deployment_branch_policy.custom_branch_policies = false; },
     x => { x.branchPolicies.branch_policies.push({name: '*', type: 'branch'}); x.branchPolicies.total_count = 2; },
     x => { x.branchPolicies.total_count = 2; },
     x => { x.branchPolicies.branch_policies[0].type = 'tag'; },
-    x => { x.approvals[0].comment = 'reviewed wrong'; },
-    x => { x.approvals[0].state = 'rejected'; },
-    x => { x.approvals[0].environments[0].id = 11; },
-    x => { x.approvals = []; },
     x => { x.run.head_sha = '0'.repeat(40); },
+    x => { x.mainBranch.protected = false; },
+    x => { x.mainBranch.commit.sha = '0'.repeat(40); },
     x => { x.run.id = 56; },
     x => { x.run.run_attempt = 2; },
     x => { x.context.attempt = '2'; },

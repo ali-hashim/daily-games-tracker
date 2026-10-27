@@ -58,18 +58,19 @@ metadata cannot create a new logical operation. A migrated ambiguity record is
 derived privately from the reviewed historical build and its preserved wire
 evidence; callers cannot supply an arbitrary logical identity to clear it.
 
-The environment also needs an administrator-configured individual required
-reviewer, administrator bypass disabled, and a custom deployment branch policy
-allowing only `main`. The job checks these settings through the GitHub API
-before building and fails closed on absent, malformed, or inaccessible evidence.
-The reviewer must approve the first attempt with the exact comment
-`reviewed <full-commit-sha>`, using the run's reviewed commit. Push and manual
-runs both require this approval; the job also verifies checkout identity before
-building. A relevant push starts automatically after that
-protected approval. The migrated record permanently blocks the exact old wire.
-For a different wire, a bounded exception can be requested only by a manually
-dispatched run with both `confirm_external_signing=true` and
-`confirm_ambiguous_recovery=true`, the required reviewer approval, and
+The production environment must have administrator bypass disabled, a custom
+deployment branch policy allowing only `main`, and no `required_reviewers`
+protection rule. Protect `main` with pull requests and administrator bypass
+disabled; zero human approvals are needed for a PR to merge. Before building,
+the job checks the run identity, verifies the run SHA equals the current `main`
+tip, and confirms GitHub reports `main` as protected. It also checks the exact
+environment and main-only deployment policy through the GitHub API. Missing,
+stale, malformed, or inaccessible evidence fails closed. The user's standing
+authorization applies to eligible pushes and confirmed manual dispatches;
+production signing does not wait for a per-run environment approval. The
+migrated record permanently blocks the exact old wire. For a different wire,
+a bounded exception can be requested only by a manually dispatched run with
+both `confirm_external_signing=true` and `confirm_ambiguous_recovery=true`, and
 `GITHUB_RUN_ATTEMPT=1`. The authorization must either exactly bind the current
 run and package, or provide successful prior-run proof for a legacy migrated
 record without `targetOriginSha256`, as detailed below. The existing pending
@@ -77,14 +78,15 @@ status lease is still authoritative: once written, it blocks every rerun and
 the workflow has no retry path. The workflow does not contact a separate
 receipt service or accept a configurable signing endpoint.
 
-### Approving a signing run
+### Production signing authorization
 
-For each intended signing run, review the exact `main` commit and its signing
-inputs. Compare the run's displayed SHA with the reviewed SHA, then approve
-its protected environment job with `reviewed <full-commit-sha>`. This can be
-done in GitHub without a development machine or a separately maintained commit
-secret. Approval does not bypass the package validation, ledger checks, or the
-separate authorization required for an ambiguous recovery.
+The user has granted standing authorization for eligible production pushes
+and exact manual dispatches. No per-run approval comment or GitHub environment
+review is required. For manual dispatch, select `main` and set
+`confirm_external_signing=true`. Production still checks that the run SHA is
+the current `main` tip and that `main` is protected. Package validation, the
+status lease, and the separate two-input authorization for ambiguous recovery
+remain required.
 
 The separate manual `shortcut-approval-rehearsal.yml` workflow is a read-only
 experiment. It never builds or signs a Shortcut, contacts HubSign, or uses the
@@ -95,20 +97,21 @@ disabled, and main-only deployment policy. Dispatch it on the reviewed main
 commit; the configured reviewer must approve with the exact comment
 `reviewed <full-commit-sha>`. The job rejects reruns, missing or mismatched
 approval, a different reviewer or environment, and enabled administrator
-bypass. It requests only Actions and contents read permissions. The production
-job separately checks the exact-commit approval and its main-only branch policy.
+bypass. It requests only Actions and contents read permissions. This
+rehearsal's manual review does not gate production signing.
 
-To prove the production environment's actual protection and Actions-token API
-access without signing, use `shortcut-production-approval-proof.yml` after the
-workflow and verifier have been reviewed and published. First configure the
-production environment with administrator bypass disabled, an individual
-required reviewer, and a custom branch policy containing only `main`. Dispatch
-the proof on the reviewed `main` commit. The configured reviewer approves its
-first attempt with `reviewed <full-commit-sha>` for that exact run. The job
-uses the production verifier and read-only token permissions; it does not read
-signing secrets, build packages, write a status, contact HubSign, or invoke the
-signing workflow. Inspect the job result before drawing conclusions. A passing
-proof does not itself authorize a signing run.
+To verify the production environment settings and Actions-token API access
+without signing, use `shortcut-production-approval-proof.yml` after the
+workflow and verifier have been reviewed and published. Configure the
+production environment with administrator bypass disabled, no required
+reviewer, and a custom branch policy containing only `main`; protect `main` as
+described above. Dispatch the proof from the current `main` tip. The job checks
+the exact run SHA and branch, the current protected `main` tip, the production
+environment, and its branch policy; it does not read signing secrets, build
+packages, write a status, contact HubSign, or invoke the signing workflow.
+Inspect the job result before drawing conclusions. A passing proof checks the
+standing authorization boundary; it does not itself perform or authorize a
+signing transfer.
 
 ## Actions-only state machine
 
@@ -140,8 +143,7 @@ For a legacy migrated record that has no `targetOriginSha256`, a prior-run
 authorization can serve as evidence that the old ambiguous operation already
 completed successfully. This exception still requires a manual dispatch with
 both `confirm_external_signing=true` and `confirm_ambiguous_recovery=true`,
-approval by the protected reviewer for the current reviewed commit, and
-`GITHUB_RUN_ATTEMPT=1`. The authorization must name a different, prior run; its
+and `GITHUB_RUN_ATTEMPT=1`. The authorization must name a different, prior run; its
 logical source identity must match both the migrated record and current
 package; its migrated wire digest must match the record; and its operation key
 must recompute from that identity and its own prior target hash. The prior
@@ -149,8 +151,8 @@ target hash must differ from the current target, and the status ledger must
 show `success` for that prior operation key. The current operation key must
 have no status, and the current package's wire digest must differ from the
 migrated wire digest. Missing, pending, failed, or mismatched prior evidence
-blocks preparation. This proof does not bypass current-run reviewer approval,
-the current-target status check, or the permanent old-wire block.
+blocks preparation. This proof does not bypass the production authorization
+checks, the current-target status check, or the permanent old-wire block.
 
 The status read uses the combined-status endpoint with `per_page=100` and
 walks every page. It requires the returned anchor SHA, total count, page shape,

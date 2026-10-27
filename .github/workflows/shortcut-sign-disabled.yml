@@ -101,7 +101,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Verify exact protected environment approval
+      - name: Verify standing protected production authorization
         run: node daily-games-tracker/scripts/phase5a-approval-rehearsal.mjs --production
 
       - name: Establish stable protected status anchor

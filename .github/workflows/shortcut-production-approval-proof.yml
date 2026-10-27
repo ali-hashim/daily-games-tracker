@@ -1,4 +1,4 @@
-name: Production signing approval proof (no signing)
+name: Production signing authorization proof (no signing)
 on:
   workflow_dispatch:
 permissions:
@@ -16,7 +16,7 @@ jobs:
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
-      - name: Verify production approval without signing
+      - name: Verify standing production authorization without signing
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: node daily-games-tracker/scripts/phase5a-approval-rehearsal.mjs --production
