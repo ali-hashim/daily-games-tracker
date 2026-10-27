@@ -331,6 +331,35 @@ class UploadContractTests(unittest.TestCase):
                 manifest_path.write_text(json.dumps(manifest),encoding='utf-8')
                 with self.assertRaises(AssertionError): s.freeze(root/'build',root/'rejected',runtime_origin=TEST_RUNTIME_ORIGIN)
 
+    def test_prepare_cli_uses_explicit_origin_without_environment_fallback(self):
+        with tempfile.TemporaryDirectory(dir=TEST_TMP) as directory:
+            root = Path(directory)
+            self.package(root)
+            output = root / 'prepared-cli'
+            env = dict(b.os.environ)
+            env.pop('WHT_RUNTIME_ORIGIN', None)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(Path(s.__file__).resolve()),
+                    'prepare',
+                    '--build-directory',
+                    str(root / 'build'),
+                    '--output',
+                    str(output),
+                    '--runtime-origin',
+                    TEST_RUNTIME_ORIGIN,
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+                env=env,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            prepared = json.loads((output / 'approval-manifest.json').read_text(encoding='utf-8'))
+            self.assertEqual(prepared['signing'], 'not performed')
+            self.assertEqual(prepared['transfer'], 'not performed')
+
     def test_wrong_approved_hashes_stop_before_protected_transfer(self):
         with tempfile.TemporaryDirectory(dir=TEST_TMP) as directory:
             root=Path(directory);package,info=self.package(root)
