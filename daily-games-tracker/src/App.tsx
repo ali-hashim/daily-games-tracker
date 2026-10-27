@@ -41,7 +41,13 @@ function PacificDate({ iso }: { iso?: string }) {
 
 // eslint-disable-next-line react-refresh/only-export-components -- exported for route classification tests
 export function getPage(pathname = window.location.pathname): Page {
-  if (pathname === "/user" || pathname === "/user/" || pathname === "/login" || pathname === "/login/") return "user";
+  if (
+    pathname === "/user" ||
+    pathname === "/user/" ||
+    pathname === "/login" ||
+    pathname === "/login/"
+  )
+    return "user";
   if (pathname === "/daily") return "daily";
   if (pathname.startsWith("/daily/")) return "daily";
   if (pathname === "/all-time" || pathname === "/all-time/") return "all-time";

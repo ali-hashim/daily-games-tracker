@@ -21,7 +21,7 @@ export function logRequestFailure({ requestId, request, error }: RequestFailure)
     level: "error",
     event: "request_failed",
     request_id: requestId,
-    method: request.method,
+    method: safeMethod(request.method),
     path: redactedPathname(url.pathname),
     error_type: error instanceof Error ? "Error" : "UnknownError",
   };
@@ -39,7 +39,7 @@ export function logAdminAccessDenied({
     level: "warn",
     event: "admin_access_denied",
     request_id: requestId,
-    method: request.method,
+    method: safeMethod(request.method),
     path: redactedPathname(new URL(request.url).pathname),
     reason,
     assertion_present: assertionPresent,
@@ -49,5 +49,47 @@ export function logAdminAccessDenied({
 }
 
 function redactedPathname(pathname: string): string {
-  return pathname.replace(/^(\/api)?\/register\/[^/]+/, "$1/register/[redacted]");
+  const registration = /^(\/api)?\/register\/[^/]+(\/redeem)?$/.exec(pathname);
+  if (registration) return `${registration[1] ?? ""}/register/[redacted]${registration[2] ?? ""}`;
+  if (SAFE_PATHS.has(pathname)) return pathname;
+  return "/[redacted]";
+}
+
+const SAFE_PATHS = new Set([
+  "/",
+  "/user",
+  "/login",
+  "/admin",
+  "/api",
+  "/api/health",
+  "/api/games",
+  "/api/import/validate",
+  "/api/import/submit",
+  "/api/user/stats",
+  "/api/auth/me",
+  "/api/auth/logout",
+  "/api/auth/device/start",
+  "/api/auth/device/status",
+  "/api/auth/device/approve",
+  "/api/auth/device/complete",
+  "/api/leaderboards/daily",
+  "/api/leaderboards/all-time",
+  "/api/leaderboards/copy",
+  "/api/admin",
+  "/api/admin/me",
+  "/api/admin/dashboard",
+  "/api/admin/players",
+  "/api/admin/invitations",
+  "/api/admin/devices",
+  "/api/admin/sessions",
+  "/api/admin/submissions",
+  "/api/admin/submissions/manual",
+  "/api/admin/audits",
+  "/api/admin/audit",
+]);
+
+function safeMethod(method: string): string {
+  return ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"].includes(method)
+    ? method
+    : "OTHER";
 }

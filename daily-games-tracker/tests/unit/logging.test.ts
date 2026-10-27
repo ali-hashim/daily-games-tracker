@@ -4,6 +4,47 @@ import { logAdminAccessDenied, logRequestFailure } from "../../functions/_lib/lo
 afterEach(() => vi.restoreAllMocks());
 
 describe("redacted request diagnostics", () => {
+  it("does not log an untrusted custom HTTP method", () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    logRequestFailure({
+      requestId: "req_safe",
+      request: new Request("https://wht.test/api/health", { method: "DEVICE-SECRET" }),
+      error: new Error("private"),
+    });
+    expect(String(spy.mock.calls[0][0])).not.toContain("DEVICE-SECRET");
+  });
+
+  it.each([
+    "/admin/raw-capture",
+    "/api/admin/players/device-code/devices/invite",
+    "/api/register/private-invite/redeem/session-cookie",
+    "/unexpected/answer-text",
+  ])("does not log untrusted path data in failure or denial diagnostics: %s", (path) => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const request = new Request(`https://wht.test${path}`);
+
+    logRequestFailure({ requestId: "req_safe", request, error: new Error("private") });
+    logAdminAccessDenied({
+      requestId: "req_safe",
+      request,
+      reason: "missing_assertion",
+      assertionPresent: false,
+    });
+
+    for (const output of [String(error.mock.calls[0][0]), String(warn.mock.calls[0][0])]) {
+      for (const secret of [
+        "raw-capture",
+        "device-code",
+        "private-invite",
+        "session-cookie",
+        "answer-text",
+      ]) {
+        expect(output).not.toContain(secret);
+      }
+    }
+  });
+
   it("redacts invitation tokens embedded in registration URL paths", () => {
     const spy = vi.spyOn(console, "error").mockImplementation(() => {});
     logRequestFailure({

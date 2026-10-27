@@ -1,0 +1,28 @@
+# Task 4 — release tree checks
+
+Recorded October 26, 2026 (America/Los_Angeles). The user accepted the current rate guard and declared Task 4 closed on October 26, 2026. This is a local Task 4 record, not production approval. Base commit `361b7d440bb8eb959a6280d2f27f01c65c3d2e9b`, tree `7de751d0ccf941a51b7a5c76173b2c52ae51655e`, on the shared Task 2 branch. The Task 4 changes are uncommitted; the base does not identify their final contents. Concurrent Task 2 documentation changes are outside this task. No deployment, publication, remote database operation, Shortcut compilation or signing was performed.
+
+## Changes and boundaries
+
+- The existing application workflow adds lint and formatting and pins Node 22.20.0, matching the lockfile's Linux optional dependency engine. It already runs `npm ci`, application tests, all TypeScript checks, local schema checks and a build; it also checks the existing signing workflow contract without executing signing. It has read-only repository permissions and no deployment step. A remote run against a reviewed commit remains pending.
+- Global ESLint had one unused import, removed. Six existing React fast-refresh warnings remain. Prettier differences in maintained application files were formatted. Exact historical records and pinned Shortcut/signing inputs are listed individually in `.prettierignore` to preserve evidence and provenance; application source remains checked. The lockfile and compiler pins were not changed.
+- Canonical inventory found none of `public/parser-proof.js`, `public/capture-safari-proof.txt`, `functions/admin/parser-proof.ts`, or `functions/api/admin/parser-proof.ts`, nor proof routes or assets under Functions/public. Parser and capture regression fixtures and required shared capture logic remain.
+- Error and administrator-denial logging previously included arbitrary request path segments and HTTP methods. Logging now retains recognized fixed routes, redacts registration tokens and unknown paths, and restricts methods to standard values. It does not log request bodies, query strings, headers or error messages. A regression failed before the fix and passed afterward. This assessment covers application console logging, not provider-side logging.
+- Local code and tests cover no-store and network-only behavior for `/user`, `/login`, API, admin and registration routes; request body limits, same-origin checks, cookie protections, Access JWT verification and React text rendering. Hosted Access configuration and platform logs have not been verified here.
+- The in-memory rate guard is per isolate and keyed by client/method/path, with a 120-request/60-second limit and 1,024 keys. It is not a global durable quota. The user accepted the current guard on October 26, 2026; this acceptance does not make it a global durable quota.
+
+## Local verification
+
+A clean `npm ci` succeeded with local filesystem access. After the fix, `npm run lint` passed with six fast-refresh warnings; `npm run format`, `npm run typecheck`, `npm run build`, and `npm run test:database` passed. The application suite passed 24 files and 403 tests with loopback access. The focused security suite passed 6 files and 75 tests. Signing workflow contract tests passed 64 tests and the static signing guard check passed; no signing was executed. Sandbox-only attempts encountered filesystem or loopback restrictions and the authorized local-access retries succeeded.
+
+The registry audit reported three development-tool findings: one high in transitive `undici` and two moderate affecting `miniflare` and `wrangler`. The production-only audit reported zero. These tools are used for local testing and deployment tooling rather than shipped production dependencies; avoid exposing local tooling to untrusted traffic. The proposed direct Miniflare remedy is a major downgrade, so this task does not silently change pinned tooling. Reassess available compatible fixes and tooling exposure before release.
+
+## Handoff
+
+Independent review and final source identity are recorded after review. A remote application CI run on the exact reviewed public revision remains pending. The user has stated that Task 2 is done. Task 3 resource decisions, hosted configuration and remaining launch gates are separate work; this record does not assert production readiness.
+
+## Independent review and source identity
+
+The assigned independent Sol medium reviewer inspected the Task 4 implementation, tests, CI, exclusions, security claims and this report and found no blocking or non-blocking findings. The reviewer independently passed 73 security/cache/logging tests, 64 signing-contract tests, the static signing guard, lint and formatting. The reviewer could not independently refresh the registry audit because network resolution was denied; the audit results above came from the authorized registry query.
+
+The Task 4 tracked changes remain uncommitted on the base stated above. The Git blob hash of the tracked Task 4 patch generated by `git diff --binary` for the ten changed workflow/application files is `73d74cf3674e6ce389d5bbea6bd7afe9fa1d096e` as captured in this PowerShell session. It excludes the three concurrent Task 2 files and this new report; it is a local diff identifier, not a commit, tree or remote CI identity. Recompute the patch and create a reviewed source commit before relying on it for remote CI or a release.

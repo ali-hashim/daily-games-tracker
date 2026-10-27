@@ -18,12 +18,7 @@ export const onRequest: PagesFunction<AppEnv, string, AppData> = async ({ reques
     );
   }
 
-  const scoreboard = await submissionScoreboard(
-    env,
-    date,
-    session.player_id,
-    submittedGame,
-  );
+  const scoreboard = await submissionScoreboard(env, date, session.player_id, submittedGame);
   return apiJson(
     data.requestId,
     { status: "ok", date, scoreboard_text: scoreboard.scoreboard_text },

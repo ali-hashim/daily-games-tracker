@@ -56,7 +56,7 @@ beforeAll(async () => {
   env = {
     DB: (await runtime.getD1Database("DB")) as unknown as D1Database,
     APP_ENV: "test",
-      SHORTCUT_INSTALL_URL: "https://example.invalid/shortcuts/EXAMPLE_SHORTCUT",
+    SHORTCUT_INSTALL_URL: "https://example.invalid/shortcuts/EXAMPLE_SHORTCUT",
   };
   const sql = readdirSync("migrations")
     .filter((name) => name.endsWith(".sql"))
@@ -622,7 +622,7 @@ describe("device authenticated D1 imports", () => {
   it("permits one winner for concurrent different results", async () => {
     const a = map(),
       b = map();
-      b.shared_text = b.shared_text.replace("72", "73").replace("810", "811");
+    b.shared_text = b.shared_text.replace("72", "73").replace("810", "811");
     const results = await Promise.all([a, b].map((capture) => call("submit", capture)));
     expect(results.map((r) => r.body.status).sort()).toEqual(["already_submitted", "submitted"]);
     expect(

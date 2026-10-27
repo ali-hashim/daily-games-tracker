@@ -164,6 +164,6 @@ if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('shortcut',type=Path)
     parser.add_argument('--runtime-origin', default=None,
-                        help='HTTPS origin; defaults to WHT_RUNTIME_ORIGIN or a generic fixture origin')
+                        help='HTTPS origin; provide --runtime-origin or set WHT_RUNTIME_ORIGIN')
     args=parser.parse_args()
     print(json.dumps(inspect(plistlib.loads(args.shortcut.read_bytes()), runtime_origin=args.runtime_origin),indent=2))
