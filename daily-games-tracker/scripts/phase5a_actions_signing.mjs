@@ -6,9 +6,12 @@
  * GitHub commit status is the durable lease: pending means permanently
  * ambiguous and blocks every later attempt for the same logical operation.
  * A private encrypted migrated record blocks the prior ambiguous logical
- * package even when a later commit produces different wire bytes. Only an
- * exact protected, run-bound recovery authorization can release that record
- * for one first-attempt run; the status lease still blocks its reruns.
+ * package. Its exact old wire digest stays permanently blocked. A legacy
+ * record without a target hash can be authorized by exact current-run auth or
+ * successful prior-run proof for a different target; a populated target hash
+ * scopes the block to that target. Current-target status and protected
+ * first-attempt recovery checks remain mandatory, and the status lease blocks
+ * reruns.
  */
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
@@ -323,6 +326,19 @@ function recoveryAuthorizationMatches(authorization, record, metadata, sourceCom
     && authorization.migratedWireSha256 === record.wireSha256;
 }
 
+function historicalRecoveryAuthorizationMatches(authorization, record, metadata) {
+  return authorization.runAttempt === 1
+    && process.env.GITHUB_RUN_ATTEMPT === '1'
+    && authorization.runId !== process.env.GITHUB_RUN_ID
+    && authorization.logicalSourceIdentity === record.logicalSourceIdentity
+    && authorization.logicalSourceIdentity === metadata.sourceIdentity
+    && authorization.migratedWireSha256 === record.wireSha256
+    && record.wireSha256 !== metadata.wireSha
+    && authorization.targetOriginSha256 !== metadata.targetOriginSha256
+    && (!record.targetOriginSha256 || authorization.targetOriginSha256 === record.targetOriginSha256)
+    && authorization.operationKey === operationKey(authorization.logicalSourceIdentity, authorization.targetOriginSha256);
+}
+
 function githubRepository() {
   const repository = process.env.GITHUB_REPOSITORY;
   if (!repository || !/^[^/]+\/[^/]+$/.test(repository)) throw new Error('GitHub repository context is missing');
@@ -432,7 +448,7 @@ function output(name, value) {
   return writeFile(target, `${name}=${value}\n`, { flag: 'a' });
 }
 
-async function packageMetadata(packageDirectory, runtimeOrigin, expectedManifestSha, expectedWireSha, outputKey, recovery = {}) {
+async function packageMetadata(packageDirectory, runtimeOrigin, expectedManifestSha, expectedWireSha) {
   const packagePath = resolve(packageDirectory);
   const manifestBytes = await readFile(resolve(packagePath, 'approval-manifest.json'));
   const manifestSha = sha256(manifestBytes);
@@ -457,14 +473,6 @@ async function packageMetadata(packageDirectory, runtimeOrigin, expectedManifest
   const origin = validateRuntimeOrigin(runtimeOrigin);
   const targetOriginSha256 = sha256(Buffer.from(origin, 'utf8'));
   const key = operationKey(sourceIdentity, targetOriginSha256);
-  const migratedRecord = readMigratedAmbiguityRecord(outputKey);
-  if (migratedRecordBlocks(migratedRecord, sourceIdentity, targetOriginSha256, wireSha)) {
-    if (recovery.requested !== true) throw new Error('known ambiguous logical package is permanently blocked');
-    const authorization = decodeRecoveryAuthorization(recovery.authorization);
-    if (!recoveryAuthorizationMatches(authorization, migratedRecord, { sourceIdentity, targetOriginSha256, key }, recovery.sourceCommit)) {
-      throw new Error('recovery authorization does not match the protected ambiguous operation');
-    }
-  }
   return {
     packagePath,
     manifestBytes,
@@ -485,15 +493,32 @@ export async function prepareSigning(args) {
     args.runtimeOrigin,
     args.manifestSha,
     args.wireSha,
-    args.outputKey,
-    {
-      requested: args.recoveryRequested === true,
-      authorization: args.recoveryAuthorization,
-      sourceCommit: args.sourceCommit,
-    },
   );
   const context = statusContext(metadata.key);
-  if (await currentStatus(context)) throw new Error('existing signing status blocks this operation');
+  const statuses = await readStatusLedger();
+  if (statusBlocks(statuses, context)) throw new Error('existing signing status blocks this operation');
+  const migratedRecord = readMigratedAmbiguityRecord(args.outputKey);
+  if (migratedRecordBlocks(migratedRecord, metadata.sourceIdentity, metadata.targetOriginSha256, metadata.wireSha)) {
+    if (migratedRecord.wireSha256 === metadata.wireSha) {
+      throw new Error('exact migrated wire is permanently blocked');
+    }
+    if (args.recoveryRequested !== true) throw new Error('known ambiguous logical package is permanently blocked');
+    const authorization = decodeRecoveryAuthorization(args.recoveryAuthorization);
+    const currentAuthorizationMatches = recoveryAuthorizationMatches(authorization, migratedRecord, {
+      sourceIdentity: metadata.sourceIdentity,
+      targetOriginSha256: metadata.targetOriginSha256,
+      key: metadata.key,
+    }, args.sourceCommit);
+    const historicalAuthorizationMatches = !currentAuthorizationMatches
+      && historicalRecoveryAuthorizationMatches(authorization, migratedRecord, metadata);
+    if (!currentAuthorizationMatches && !historicalAuthorizationMatches) {
+      throw new Error('recovery authorization does not match the protected ambiguous operation');
+    }
+    if (historicalAuthorizationMatches
+      && statuses.find(status => status.context === statusContext(authorization.operationKey))?.state !== 'success') {
+      throw new Error('prior ambiguous recovery operation has no successful status');
+    }
+  }
   await createStatus(context, 'pending', 'Encrypted signing intent recorded; interruption remains ambiguous');
   const intent = {
     schemaVersion: 1,
