@@ -17,6 +17,11 @@ export interface AuthenticatedRenderProps {
 type AuthenticatedRender = (props: AuthenticatedRenderProps) => ReactNode;
 
 const AUTH_REVALIDATION_INTERVAL_MS = 60_000;
+const DEVICE_LOGIN_INSTRUCTIONS =
+  "Tap Login with your device to verify this login. This request lasts two minutes.";
+const SESSION_EXPIRED_MESSAGE = "Your login expired or was revoked. Login with Device to continue.";
+const LOGGED_OUT_MESSAGE = "You are logged out.";
+type PlayerLoadResult = "authenticated" | "unauthenticated" | "redirected" | "unavailable";
 
 interface DeviceLoginProps {
   children?: ReactNode | AuthenticatedRender;
@@ -65,15 +70,58 @@ export default function DeviceLogin({
   const [shortcut, setShortcut] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [authError, setAuthError] = useState<unknown>(null);
+  const [deviceError, setDeviceError] = useState<unknown>(null);
+  const [logoutError, setLogoutError] = useState<unknown>(null);
   const [busy, setBusy] = useState(false);
   const inFlight = useRef(false);
+  const startInFlight = useRef(false);
+  const preserveMessageWhileWaiting = useRef(false);
+  const deviceFlowGeneration = useRef(0);
   const authRequestGeneration = useRef(0);
   const authInFlightGeneration = useRef<number | null>(null);
   const playerRef = useRef<Player | null>(null);
+  const initialLoadStarted = useRef(false);
 
   useEffect(() => {
     playerRef.current = player;
   }, [player]);
+
+  const start = useCallback(
+    async (successMessage = DEVICE_LOGIN_INSTRUCTIONS, preserveMessage = false) => {
+      if (startInFlight.current) return;
+      startInFlight.current = true;
+      const flowGeneration = ++deviceFlowGeneration.current;
+      authRequestGeneration.current += 1;
+      authInFlightGeneration.current = null;
+      inFlight.current = false;
+      preserveMessageWhileWaiting.current = preserveMessage;
+      setBusy(true);
+      if (!preserveMessage) setMessage("");
+      setAuthError(null);
+      setDeviceError(null);
+      setWaiting(false);
+      setShortcut(null);
+      try {
+        const result = await apiRequest<{ shortcut_url: string }>("/api/auth/device/start", {
+          method: "POST",
+          body: JSON.stringify({ return_url: returnPathFromLocation() }),
+        });
+        if (flowGeneration !== deviceFlowGeneration.current) return;
+        setShortcut(result.shortcut_url);
+        setWaiting(true);
+        setMessage(successMessage);
+      } catch (error) {
+        if (flowGeneration !== deviceFlowGeneration.current) return;
+        preserveMessageWhileWaiting.current = false;
+        setDeviceError(error);
+        setMessage(error instanceof Error ? error.message : "Try again.");
+      } finally {
+        startInFlight.current = false;
+        if (flowGeneration === deviceFlowGeneration.current) setBusy(false);
+      }
+    },
+    [],
+  );
 
   const sessionExpired = useCallback(() => {
     authRequestGeneration.current += 1;
@@ -82,97 +130,140 @@ export default function DeviceLogin({
     setPlayer(null);
     setWaiting(false);
     setShortcut(null);
-    setMessage("Your login expired or was revoked. Login with Device to continue.");
+    setMessage(SESSION_EXPIRED_MESSAGE);
     setAuthError(null);
-  }, []);
+    setDeviceError(null);
+    void start(SESSION_EXPIRED_MESSAGE, true);
+  }, [start]);
 
-  const loadPlayer = useCallback(async () => {
-    if (authInFlightGeneration.current !== null) return false;
-    const requestGeneration = ++authRequestGeneration.current;
-    authInFlightGeneration.current = requestGeneration;
-    try {
-      const result = await apiRequest<{ player: Player }>("/api/auth/me");
-      if (requestGeneration !== authRequestGeneration.current) return false;
-      setPlayer(result.player);
-      playerRef.current = result.player;
-      setAuthError(null);
-      return true;
-    } catch (error) {
-      if (requestGeneration !== authRequestGeneration.current) return false;
-      const unauthorized = shouldRedirectDaily(error);
-      if (unauthorized || !playerRef.current) setPlayer(null);
-      if (redirectWhenSignedOut && unauthorized) {
+  const loadPlayer = useCallback(
+    async (expectedDeviceFlowGeneration?: number): Promise<PlayerLoadResult> => {
+      const isExpectedFlowCurrent = () =>
+        expectedDeviceFlowGeneration === undefined ||
+        expectedDeviceFlowGeneration === deviceFlowGeneration.current;
+      if (!isExpectedFlowCurrent()) return "unavailable";
+      if (authInFlightGeneration.current !== null) return "unavailable";
+      const requestGeneration = ++authRequestGeneration.current;
+      authInFlightGeneration.current = requestGeneration;
+      try {
+        const result = await apiRequest<{ player: Player }>("/api/auth/me");
+        if (requestGeneration !== authRequestGeneration.current || !isExpectedFlowCurrent()) {
+          return "unavailable";
+        }
+        setPlayer(result.player);
+        playerRef.current = result.player;
         setAuthError(null);
-        window.location.assign(
-          dailySignInUrl(window.location.pathname, window.location.search, dailyReturnDate),
-        );
-      } else if (unauthorized) {
-        setAuthError(null);
-      } else {
-        setAuthError(error);
+        return "authenticated";
+      } catch (error) {
+        if (requestGeneration !== authRequestGeneration.current || !isExpectedFlowCurrent()) {
+          return "unavailable";
+        }
+        const unauthorized = shouldRedirectDaily(error);
+        if (unauthorized || !playerRef.current) setPlayer(null);
+        if (redirectWhenSignedOut && unauthorized) {
+          setAuthError(null);
+          window.location.assign(
+            dailySignInUrl(window.location.pathname, window.location.search, dailyReturnDate),
+          );
+          return "redirected";
+        } else if (unauthorized) {
+          setAuthError(null);
+          return "unauthenticated";
+        } else {
+          setAuthError(error);
+          return "unavailable";
+        }
+      } finally {
+        if (authInFlightGeneration.current === requestGeneration) {
+          authInFlightGeneration.current = null;
+        }
+        if (requestGeneration === authRequestGeneration.current && isExpectedFlowCurrent()) {
+          setChecked(true);
+        }
       }
-      return false;
-    } finally {
-      if (authInFlightGeneration.current === requestGeneration) {
-        authInFlightGeneration.current = null;
-      }
-      if (requestGeneration === authRequestGeneration.current) setChecked(true);
-    }
-  }, [dailyReturnDate, redirectWhenSignedOut]);
+    },
+    [dailyReturnDate, redirectWhenSignedOut],
+  );
 
   const complete = useCallback(async () => {
     if (inFlight.current || document.visibilityState === "hidden") return;
     inFlight.current = true;
+    const flowGeneration = deviceFlowGeneration.current;
     try {
       const result = await apiRequest<{ status: string }>("/api/auth/device/complete", {
         method: "POST",
         body: "{}",
       });
+      if (flowGeneration !== deviceFlowGeneration.current) return;
       if (result.status === "authenticated") {
+        preserveMessageWhileWaiting.current = false;
         setWaiting(false);
         setShortcut(null);
         setMessage("");
+        setDeviceError(null);
         const returnPath = returnPathFromLocation();
         if (returnPath !== "/user") {
           window.location.assign(returnPath);
         } else {
-          await loadPlayer();
+          const playerLoadResult = await loadPlayer(flowGeneration);
+          if (flowGeneration !== deviceFlowGeneration.current) return;
+          if (playerLoadResult === "unauthenticated") {
+            void start(SESSION_EXPIRED_MESSAGE, true);
+          }
         }
       } else {
-        setMessage(
-          "Waiting for your registered device. After approval, return to this window and tap Check login.",
-        );
+        setDeviceError(null);
+        if (!preserveMessageWhileWaiting.current) {
+          setMessage(
+            "Waiting for your registered device. After approval, return to this window and tap Check login.",
+          );
+        }
       }
     } catch (error) {
+      if (flowGeneration !== deviceFlowGeneration.current) return;
+      preserveMessageWhileWaiting.current = false;
       // Another tab/request may have completed first; check the session before showing expiry.
-      if (await loadPlayer()) {
+      const playerLoadResult = await loadPlayer(flowGeneration);
+      if (flowGeneration !== deviceFlowGeneration.current) return;
+      if (playerLoadResult === "authenticated") {
         setMessage("");
         setWaiting(false);
         setShortcut(null);
+        setDeviceError(null);
       } else if (error instanceof ApiRequestError && error.status < 500) {
+        setDeviceError(error);
         setMessage(error.message);
         setWaiting(false);
         setShortcut(null);
       } else {
+        setDeviceError(error);
         setMessage(
           "Connection interrupted. Return to this window and tap Check login when you are online.",
         );
       }
     } finally {
-      inFlight.current = false;
+      if (flowGeneration === deviceFlowGeneration.current) inFlight.current = false;
     }
-  }, [loadPlayer]);
+  }, [loadPlayer, start]);
+
+  const retryAuth = useCallback(async () => {
+    const result = await loadPlayer();
+    if (result === "unauthenticated") await start();
+  }, [loadPlayer, start]);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => void loadPlayer(), 0);
-    return () => window.clearTimeout(timer);
-  }, [loadPlayer]);
+    if (initialLoadStarted.current) return;
+    initialLoadStarted.current = true;
+    void retryAuth();
+  }, [retryAuth]);
 
   useEffect(() => {
     if (!checked || !player) return;
     const revalidate = () => {
       if (document.visibilityState === "hidden") return;
-      void loadPlayer();
+      void loadPlayer().then((result) => {
+        if (result === "unauthenticated") void start(SESSION_EXPIRED_MESSAGE, true);
+      });
     };
     const interval = window.setInterval(revalidate, AUTH_REVALIDATION_INTERVAL_MS);
     window.addEventListener("focus", revalidate);
@@ -184,7 +275,7 @@ export default function DeviceLogin({
       window.removeEventListener("pageshow", revalidate);
       document.removeEventListener("visibilitychange", revalidate);
     };
-  }, [checked, loadPlayer, player]);
+  }, [checked, loadPlayer, player, start]);
 
   useEffect(() => {
     if (!waiting || player) return;
@@ -204,53 +295,37 @@ export default function DeviceLogin({
     };
   }, [waiting, player, complete]);
 
-  async function start() {
-    setBusy(true);
-    setMessage("");
-    setAuthError(null);
-    try {
-      const result = await apiRequest<{ shortcut_url: string }>("/api/auth/device/start", {
-        method: "POST",
-        body: JSON.stringify({ return_url: returnPathFromLocation() }),
-      });
-      setShortcut(result.shortcut_url);
-      setWaiting(true);
-      setMessage(
-        "Tap Login with your device to verify this login. This request lasts two minutes.",
-      );
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Try again.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function logout() {
+  const logout = useCallback(async () => {
+    deviceFlowGeneration.current += 1;
     authRequestGeneration.current += 1;
     authInFlightGeneration.current = null;
     playerRef.current = null;
     setPlayer(null);
+    setWaiting(false);
+    setShortcut(null);
+    setMessage("");
+    setAuthError(null);
+    setDeviceError(null);
+    setLogoutError(null);
     setBusy(true);
     try {
       await apiRequest("/api/auth/logout", { method: "POST", body: "{}" });
-      setMessage("You are logged out.");
+      await start(LOGGED_OUT_MESSAGE, true);
     } catch (error) {
+      setLogoutError(error);
       setMessage(error instanceof Error ? error.message : "Try again.");
     } finally {
       setPlayer(null);
-      setWaiting(false);
-      setShortcut(null);
-      setAuthError(null);
       setBusy(false);
     }
-  }
+  }, [start]);
 
   if (!checked) return <p role="status">Checking your login…</p>;
   if (!player && redirectWhenSignedOut && authError) {
     return (
       <div className="notice error" role="alert">
         {authErrorMessage(authError)}
-        <button type="button" className="primary-action" onClick={() => void loadPlayer()}>
+        <button type="button" className="primary-action" onClick={() => void retryAuth()}>
           Try again
         </button>
       </div>
@@ -286,14 +361,14 @@ export default function DeviceLogin({
             <h2>Login with Device</h2>
             <p>Your registered Upload to WHT Shortcut verifies your login in this window.</p>
             {authError && <p className="notice error">{authErrorMessage(authError)}</p>}
-            {!waiting && (
+            {(authError || deviceError || logoutError) && (
               <button
                 type="button"
                 className="primary-action"
                 disabled={busy}
-                onClick={() => void start()}
+                onClick={() => void (logoutError ? logout() : deviceError ? start() : retryAuth())}
               >
-                {busy ? "Preparing…" : "Login with Device"}
+                Try again
               </button>
             )}
             {shortcut && (

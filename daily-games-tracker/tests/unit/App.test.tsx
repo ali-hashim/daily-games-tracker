@@ -386,6 +386,247 @@ afterEach(async () => {
 });
 
 describe("Phase 10 User behavior", () => {
+  it("auto-starts device login on initial unauthenticated entry", async () => {
+    const requestPaths: string[] = [];
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        const path = String(input);
+        requestPaths.push(path);
+
+        if (path === "/api/auth/me") {
+          return Response.json({ error_message: "required" }, { status: 401 });
+        }
+        if (path === "/api/auth/device/start") {
+          return Response.json({
+            shortcut_url: "shortcuts://run-shortcut?name=Upload%20To%20WHT",
+          });
+        }
+        if (path === "/api/auth/device/complete") {
+          return Response.json({ status: "pending" });
+        }
+
+        throw new Error(`Unexpected request: ${path}`);
+      }),
+    );
+
+    const rendered = await renderBehavior(createElement(DeviceLogin));
+    await flushBehavior();
+
+    expect(requestPaths.filter((path) => path === "/api/auth/device/start")).toHaveLength(1);
+    const shortcut = rendered.container.querySelector("a.primary-action");
+    expect(shortcut?.textContent).toBe("Login with your device");
+    expect(shortcut?.getAttribute("href")).toBe("shortcuts://run-shortcut?name=Upload%20To%20WHT");
+    expect(() => buttonWithText(rendered.container, "Login with Device")).toThrow();
+  });
+
+  it("auto-starts device login once when mounted in StrictMode", async () => {
+    const requestPaths: string[] = [];
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        const path = String(input);
+        requestPaths.push(path);
+        if (path === "/api/auth/me") {
+          return Response.json({ error_message: "required" }, { status: 401 });
+        }
+        if (path === "/api/auth/device/start") {
+          return Response.json({
+            shortcut_url: "shortcuts://run-shortcut?name=Upload%20To%20WHT",
+          });
+        }
+        if (path === "/api/auth/device/complete") {
+          return Response.json({ status: "pending" });
+        }
+        throw new Error(`Unexpected request: ${path}`);
+      }),
+    );
+
+    const rendered = await renderBehavior(
+      createElement(React.StrictMode, null, createElement(DeviceLogin)),
+    );
+    await flushBehavior();
+
+    expect(requestPaths.filter((path) => path === "/api/auth/me")).toHaveLength(1);
+    expect(requestPaths.filter((path) => path === "/api/auth/device/start")).toHaveLength(1);
+    expect(rendered.container.querySelector("a.primary-action")?.textContent).toBe(
+      "Login with your device",
+    );
+  });
+
+  it("restarts device login when completion finds the session unauthenticated", async () => {
+    let authCalls = 0;
+    let startCalls = 0;
+    let completeCalls = 0;
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        const path = String(input);
+        if (path === "/api/auth/me") {
+          authCalls += 1;
+          return Response.json({ error_message: "required" }, { status: 401 });
+        }
+        if (path === "/api/auth/device/start") {
+          startCalls += 1;
+          return Response.json({
+            shortcut_url: `shortcuts://run-shortcut?name=Upload%20To%20WHT%20${startCalls}`,
+          });
+        }
+        if (path === "/api/auth/device/complete") {
+          completeCalls += 1;
+          return Response.json({ status: completeCalls === 1 ? "authenticated" : "pending" });
+        }
+        throw new Error(`Unexpected request: ${path}`);
+      }),
+    );
+
+    const rendered = await renderBehavior(createElement(DeviceLogin));
+    await flushBehavior();
+
+    expect(authCalls).toBeGreaterThanOrEqual(2);
+    expect(startCalls).toBe(2);
+    expect(rendered.container.querySelector("a.primary-action")?.textContent).toBe(
+      "Login with your device",
+    );
+  });
+
+  it("does not render an initial login button while starting device login", async () => {
+    let resolveStart!: (response: Response) => void;
+    const pendingStart = new Promise<Response>((resolve) => {
+      resolveStart = resolve;
+    });
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        const path = String(input);
+        if (path === "/api/auth/me") {
+          return Response.json({ error_message: "required" }, { status: 401 });
+        }
+        if (path === "/api/auth/device/start") return pendingStart;
+        if (path === "/api/auth/device/complete") return Response.json({ status: "pending" });
+        throw new Error(`Unexpected request: ${path}`);
+      }),
+    );
+
+    const rendered = await renderBehavior(createElement(DeviceLogin));
+    await flushBehavior();
+
+    expect(rendered.container.querySelectorAll("button")).toHaveLength(0);
+
+    resolveStart(
+      Response.json({
+        shortcut_url: "shortcuts://run-shortcut?name=Upload%20To%20WHT",
+      }),
+    );
+    await flushBehavior();
+  });
+
+  it("offers a retry action when starting device login fails", async () => {
+    let startAttempts = 0;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        const path = String(input);
+        if (path === "/api/auth/me") {
+          return Response.json({ error_message: "required" }, { status: 401 });
+        }
+        if (path === "/api/auth/device/start") {
+          startAttempts += 1;
+          if (startAttempts === 1) {
+            return Response.json({ error_message: "Device unavailable" }, { status: 503 });
+          }
+          return Response.json({
+            shortcut_url: "shortcuts://run-shortcut?name=Upload%20To%20WHT",
+          });
+        }
+        if (path === "/api/auth/device/complete") {
+          return Response.json({ status: "pending" });
+        }
+        throw new Error(`Unexpected request: ${path}`);
+      }),
+    );
+
+    const rendered = await renderBehavior(createElement(DeviceLogin));
+    await flushBehavior();
+
+    await act(async () => buttonWithText(rendered.container, "Try again").click());
+    await flushBehavior();
+
+    expect(startAttempts).toBe(2);
+    expect(rendered.container.querySelector("a.primary-action")?.textContent).toBe(
+      "Login with your device",
+    );
+  });
+
+  it("offers a retry action when the initial login check fails", async () => {
+    let authAttempts = 0;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        const path = String(input);
+        if (path === "/api/auth/me") {
+          authAttempts += 1;
+          if (authAttempts === 1) {
+            return Response.json({ error_message: "Auth service unavailable" }, { status: 503 });
+          }
+          return Response.json({ error_message: "required" }, { status: 401 });
+        }
+        if (path === "/api/auth/device/start") {
+          return Response.json({
+            shortcut_url: "shortcuts://run-shortcut?name=Upload%20To%20WHT",
+          });
+        }
+        if (path === "/api/auth/device/complete") {
+          return Response.json({ status: "pending" });
+        }
+        throw new Error(`Unexpected request: ${path}`);
+      }),
+    );
+
+    const rendered = await renderBehavior(createElement(DeviceLogin));
+    await flushBehavior();
+
+    expect(rendered.container.textContent).toContain("Auth service unavailable");
+    await act(async () => buttonWithText(rendered.container, "Try again").click());
+    await flushBehavior();
+
+    expect(authAttempts).toBe(2);
+    expect(rendered.container.querySelector("a.primary-action")?.textContent).toBe(
+      "Login with your device",
+    );
+  });
+
+  it("offers a retry action when the device login request expires", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        const path = String(input);
+        if (path === "/api/auth/me") {
+          return Response.json({ error_message: "required" }, { status: 401 });
+        }
+        if (path === "/api/auth/device/start") {
+          return Response.json({
+            shortcut_url: "shortcuts://run-shortcut?name=Upload%20To%20WHT",
+          });
+        }
+        if (path === "/api/auth/device/complete") {
+          return Response.json({ error_message: "Device login expired" }, { status: 410 });
+        }
+        throw new Error(`Unexpected request: ${path}`);
+      }),
+    );
+
+    const rendered = await renderBehavior(createElement(DeviceLogin));
+    await flushBehavior();
+
+    expect(rendered.container.textContent).toContain("Device login expired");
+    expect(buttonWithText(rendered.container, "Try again")).toBeDefined();
+  });
+
   it("cleans up the waiting Login with Device actions and advisory notes", async () => {
     const requestPaths: string[] = [];
 
@@ -414,15 +655,8 @@ describe("Phase 10 User behavior", () => {
     const rendered = await renderBehavior(createElement(DeviceLogin));
     await flushBehavior();
 
-    expect(buttonWithText(rendered.container, "Login with Device")).toBeDefined();
     expect(rendered.container.textContent).not.toContain("Start a new login");
-
-    await act(async () => {
-      buttonWithText(rendered.container, "Login with Device").click();
-    });
-    await flushBehavior();
-
-    expect(requestPaths).toContain("/api/auth/device/start");
+    expect(requestPaths.filter((path) => path === "/api/auth/device/start")).toHaveLength(1);
     const shortcut = rendered.container.querySelector("a.primary-action");
     expect(shortcut?.textContent).toBe("Login with your device");
     expect(shortcut?.getAttribute("href")).toBe("shortcuts://run-shortcut?name=Upload%20To%20WHT");
@@ -467,6 +701,12 @@ describe("Phase 10 User behavior", () => {
         if (path === "/api/auth/me") return Response.json({ player: testPlayer });
         if (path === "/api/user/stats") return pendingStats;
         if (path === "/api/auth/logout") return Response.json({ status: "ok" });
+        if (path === "/api/auth/device/start") {
+          return Response.json({
+            shortcut_url: "shortcuts://run-shortcut?name=Upload%20To%20WHT",
+          });
+        }
+        if (path === "/api/auth/device/complete") return Response.json({ status: "pending" });
         throw new Error(`Unexpected ${path}`);
       }),
     );
@@ -491,6 +731,10 @@ describe("Phase 10 User behavior", () => {
     await flushBehavior();
     expect(calls).toContain("/api/auth/logout");
     expect(rendered.container.textContent).toContain("Login with Device");
+    expect(calls).toContain("/api/auth/device/start");
+    expect(rendered.container.querySelector("a.primary-action")?.textContent).toBe(
+      "Login with your device",
+    );
     expect(rendered.container.textContent).not.toContain("Alex");
   });
 
@@ -506,6 +750,12 @@ describe("Phase 10 User behavior", () => {
         if (path === "/api/user/stats") {
           return Response.json({ error_message: "Session expired" }, { status: 401 });
         }
+        if (path === "/api/auth/device/start") {
+          return Response.json({
+            shortcut_url: "shortcuts://run-shortcut?name=Upload%20To%20WHT",
+          });
+        }
+        if (path === "/api/auth/device/complete") return Response.json({ status: "pending" });
         throw new Error(`Unexpected ${path}`);
       }),
     );
@@ -524,7 +774,109 @@ describe("Phase 10 User behavior", () => {
     expect(rendered.container.textContent).toContain(
       "Your login expired or was revoked. Login with Device to continue.",
     );
+    expect(calls).toContain("/api/auth/device/start");
+    expect(rendered.container.querySelector("a.primary-action")?.textContent).toBe(
+      "Login with your device",
+    );
     expect(rendered.container.textContent).not.toContain("Alex");
+  });
+
+  it("ignores an old completion auth response after a newer device flow starts", async () => {
+    let authCalls = 0;
+    let startCalls = 0;
+    let completeCalls = 0;
+    let resolveOldAuth!: (response: Response) => void;
+    let expireSession!: () => void;
+    const oldAuth = new Promise<Response>((resolve) => {
+      resolveOldAuth = resolve;
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        const path = String(input);
+        if (path === "/api/auth/me") {
+          authCalls += 1;
+          return authCalls === 1 ? Response.json({ player: testPlayer }) : oldAuth;
+        }
+        if (path === "/api/auth/device/start") {
+          startCalls += 1;
+          return Response.json({ shortcut_url: `shortcuts://flow-${startCalls}` });
+        }
+        if (path === "/api/auth/device/complete") {
+          completeCalls += 1;
+          return Response.json({ status: completeCalls === 1 ? "authenticated" : "pending" });
+        }
+        throw new Error(`Unexpected ${path}`);
+      }),
+    );
+    const rendered = await renderBehavior(
+      createElement(DeviceLogin, {
+        children: (auth: AuthenticatedRenderProps) => {
+          expireSession = auth.sessionExpired;
+          return createElement("div", null, auth.player.display_name);
+        },
+      }),
+    );
+    await flushBehavior();
+    await act(async () => expireSession());
+    await flushBehavior();
+    expect(authCalls).toBe(2);
+    await act(async () => expireSession());
+    await flushBehavior();
+    expect(startCalls).toBe(2);
+    await act(async () => resolveOldAuth(Response.json({ player: testPlayer })));
+    await flushBehavior();
+    expect(rendered.container.textContent).not.toContain(testPlayer.display_name);
+    expect(rendered.container.querySelector("a.primary-action")?.getAttribute("href")).toBe(
+      "shortcuts://flow-2",
+    );
+  });
+
+  it("retries server logout before starting a new device login", async () => {
+    const calls: string[] = [];
+    let logoutAttempts = 0;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        const path = String(input);
+        calls.push(path);
+        if (path === "/api/auth/me") return Response.json({ player: testPlayer });
+        if (path === "/api/user/stats") return Response.json(userStats());
+        if (path === "/api/auth/logout") {
+          logoutAttempts += 1;
+          return logoutAttempts === 1
+            ? Response.json({ error_message: "Logout unavailable" }, { status: 503 })
+            : Response.json({ status: "ok" });
+        }
+        if (path === "/api/auth/device/start") {
+          return Response.json({
+            shortcut_url: "shortcuts://run-shortcut?name=Upload%20To%20WHT",
+          });
+        }
+        if (path === "/api/auth/device/complete") return Response.json({ status: "pending" });
+        throw new Error(`Unexpected ${path}`);
+      }),
+    );
+
+    const rendered = await renderBehavior(
+      createElement(DeviceLogin, {
+        children: (auth: AuthenticatedRenderProps) => createElement(UserPage, auth),
+      }),
+    );
+    await flushBehavior();
+
+    await act(async () => buttonWithText(rendered.container, "Log out").click());
+    await flushBehavior();
+
+    expect(rendered.container.textContent).toContain("Logout unavailable");
+    expect(calls).not.toContain("/api/auth/device/start");
+    await act(async () => buttonWithText(rendered.container, "Try again").click());
+    await flushBehavior();
+    expect(calls.filter((path) => path === "/api/auth/logout")).toHaveLength(2);
+    expect(calls.indexOf("/api/auth/device/start")).toBeGreaterThan(
+      calls.lastIndexOf("/api/auth/logout"),
+    );
+    expect(rendered.container.textContent).toContain("You are logged out.");
   });
 
   it.each(["server", "network"] as const)(
