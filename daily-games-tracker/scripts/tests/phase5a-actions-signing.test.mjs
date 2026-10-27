@@ -79,6 +79,91 @@ async function makePackage(buildManifest = BUILD_MANIFEST, wire = Buffer.from('{
   return { root, manifestSha: createSha256(approvalBytes), wireSha: createSha256(wire) };
 }
 
+async function attemptPriorTargetRecovery({
+  priorStatus = 'success',
+  includePriorStatus = true,
+  exactMigratedWire = false,
+  sameTarget = false,
+  authorizationRunId = 'prior-run',
+  currentRunAttempt = '1',
+  authorizationOverrides = {},
+} = {}) {
+  const packageInfo = await makePackage();
+  const intentPath = join(packageInfo.root, 'intent.enc');
+  const outputKey = OUTPUT_KEY;
+  const priorOrigin = 'https://prior-target.example.com';
+  const currentOrigin = 'https://current-target.example.com';
+  const sourceIdentity = logicalSourceIdentity(BUILD_MANIFEST);
+  const priorTargetSha = createSha256(Buffer.from(priorOrigin));
+  const currentTargetSha = createSha256(Buffer.from(currentOrigin));
+  const currentKey = operationKey(sourceIdentity, currentTargetSha);
+  const authorizationTargetSha = sameTarget ? currentTargetSha : priorTargetSha;
+  const authorizationKey = operationKey(sourceIdentity, authorizationTargetSha);
+  const migratedWireSha = exactMigratedWire ? packageInfo.wireSha : 'f'.repeat(64);
+  const auth = Buffer.from(JSON.stringify({
+    schemaVersion: 1,
+    runId: authorizationRunId,
+    runAttempt: 1,
+    sourceCommit: '3'.repeat(40),
+    logicalSourceIdentity: sourceIdentity,
+    targetOriginSha256: authorizationTargetSha,
+    operationKey: authorizationKey,
+    migratedWireSha256: migratedWireSha,
+    ...authorizationOverrides,
+  })).toString('base64');
+  const record = encodeMigratedAmbiguityRecord({
+    schemaVersion: 1,
+    status: 'ambiguous',
+    logicalSourceIdentity: sourceIdentity,
+    wireSha256: migratedWireSha,
+  }, outputKey);
+  const originalEnv = { ...process.env };
+  const originalFetch = globalThis.fetch;
+  const statuses = includePriorStatus ? [{ id: 7, context: statusContext(authorizationKey), state: priorStatus }] : [];
+  const calls = [];
+  process.env = {
+    ...process.env,
+    GITHUB_TOKEN: 'synthetic-token',
+    GITHUB_API_URL: 'https://api.github.test',
+    GITHUB_REPOSITORY: 'owner/repo',
+    GITHUB_RUN_ID: 'current-run',
+    GITHUB_RUN_ATTEMPT: currentRunAttempt,
+    WHT_SIGNING_STATUS_ANCHOR: '1'.repeat(40),
+    WHT_SIGNING_OUTPUT_KEY: outputKey,
+    WHT_AMBIGUOUS_SIGNING_RECORD: record,
+    RUNNER_TEMP: packageInfo.root,
+  };
+  globalThis.fetch = async (url, options = {}) => {
+    calls.push({ url: String(url), options });
+    if (options.method === 'GET') return responseJson(statusPage('1'.repeat(40), statuses, statuses.length));
+    if (String(url).startsWith('https://api.github.test')) {
+      const body = JSON.parse(options.body);
+      const status = { id: statuses.length + 1, context: body.context, state: body.state };
+      statuses.push(status);
+      return responseJson(status);
+    }
+    throw new Error('prior proof must not contact the signing provider');
+  };
+  let error;
+  try {
+    await prepareSigning({
+      package: packageInfo.root,
+      sourceCommit: SOURCE_COMMIT,
+      runtimeOrigin: currentOrigin,
+      manifestSha: packageInfo.manifestSha,
+      wireSha: packageInfo.wireSha,
+      outputKey,
+      intentPath,
+      recoveryRequested: true,
+      recoveryAuthorization: auth,
+    }).catch(caught => { error = caught; });
+    return { error, calls, statuses, packageInfo, intentPath, currentKey };
+  } finally {
+    process.env = originalEnv;
+    globalThis.fetch = originalFetch;
+  }
+}
+
 function createSha256(value) {
   return createHash('sha256').update(value).digest('hex');
 }
@@ -497,7 +582,56 @@ test('migrated ambiguity record blocks wire variance for the same logical packag
   assert.throws(() => decodeMigratedAmbiguityRecord(encoded, Buffer.alloc(32, 8).toString('base64')), /authentication failed/);
 });
 
-test('prepare blocks the migrated logical package before status or provider calls when commit and wire vary', async () => {
+test('existing status for an ambiguous package is detected before the migrated record blocks it', async () => {
+  const packageInfo = await makePackage();
+  const intentPath = join(packageInfo.root, 'intent.enc');
+  const outputKey = OUTPUT_KEY;
+  const origin = 'https://ci-fixture.example.com';
+  const sourceIdentity = logicalSourceIdentity(BUILD_MANIFEST);
+  const key = operationKey(sourceIdentity, createSha256(Buffer.from(origin)));
+  const context = statusContext(key);
+  const record = encodeMigratedAmbiguityRecord({
+    schemaVersion: 1,
+    status: 'ambiguous',
+    logicalSourceIdentity: sourceIdentity,
+    wireSha256: 'f'.repeat(64),
+  }, outputKey);
+  const originalEnv = { ...process.env };
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  process.env = {
+    ...process.env,
+    GITHUB_TOKEN: 'synthetic-token',
+    GITHUB_API_URL: 'https://api.github.test',
+    GITHUB_REPOSITORY: 'owner/repo',
+    WHT_SIGNING_STATUS_ANCHOR: '1'.repeat(40),
+    WHT_SIGNING_OUTPUT_KEY: outputKey,
+    WHT_AMBIGUOUS_SIGNING_RECORD: record,
+    RUNNER_TEMP: packageInfo.root,
+  };
+  globalThis.fetch = async (url, options = {}) => {
+    calls.push({ url: String(url), options });
+    return responseJson(statusPage('1'.repeat(40), [{ id: 7, context, state: 'success' }]));
+  };
+  try {
+    await assert.rejects(() => prepareSigning({
+      package: packageInfo.root,
+      sourceCommit: SOURCE_COMMIT,
+      runtimeOrigin: origin,
+      manifestSha: packageInfo.manifestSha,
+      wireSha: packageInfo.wireSha,
+      outputKey,
+      intentPath,
+    }), /existing signing status blocks this operation/);
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].options.method, 'GET');
+  } finally {
+    process.env = originalEnv;
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('prepare blocks a migrated logical package after a read-only status check when commit and wire vary', async () => {
   const packageInfo = await makePackage();
   const intentPath = join(packageInfo.root, 'intent.enc');
   const outputKey = OUTPUT_KEY;
@@ -509,7 +643,7 @@ test('prepare blocks the migrated logical package before status or provider call
   }, outputKey);
   const originalEnv = { ...process.env };
   const originalFetch = globalThis.fetch;
-  let calls = 0;
+  const calls = [];
   process.env = {
     ...process.env,
     GITHUB_TOKEN: 'synthetic-token',
@@ -520,9 +654,9 @@ test('prepare blocks the migrated logical package before status or provider call
     WHT_AMBIGUOUS_SIGNING_RECORD: record,
     RUNNER_TEMP: packageInfo.root,
   };
-  globalThis.fetch = async () => {
-    calls += 1;
-    throw new Error('migrated ambiguity must stop before status or provider calls');
+  globalThis.fetch = async (url, options = {}) => {
+    calls.push({ url: String(url), options });
+    return responseJson(statusPage('1'.repeat(40), [], 0));
   };
   try {
     await assert.rejects(() => prepareSigning({
@@ -534,7 +668,108 @@ test('prepare blocks the migrated logical package before status or provider call
       outputKey,
       intentPath,
     }), /known ambiguous logical package/);
-    assert.equal(calls, 0);
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].options.method, 'GET');
+  } finally {
+    process.env = originalEnv;
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('manual recovery requires a successful prior target proof and a distinct current wire', async (t) => {
+  await t.test('successful prior status permits the separately targeted package', async () => {
+    const result = await attemptPriorTargetRecovery();
+    assert.equal(result.error, undefined);
+    assert.equal(result.statuses.some(status => status.context === statusContext(result.currentKey) && status.state === 'pending'), true);
+    assert.equal(result.calls.filter(call => call.options.method === 'GET').length, 1);
+    assert.equal(result.calls.filter(call => call.options.method === 'POST').length, 1);
+    assert.equal((await stat(result.intentPath)).isFile(), true);
+  });
+
+  for (const [name, options] of [
+    ['missing prior status', { includePriorStatus: false }],
+    ['pending prior status', { priorStatus: 'pending' }],
+    ['failed prior status', { priorStatus: 'failure' }],
+    ['authorization wire digest mismatch', { authorizationOverrides: { migratedWireSha256: 'e'.repeat(64) } }],
+    ['authorization operation key mismatch', { authorizationOverrides: { operationKey: '0'.repeat(64) } }],
+    ['authorization is bound to current run', { authorizationRunId: 'current-run' }],
+    ['current run retry is rejected', { currentRunAttempt: '2' }],
+    ['authorization target is the current target', { sameTarget: true, includePriorStatus: false }],
+    ['exact migrated wire remains blocked after prior success', { exactMigratedWire: true }],
+  ]) {
+    await t.test(name, async () => {
+      const result = await attemptPriorTargetRecovery(options);
+      assert.ok(result.error, 'invalid or incomplete prior proof must be rejected');
+      assert.equal(result.calls.filter(call => call.options.method === 'GET').length, 1);
+      assert.equal(result.calls.filter(call => call.options.method === 'POST').length, 0);
+      assert.equal(result.statuses.some(status => status.context === statusContext(result.currentKey)), false);
+    });
+  }
+});
+
+test('exact migrated wire remains blocked before a matching current-run authorization', async () => {
+  const packageInfo = await makePackage();
+  const intentPath = join(packageInfo.root, 'intent.enc');
+  const outputKey = OUTPUT_KEY;
+  const currentOrigin = 'https://current-target.example.com';
+  const priorOrigin = 'https://prior-target.example.com';
+  const sourceIdentity = logicalSourceIdentity(BUILD_MANIFEST);
+  const currentTargetSha = createSha256(Buffer.from(currentOrigin));
+  const priorKey = operationKey(sourceIdentity, createSha256(Buffer.from(priorOrigin)));
+  const currentKey = operationKey(sourceIdentity, currentTargetSha);
+  const auth = Buffer.from(JSON.stringify({
+    schemaVersion: 1,
+    runId: 'current-run',
+    runAttempt: 1,
+    sourceCommit: SOURCE_COMMIT,
+    logicalSourceIdentity: sourceIdentity,
+    targetOriginSha256: currentTargetSha,
+    operationKey: currentKey,
+    migratedWireSha256: packageInfo.wireSha,
+  })).toString('base64');
+  const record = encodeMigratedAmbiguityRecord({
+    schemaVersion: 1,
+    status: 'ambiguous',
+    logicalSourceIdentity: sourceIdentity,
+    wireSha256: packageInfo.wireSha,
+  }, outputKey);
+  const originalEnv = { ...process.env };
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  process.env = {
+    ...process.env,
+    GITHUB_TOKEN: 'synthetic-token',
+    GITHUB_API_URL: 'https://api.github.test',
+    GITHUB_REPOSITORY: 'owner/repo',
+    GITHUB_RUN_ID: 'current-run',
+    GITHUB_RUN_ATTEMPT: '1',
+    WHT_SIGNING_STATUS_ANCHOR: '1'.repeat(40),
+    WHT_SIGNING_OUTPUT_KEY: outputKey,
+    WHT_AMBIGUOUS_SIGNING_RECORD: record,
+    RUNNER_TEMP: packageInfo.root,
+  };
+  globalThis.fetch = async (url, options = {}) => {
+    calls.push({ url: String(url), options });
+    if (options.method === 'GET') {
+      return responseJson(statusPage('1'.repeat(40), [{ id: 7, context: statusContext(priorKey), state: 'success' }]));
+    }
+    const body = JSON.parse(options.body);
+    return responseJson({ state: body.state, context: body.context, id: 8 });
+  };
+  try {
+    await assert.rejects(() => prepareSigning({
+      package: packageInfo.root,
+      sourceCommit: SOURCE_COMMIT,
+      runtimeOrigin: currentOrigin,
+      manifestSha: packageInfo.manifestSha,
+      wireSha: packageInfo.wireSha,
+      outputKey,
+      intentPath,
+      recoveryRequested: true,
+      recoveryAuthorization: auth,
+    }), /exact migrated wire is permanently blocked/);
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].options.method, 'GET');
   } finally {
     process.env = originalEnv;
     globalThis.fetch = originalFetch;
@@ -570,7 +805,7 @@ test('migrated ambiguity recovery is default-off, run-bound, and one-use through
       })).toString('base64');
       const originalEnv = { ...process.env };
       const originalFetch = globalThis.fetch;
-      let calls = 0;
+      const calls = [];
       process.env = {
         ...process.env,
         GITHUB_TOKEN: 'synthetic-token',
@@ -583,9 +818,9 @@ test('migrated ambiguity recovery is default-off, run-bound, and one-use through
         WHT_AMBIGUOUS_SIGNING_RECORD: encodeMigratedAmbiguityRecord({ schemaVersion: 1, status: 'ambiguous', logicalSourceIdentity: sourceIdentity, wireSha256: 'f'.repeat(64) }, outputKey),
         RUNNER_TEMP: packageInfo.root,
       };
-      globalThis.fetch = async () => {
-        calls += 1;
-        throw new Error('recovery guard must stop before status or provider calls');
+      globalThis.fetch = async (url, options = {}) => {
+        calls.push({ url: String(url), options });
+        return responseJson(statusPage('1'.repeat(40), [], 0));
       };
       try {
         await assert.rejects(() => prepareSigning({
@@ -598,8 +833,9 @@ test('migrated ambiguity recovery is default-off, run-bound, and one-use through
           intentPath,
           recoveryRequested: scenario.requested,
           recoveryAuthorization: auth,
-        }), /known ambiguous logical package|recovery authorization/);
-        assert.equal(calls, 0);
+        }), /known ambiguous logical package|recovery authorization|prior ambiguous recovery operation/);
+        assert.equal(calls.length, 1);
+        assert.equal(calls[0].options.method, 'GET');
       } finally {
         process.env = originalEnv;
         globalThis.fetch = originalFetch;
