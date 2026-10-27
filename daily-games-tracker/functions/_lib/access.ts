@@ -15,12 +15,7 @@ export async function requireAdmin(request: Request, env: AppEnv, requestId = "u
     CLOUDFLARE_ACCESS_AUD: audience,
     ADMIN_EMAIL: email,
   } = env;
-  if (
-    !issuer ||
-    !audience ||
-    !email ||
-    !isAllowedAccessIssuer(issuer, env.APP_ENV)
-  ) {
+  if (!issuer || !audience || !email || !isAllowedAccessIssuer(issuer, env.APP_ENV)) {
     throw new ApiError(503, "ADMIN_NOT_CONFIGURED", "Administrator access is not configured yet.");
   }
   const token = request.headers.get("Cf-Access-Jwt-Assertion");

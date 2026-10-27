@@ -120,7 +120,7 @@ try {
     { expectFailure: true },
   );
 
-console.log("PASS: current D1 schema (v3), seeds, foreign keys, and uniqueness constraints");
+  console.log("PASS: current D1 schema (v3), seeds, foreign keys, and uniqueness constraints");
 } finally {
   await rm(state, { recursive: true, force: true });
 }

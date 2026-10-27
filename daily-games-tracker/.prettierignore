@@ -4,3 +4,33 @@ node_modules/
 coverage/
 package-lock.json
 public/*.png
+# Historical launch and verification records are preserved as evidence.
+PHASE_4_API_ALIGNMENT_PLAN.md
+PHASE_9_LAUNCH_GATES.md
+PROJECT_STATUS.md
+reports/phase10-user-page-verification.md
+reports/production-task2-baseline.md
+
+# Shortcut compiler and signing sources are pinned operational tooling; avoid
+# rewriting their reviewed provenance as part of application formatting.
+shortcut/cherri-migration/build/build.mjs
+shortcut/cherri-migration/build/path-safety.mjs
+shortcut/cherri-migration/build/runtime-fixtures.mjs
+shortcut/cherri-migration/build/upload-native-contract.json
+shortcut/cherri-migration/source/EXPERIMENTS.md
+shortcut/cherri-migration/toolchain.lock.json
+shortcut/PHASE_5A_HANDOFF.md
+shortcut/PHASE_5A_NATIVE_ACCEPTANCE.md
+scripts/PHASE5A_FULL_CLIENT_CI_SIGNING.md
+scripts/phase5a_actions_signing.mjs
+scripts/phase5a-approval-rehearsal.mjs
+scripts/phase5a-compile-runtime-fixtures.mjs
+scripts/phase5a-verify-manifest.mjs
+scripts/phase5a-verify-production-approval-proof.mjs
+scripts/phase5a-verify-signing-workflow.mjs
+scripts/phase5a-verify-toolchain.mjs
+scripts/tests/phase5a-actions-signing.test.mjs
+scripts/tests/phase5a-approval-rehearsal.test.mjs
+scripts/tests/phase5a-production-approval-proof.test.mjs
+scripts/tests/phase5a-signing-workflow.test.mjs
+scripts/tests/phase5a-verifier.test.mjs
