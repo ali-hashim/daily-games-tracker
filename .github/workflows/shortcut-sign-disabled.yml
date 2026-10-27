@@ -35,6 +35,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
   statuses: write
 
 # Serialize all protected signing attempts. The status lease below remains
@@ -103,6 +104,9 @@ jobs:
           ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: false
+
+      - name: Verify exact protected environment approval
+        run: node daily-games-tracker/scripts/phase5a-approval-rehearsal.mjs --production
 
       - name: Establish stable protected status anchor
         shell: bash
