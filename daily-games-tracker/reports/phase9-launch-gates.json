@@ -167,7 +167,7 @@
       "id": "phase5a.protected-signing-workflow",
       "title": "Operational signing workflow activation",
       "disposition": "pending",
-      "evidence": "The Actions-only workflow compiles and inspects through pinned CI, records a GitHub pending lease, sends one exact HubSign POST, and stores only AES-256-GCM encrypted intent/result artifacts with bounded expiry; private inputs and protected configuration remain unprovisioned, so no operational CI signing run or signed delivery is claimed. The migrated WHT_AMBIGUOUS_SIGNING_RECORD is retained for exact logical-package/state checks; user-directed retry is authorized without repeat approval when the reviewed package, source/digest checks and valid private artifacts still match.",
+      "evidence": "The Actions-only workflow compiles and inspects through pinned CI, records a GitHub pending lease, sends one exact HubSign POST, and stores only private R2 signing state and digest-verified signed objects; private inputs and protected configuration remain unprovisioned, so no operational CI signing run or signed delivery is claimed. The migrated ambiguity record is stored privately in R2 and pinned by WHT_AMBIGUITY_RECORD_SHA256 for exact logical-package/state checks; user-directed retry is authorized without repeat approval when the reviewed package, source/digest checks and valid private R2 state still match.",
       "references": ["../shortcut/PHASE_5A_HANDOFF.md", "PHASE_5A_PLAN.md"]
     },
     {

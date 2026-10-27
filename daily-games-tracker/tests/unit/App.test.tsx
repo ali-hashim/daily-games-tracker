@@ -27,6 +27,7 @@ function sourceIfPresent(path: string): string {
 }
 
 const userPageSource = sourceIfPresent("../../src/pages/UserPage.tsx");
+const registrationPageSource = sourceIfPresent("../../src/pages/RegistrationPage.tsx");
 const loginReturnSource = sourceIfPresent("../../src/lib/login-return.ts");
 
 class BehaviorEvent {
@@ -1133,6 +1134,11 @@ describe("Phase 10 user route shell", () => {
     expect(userPageSource).toContain("average: number | null");
     expect(userPageSource).toContain("rank: number | null");
     expect(userPageSource).toContain("install_url: string | null");
+    expect(userPageSource).toContain("href={currentStats.install_url}");
+    expect(userPageSource).toContain("Download Shortcut");
+    expect(registrationPageSource).toContain("href={result.shortcut_install_url}");
+    expect(registrationPageSource).not.toContain("www.icloud.com/shortcuts");
+    expect(appSource).toContain("Shortcut download after registration");
     expect(userPageSource).toContain("Log out");
   });
 

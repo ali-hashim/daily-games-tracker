@@ -24,6 +24,7 @@ on:
       - daily-games-tracker/scripts/phase5a-verify-toolchain.mjs
       - daily-games-tracker/scripts/phase5a-verify-signing-workflow.mjs
       - daily-games-tracker/scripts/phase5a_actions_signing.mjs
+      - daily-games-tracker/scripts/phase5a-r2-private-store.mjs
       - daily-games-tracker/scripts/phase5a-verify-manifest.mjs
       - daily-games-tracker/scripts/phase5a_prepare_signing_package.py
       - daily-games-tracker/scripts/phase5a-compile-runtime-fixtures.mjs
@@ -66,7 +67,7 @@ jobs:
       - name: Run Phase 5A workflow and manifest mutation tests
         run: |
           node --check daily-games-tracker/scripts/phase5a-compile-runtime-fixtures.mjs
-          node --test daily-games-tracker/scripts/tests/phase5a-verifier.test.mjs daily-games-tracker/scripts/tests/phase5a-signing-workflow.test.mjs
+          node --test daily-games-tracker/scripts/tests/phase5a-verifier.test.mjs daily-games-tracker/scripts/tests/phase5a-signing-workflow.test.mjs daily-games-tracker/scripts/tests/phase5a-actions-signing.test.mjs daily-games-tracker/scripts/tests/phase5a-r2-store.test.mjs
 
       - name: Set up pinned Go
         uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0

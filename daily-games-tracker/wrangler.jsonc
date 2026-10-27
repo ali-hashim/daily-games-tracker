@@ -13,6 +13,12 @@
       "migrations_dir": "migrations",
     },
   ],
+  "r2_buckets": [
+    {
+      "binding": "SHORTCUT_BUCKET",
+      "bucket_name": "example-shortcut-bucket",
+    },
+  ],
   "vars": {
     "APP_ENV": "local",
   },
@@ -27,6 +33,12 @@
           "migrations_dir": "migrations",
         },
       ],
+      "r2_buckets": [
+        {
+          "binding": "SHORTCUT_BUCKET",
+          "bucket_name": "example-shortcut-bucket",
+        },
+      ],
       "vars": {
         "APP_ENV": "preview",
       },
@@ -39,6 +51,12 @@
           // Inert placeholder. Keep real runtime IDs outside the public repository.
           "database_id": "00000000-0000-0000-0000-000000000000",
           "migrations_dir": "migrations",
+        },
+      ],
+      "r2_buckets": [
+        {
+          "binding": "SHORTCUT_BUCKET",
+          "bucket_name": "example-shortcut-bucket",
         },
       ],
       "vars": {

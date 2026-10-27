@@ -5,7 +5,7 @@ export interface AppEnv {
   CLOUDFLARE_ACCESS_DOMAIN?: string;
   CLOUDFLARE_ACCESS_AUD?: string;
   ADMIN_EMAIL?: string;
-  SHORTCUT_INSTALL_URL?: string;
+  SHORTCUT_BUCKET?: R2Bucket;
 }
 
 export interface AppData extends Record<string, unknown> {

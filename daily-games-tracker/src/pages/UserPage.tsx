@@ -208,15 +208,17 @@ export default function UserPage({
             <div>
               <h2>Keep Upload to WHT handy</h2>
               <p className="subtle">
-                Reinstall the supported Shortcut on a registered iPhone when you need it.
+                Download the supported Shortcut for a registered iPhone when you need it.
               </p>
             </div>
             {currentStats.install_url ? (
               <a className="secondary-action" href={currentStats.install_url} rel="noreferrer">
-                Redownload Shortcut
+                Download Shortcut
               </a>
             ) : (
-              <p className="muted-note">The supported install link is currently unavailable.</p>
+              <p className="muted-note">
+                The supported Shortcut download is currently unavailable.
+              </p>
             )}
           </section>
         </>
