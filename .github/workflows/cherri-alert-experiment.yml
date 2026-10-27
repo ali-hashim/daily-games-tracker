@@ -254,7 +254,7 @@ jobs:
           set -euo pipefail
           python3 daily-games-tracker/scripts/phase5a_build_upload.py --compiler "$RUNNER_TEMP/cherri" --runtime-origin "https://runtime.example.invalid" --output "$RUNNER_TEMP/upload-first"
           python3 daily-games-tracker/scripts/phase5a_build_upload.py --compiler "$RUNNER_TEMP/cherri" --runtime-origin "https://runtime.example.invalid" --output "$RUNNER_TEMP/upload-second"
-          python3 daily-games-tracker/scripts/phase5a_compare_upload.py "$RUNNER_TEMP/upload-first/Upload To WHT_unsigned.shortcut" "$RUNNER_TEMP/upload-second/Upload To WHT_unsigned.shortcut" > "$RUNNER_TEMP/upload-first/reproducibility.json"
+          python3 daily-games-tracker/scripts/phase5a_compare_upload.py "$RUNNER_TEMP/upload-first/Upload To WHT_unsigned.shortcut" "$RUNNER_TEMP/upload-second/Upload To WHT_unsigned.shortcut" --runtime-origin "https://runtime.example.invalid" > "$RUNNER_TEMP/upload-first/reproducibility.json"
           python3 daily-games-tracker/scripts/phase5a_upload_signing.py prepare --build-directory "$RUNNER_TEMP/upload-first" --output "$RUNNER_TEMP/upload-review-package"
 
       - name: Confirm private runner-only outputs are not uploaded

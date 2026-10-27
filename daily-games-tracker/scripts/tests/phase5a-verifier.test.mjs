@@ -154,7 +154,8 @@ test('toolchain verifier rejects runner drift, unknown action pins, and a missin
       ['missing compiler flag', text => text.replace('"$RUNNER_TEMP/cherri" "$dir/01-alert.cherri" --skip-sign --derive-uuids', '"$RUNNER_TEMP/cherri" "$dir/01-alert.cherri"'), /missing locked flag/],
       ['missing strict current inspector guard', text => text.replace('inspector_flags+=(--strict-current)', 'inspector_flags+=(--experiment-only)'), /strict-current/],
       ['missing full client repeat', text => text.replace('phase5a_build_upload.py --compiler "$RUNNER_TEMP/cherri" --runtime-origin "https://runtime.example.invalid" --output "$RUNNER_TEMP/upload-second"', 'removed-full-client-repeat'), /second complete unsigned client/],
-      ['missing full client comparison', text => text.replace('phase5a_compare_upload.py', 'removed-comparison.py'), /complete-client native contract/],
+      ['missing full client comparison', text => text.replace('phase5a_compare_upload.py', 'removed-comparison.py'), /same sanitized test origin/],
+      ['missing complete-client comparison origin', text => text.replace('phase5a_compare_upload.py "$RUNNER_TEMP/upload-first/Upload To WHT_unsigned.shortcut" "$RUNNER_TEMP/upload-second/Upload To WHT_unsigned.shortcut" --runtime-origin "https://runtime.example.invalid"', 'phase5a_compare_upload.py "$RUNNER_TEMP/upload-first/Upload To WHT_unsigned.shortcut" "$RUNNER_TEMP/upload-second/Upload To WHT_unsigned.shortcut"'), /same sanitized test origin/],
       ['signing transfer in routine workflow', text => text.replace('phase5a_upload_signing.py prepare', 'phase5a_upload_signing.py send'), /must not send a signing payload/],
     ]) {
       await t.test(name, async () => {
