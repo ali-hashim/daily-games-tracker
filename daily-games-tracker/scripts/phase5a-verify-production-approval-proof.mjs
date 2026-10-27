@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 // Deliberately allow only this small workflow: an added step, secret, event,
 // or permission must be reviewed before it can become a signing proof.
 export function verifyProductionApprovalProof(workflow) {
-  const expected = `name: Production signing approval proof (no signing)
+  const expected = `name: Production signing authorization proof (no signing)
 on:
   workflow_dispatch:
 permissions:
@@ -21,7 +21,7 @@ jobs:
         with:
           ref: \${{ github.sha }}
           persist-credentials: false
-      - name: Verify production approval without signing
+      - name: Verify standing production authorization without signing
         env:
           GITHUB_TOKEN: \${{ github.token }}
         run: node daily-games-tracker/scripts/phase5a-approval-rehearsal.mjs --production

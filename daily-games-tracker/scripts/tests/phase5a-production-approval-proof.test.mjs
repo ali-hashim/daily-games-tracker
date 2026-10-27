@@ -6,11 +6,13 @@ import test from 'node:test';
 const workflowUrl = new URL('../../../.github/workflows/shortcut-production-approval-proof.yml', import.meta.url);
 const verifierUrl = new URL('../phase5a-verify-production-approval-proof.mjs', import.meta.url);
 
-test('production approval proof only performs the protected read-only check', async () => {
+test('production authorization proof only performs the protected read-only check', async () => {
   assert.ok(existsSync(workflowUrl) && existsSync(verifierUrl), 'production proof workflow and verifier exist');
   const workflow = await readFile(workflowUrl, 'utf8');
   const { verifyProductionApprovalProof } = await import(verifierUrl);
   assert.equal(verifyProductionApprovalProof(workflow), true);
+  assert.match(workflow, /^name: Production signing authorization proof \(no signing\)/);
+  assert.match(workflow, /name: Verify standing production authorization without signing/);
   for (const [before, after] of [
     ['workflow_dispatch:', 'push:'],
     ['environment: wht-shortcut-signing', 'environment: unprotected'],

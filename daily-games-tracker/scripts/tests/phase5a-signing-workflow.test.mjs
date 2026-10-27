@@ -10,20 +10,27 @@ test('protected Actions-only workflow retains all boundaries', () => {
   assert.equal(verifySigningWorkflow(workflow, lock), true);
 });
 
-test('the exact approval check precedes any package build or provider transfer', () => {
+test('the standing authorization check precedes any package build or provider transfer', async () => {
   const check = workflow.indexOf('node daily-games-tracker/scripts/phase5a-approval-rehearsal.mjs --production');
   assert.ok(check > workflow.indexOf('name: Check out only the protected reviewed source commit'));
   assert.ok(check < workflow.indexOf('name: Rebuild pinned compiler with verified module graph'));
+  assert.match(workflow, /name: Verify standing protected production authorization/);
   assert.match(workflow, /\n  actions: read\n/);
   assert.doesNotMatch(workflow, /REVIEWED_APPLICATION_COMMIT/);
+  const verifier = await readFile(new URL('../phase5a-approval-rehearsal.mjs', import.meta.url), 'utf8');
+  assert.match(verifier, /assert\.equal\(mainBranch\?\.commit\?\.sha, context\.sha\)/);
+  assert.match(verifier, /assert\.equal\(mainBranch\?\.protected, true\)/);
+  assert.match(verifier, /assert\.equal\(rules\.length, 0, 'Production signing authorization must not require per-run reviewers'\)/);
+  assert.match(verifier, /mode === 'production' \? undefined : get\(`\/actions\/runs\/\$\{runId\}\/approvals`\)/);
+  assert.match(verifier, /mode === 'production' \? get\('\/branches\/main'\) : undefined/);
 });
 
 const expression = '$' + '{{';
 const mutations = [
   ['automatic main trigger', '  push:\n    branches: [main]', '  removed-trigger:\n    branches: [main]'],
   ['environment protection', 'environment: wht-shortcut-signing', 'environment: unprotected'],
-  ['approval verification', 'node daily-games-tracker/scripts/phase5a-approval-rehearsal.mjs --production', 'true'],
-  ['approval read permission', '  actions: read', '  actions: none'],
+  ['standing authorization verification', 'node daily-games-tracker/scripts/phase5a-approval-rehearsal.mjs --production', 'true'],
+  ['Actions API read permission', '  actions: read', '  actions: none'],
   ['checkout commit identity', 'test "$(git rev-parse HEAD)" = "$GITHUB_SHA"', 'true'],
   ['runtime origin secret', 'WHT_RUNTIME_ORIGIN: ' + expression + ' secrets.WHT_RUNTIME_ORIGIN }}', 'WHT_RUNTIME_ORIGIN: https://runtime.example.invalid'],
   ['output encryption secret', 'WHT_SIGNING_OUTPUT_KEY: ' + expression + ' secrets.WHT_SIGNING_OUTPUT_KEY }}', 'WHT_SIGNING_OUTPUT_KEY: unset'],
