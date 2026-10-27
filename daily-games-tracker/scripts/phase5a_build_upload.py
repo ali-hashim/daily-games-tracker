@@ -19,7 +19,6 @@ LOCK = MIGRATION/'toolchain.lock.json'
 NOTE = 'PRIVATE DEVICE CODE: stored in the Text action immediately above, named deviceCode. Customize Shortcut asks for it on this iPhone. If setup was skipped, edit that Text action. Editing or sharing a configured shortcut can expose the code.'
 PROMPT = 'Paste your private WHT device code.'
 RUNTIME_ORIGIN_TOKEN = '__WHT_RUNTIME_ORIGIN__'
-DEFAULT_RUNTIME_ORIGIN = 'https://runtime.example.invalid'
 RESERVED_RUNTIME_HOST_SUFFIXES = ('.invalid', '.example', '.test')
 
 def digest(data):
@@ -49,7 +48,9 @@ def validate_runtime_origin(value: str, *, allow_fixture: bool = True) -> str:
 
 def runtime_origin(value: str | None = None, *, allow_fixture: bool = True) -> str:
     if value is None:
-        value = os.environ.get('WHT_RUNTIME_ORIGIN', DEFAULT_RUNTIME_ORIGIN)
+        value = os.environ.get('WHT_RUNTIME_ORIGIN')
+    if value is None:
+        raise ValueError('runtime origin must be provided explicitly or via WHT_RUNTIME_ORIGIN')
     return validate_runtime_origin(value, allow_fixture=allow_fixture)
 
 
@@ -151,8 +152,8 @@ if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--compiler',required=True,type=Path)
     p.add_argument('--output',required=True,type=Path)
-    p.add_argument('--runtime-origin', type=str, default=None,
-                   help='HTTPS runtime origin; defaults to WHT_RUNTIME_ORIGIN or a generic fixture origin')
+    p.add_argument('--runtime-origin', required=True, type=str,
+                   help='Explicit HTTPS runtime origin')
     p.add_argument('--require-nonreserved-origin', action='store_true',
                    help='Reject generic fixture and reserved placeholder hosts for protected signing')
     a=p.parse_args()

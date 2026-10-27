@@ -3,14 +3,17 @@ import copy
 import json
 from pathlib import Path
 import plistlib
+import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 import phase5a_build_upload as b
 import phase5a_inspect_upload as i
 import phase5a_upload_signing as s
+TEST_RUNTIME_ORIGIN='https://runtime.example.invalid'
 TEST_TMP=b.ROOT/'tmp/phase5a-upload-tests'
 TEST_TMP.mkdir(parents=True,exist_ok=True)
 
@@ -19,7 +22,7 @@ def fixture():
     # contract, not a second source renderer or implementation of game logic.
     w=i._replace_origin_token(
         json.loads(i.CONTRACT.read_text(encoding='utf-8')),
-        b.DEFAULT_RUNTIME_ORIGIN,
+        TEST_RUNTIME_ORIGIN,
     )
     for action in w['WFWorkflowActions']:
         p=action.get('WFWorkflowActionParameters',{})
@@ -37,10 +40,29 @@ def params(w,kind=None,output=None,key=None,n=0):
     return candidates[n]
 
 class UploadContractTests(unittest.TestCase):
+    def test_runtime_origin_fails_without_argument_or_environment(self):
+        with patch.dict(b.os.environ, {}, clear=True):
+            with self.assertRaisesRegex(ValueError, 'runtime origin'):
+                b.runtime_origin()
+
+    def test_runtime_origin_uses_an_explicit_environment_value(self):
+        with patch.dict(b.os.environ, {'WHT_RUNTIME_ORIGIN': TEST_RUNTIME_ORIGIN}, clear=True):
+            self.assertEqual(b.runtime_origin(), TEST_RUNTIME_ORIGIN)
+
+    def test_cli_requires_runtime_origin(self):
+        with tempfile.TemporaryDirectory(dir=TEST_TMP) as directory:
+            root = Path(directory)
+            result = subprocess.run(
+                [sys.executable, str(Path(b.__file__).resolve()), '--compiler', str(root/'missing-compiler'), '--output', str(root/'output')],
+                capture_output=True, text=True, check=False,
+            )
+        self.assertEqual(result.returncode, 2)
+        self.assertIn('--runtime-origin', result.stderr)
+
     def test_reviewed_contract(self):
         # The accepted upload tail still has validate/submit; Phase 5B adds
         # the separate device-approval request ahead of it.
-        self.assertEqual(i.inspect(fixture())['networkActions'],3)
+        self.assertEqual(i.inspect(fixture(), runtime_origin=TEST_RUNTIME_ORIGIN)['networkActions'],3)
 
     def test_login_return_contract_matches_current_source(self):
         source = b.SOURCE.read_text(encoding='utf-8')
@@ -49,7 +71,7 @@ class UploadContractTests(unittest.TestCase):
         self.assertIn('whtOpenURL(@loginReturnURL)\n                        stop()', source)
 
         workflow = fixture()
-        i.inspect(workflow)
+        i.inspect(workflow, runtime_origin=TEST_RUNTIME_ORIGIN)
         actions = workflow['WFWorkflowActions']
         params_by_index = [a.get('WFWorkflowActionParameters', {}) for a in actions]
         return_reads = [
@@ -134,7 +156,7 @@ class UploadContractTests(unittest.TestCase):
                 workflow = fixture()
                 mutate(workflow)
                 with self.assertRaises((AssertionError, KeyError, IndexError)):
-                    i.inspect(workflow, require_contract=False)
+                    i.inspect(workflow, require_contract=False, runtime_origin=TEST_RUNTIME_ORIGIN)
 
     def test_native_mutations_rejected(self):
         mutations=[
@@ -160,7 +182,7 @@ class UploadContractTests(unittest.TestCase):
         for number,mutate in enumerate(mutations):
             with self.subTest(mutation=number):
                 w=fixture();mutate(w)
-                with self.assertRaises((AssertionError,KeyError,IndexError)): i.inspect(w)
+                with self.assertRaises((AssertionError,KeyError,IndexError)): i.inspect(w, runtime_origin=TEST_RUNTIME_ORIGIN)
 
     def test_compiler_control_and_menu_repair(self):
         desired=fixture(); raw=copy.deepcopy(desired)
@@ -173,7 +195,7 @@ class UploadContractTests(unittest.TestCase):
             if 'WFMenuItems' in p: p['WFMenuItems']=[{'WFValue':'Close'},{'WFValue':'Open WHT'}]
         repaired=b.normalize(raw)
         self.assertEqual(i.canonical(repaired),i.canonical(desired))
-        i.inspect(repaired)
+        i.inspect(repaired, runtime_origin=TEST_RUNTIME_ORIGIN)
         self.assertNotEqual(raw,repaired)
         self.assertEqual(raw['WFWorkflowActions'][0],repaired['WFWorkflowActions'][0])
 
@@ -186,18 +208,25 @@ class UploadContractTests(unittest.TestCase):
             with self.assertRaises(AssertionError): b.normalize(raw)
 
     def test_script_render_is_exact_single_embedding(self):
-        rendered=b.render_source()
+        rendered=b.render_source(TEST_RUNTIME_ORIGIN)
         self.assertNotIn('__WHT_CAPTURE_SCRIPT__',rendered)
         self.assertNotIn(b.RUNTIME_ORIGIN_TOKEN, rendered)
-        self.assertIn(b.DEFAULT_RUNTIME_ORIGIN, rendered)
+        self.assertIn(TEST_RUNTIME_ORIGIN, rendered)
         self.assertEqual(rendered.count(b.CAPTURE.read_text(encoding='utf-8').replace("'","\\'")),1)
 
     def test_runtime_origin_is_injected_only_after_strict_origin_validation(self):
-        origin = 'https://runtime.example.invalid'
+        origin = TEST_RUNTIME_ORIGIN
         with self.assertRaises(ValueError):
             b.validate_runtime_origin(origin, allow_fixture=False)
         rendered = b.render_source(origin)
-        self.assertIn(origin + '/api/import/validate', rendered)
+        expected_endpoints = (
+            'https://runtime.example.invalid/api/auth/device/approve',
+            'https://runtime.example.invalid/api/import/validate',
+            'https://runtime.example.invalid/api/import/submit',
+        )
+        for endpoint in expected_endpoints:
+            with self.subTest(endpoint=endpoint):
+                self.assertEqual(rendered.count('"' + endpoint + '"'), 1)
         self.assertNotIn(b.RUNTIME_ORIGIN_TOKEN, rendered)
         for invalid in (
             'http://runtime.example.invalid',
@@ -210,7 +239,7 @@ class UploadContractTests(unittest.TestCase):
                 b.render_source(invalid)
 
     def test_contract_token_is_bound_to_the_same_runtime_origin(self):
-        origin = 'https://runtime.example.invalid'
+        origin = TEST_RUNTIME_ORIGIN
         workflow = i._replace_origin_token(
             json.loads(i.CONTRACT.read_text(encoding='utf-8')), origin
         )
@@ -226,21 +255,21 @@ class UploadContractTests(unittest.TestCase):
         raw_bytes=plistlib.dumps(raw);binary=plistlib.dumps(b.normalize(raw))
         (build/'compiler-output.shortcut').write_bytes(raw_bytes)
         (build/'Upload To WHT_unsigned.shortcut').write_bytes(binary)
-        (build/'upload-to-wht.cherri').write_text(b.render_source(),encoding='utf-8')
+        (build/'upload-to-wht.cherri').write_text(b.render_source(TEST_RUNTIME_ORIGIN),encoding='utf-8')
         manifest={'sourceSha256':b.digest(b.SOURCE.read_bytes()),'artifactSha256':b.digest(binary),'rawArtifactSha256':b.digest(raw_bytes),'lockSha256':b.digest(b.LOCK.read_bytes()),'normalizerSha256':b.digest(Path(b.__file__).read_bytes()),'inspectorSha256':b.digest(Path(i.__file__).read_bytes()),'nativeContractSha256':b.digest(i.CONTRACT.read_bytes())}
         manifest['captureSha256']=b.digest(b.CAPTURE.read_bytes())
         manifest['renderedSourceSha256']=b.digest((build/'upload-to-wht.cherri').read_bytes())
         (build/'manifest.json').write_text(json.dumps(manifest),encoding='utf-8')
-        package=root/'package';info=s.freeze(build,package)
+        package=root/'package';info=s.freeze(build,package,runtime_origin=TEST_RUNTIME_ORIGIN)
         return package,info
 
     def test_package_validation_keeps_unsigned_payload_and_requires_exact_digests(self):
         with tempfile.TemporaryDirectory(dir=TEST_TMP) as directory:
             root=Path(directory);package,info=self.package(root)
-            payload=s.validate(package,info['manifestSha256'],info['wireSha256'])
+            payload=s.validate(package,info['manifestSha256'],info['wireSha256'],runtime_origin=TEST_RUNTIME_ORIGIN)
             self.assertTrue(payload.startswith(b'<?xml'))
             with self.assertRaises(AssertionError):
-                s.validate(package,'0'*64,info['wireSha256'])
+                s.validate(package,'0'*64,info['wireSha256'],runtime_origin=TEST_RUNTIME_ORIGIN)
     def test_freeze_rejects_capture_and_rendered_source_provenance_drift(self):
         for field in ('captureSha256','renderedSourceSha256'):
             with self.subTest(field=field), tempfile.TemporaryDirectory(dir=TEST_TMP) as directory:
@@ -248,19 +277,19 @@ class UploadContractTests(unittest.TestCase):
                 manifest_path=root/'build/manifest.json'
                 manifest=json.loads(manifest_path.read_bytes());manifest[field]='0'*64
                 manifest_path.write_text(json.dumps(manifest),encoding='utf-8')
-                with self.assertRaises(AssertionError): s.freeze(root/'build',root/'rejected')
+                with self.assertRaises(AssertionError): s.freeze(root/'build',root/'rejected',runtime_origin=TEST_RUNTIME_ORIGIN)
 
     def test_wrong_approved_hashes_stop_before_protected_transfer(self):
         with tempfile.TemporaryDirectory(dir=TEST_TMP) as directory:
             root=Path(directory);package,info=self.package(root)
             for name,manifest,wire in (('manifest','0'*64,info['wireSha256']),('wire',info['manifestSha256'],'0'*64)):
                 with self.subTest(name=name), self.assertRaises(AssertionError):
-                    s.validate(package,manifest,wire)
+                    s.validate(package,manifest,wire,runtime_origin=TEST_RUNTIME_ORIGIN)
 
     def test_package_tampering_is_rejected_before_protected_transfer(self):
         with tempfile.TemporaryDirectory(dir=TEST_TMP) as directory:
             root=Path(directory);package,info=self.package(root)
             (package/'hubsign-request.json').write_bytes(b'changed')
             with self.assertRaises(AssertionError):
-                s.validate(package,info['manifestSha256'],info['wireSha256'])
+                s.validate(package,info['manifestSha256'],info['wireSha256'],runtime_origin=TEST_RUNTIME_ORIGIN)
 if __name__=='__main__': unittest.main()
