@@ -29,11 +29,13 @@ The protected environment requires these private values:
   record. It includes the prior logical source identity and wire digest, and
   may include its target hash. The record is required before any transfer.
 * `WHT_AMBIGUOUS_RECOVERY_AUTH`: an optional, protected base64 JSON
-  authorization for the single manually approved recovery run. Its fields
-  bind the run ID and first attempt to the reviewed source commit, semantic
-  logical identity, protected target hash, migrated wire digest, and derived
-  operation key. It is ignored on automatic pushes and is never a reason to
-  clear or rewrite the migrated record.
+  authorization used only by the manual recovery path. Ordinary recovery
+  authorization binds the current run ID and first attempt to the reviewed
+  source commit, logical identity, current target hash, migrated wire digest,
+  and derived operation key. A prior-run authorization has a narrower role: it
+  can prove a completed prior operation for a legacy record without a target
+  hash, under the extra checks below. It does not approve the current run and
+  is ignored on automatic pushes. Neither form clears or rewrites the record.
 
 The private record plaintext has the bounded shape
 `{"schemaVersion":1,"status":"ambiguous","logicalSourceIdentity":"<sha256>","wireSha256":"<sha256>"}`;
@@ -41,6 +43,10 @@ an optional `targetOriginSha256` narrows the block. Generate the envelope with
 the `encodeMigratedAmbiguityRecord` helper in
 `phase5a_actions_signing.mjs` while the output key remains in process memory;
 do not print the value into CI logs or tracked files.
+When present, the target hash scopes the logical-source fallback to that
+target. Distinct target hashes derive distinct operation keys and status
+contexts. Such target-scoped records do not use the legacy prior-run proof
+path described below. A matching old wire digest remains permanently blocked.
 
 The logical source identity uses the canonical semantic projection in the
 build manifest: maintained source, capture, and native-contract digests; the
@@ -60,12 +66,13 @@ The reviewer must approve the first attempt with the exact comment
 `reviewed <full-commit-sha>`, using the run's reviewed commit. Push and manual
 runs both require this approval; the job also verifies checkout identity before
 building. A relevant push starts automatically after that
-protected approval. The migrated
-record blocks the old logical package by default. A bounded exception can be
-requested only by a manually dispatched run with both
-`confirm_external_signing=true` and `confirm_ambiguous_recovery=true`, the
-required reviewer approval, `GITHUB_RUN_ATTEMPT=1`, and a recovery secret whose
-authenticated fields match the exact run and package. The existing pending
+protected approval. The migrated record permanently blocks the exact old wire.
+For a different wire, a bounded exception can be requested only by a manually
+dispatched run with both `confirm_external_signing=true` and
+`confirm_ambiguous_recovery=true`, the required reviewer approval, and
+`GITHUB_RUN_ATTEMPT=1`. The authorization must either exactly bind the current
+run and package, or provide successful prior-run proof for a legacy migrated
+record without `targetOriginSha256`, as detailed below. The existing pending
 status lease is still authoritative: once written, it blocks every rerun and
 the workflow has no retry path. The workflow does not contact a separate
 receipt service or accept a configurable signing endpoint.
@@ -123,9 +130,27 @@ root commit as the status anchor. The prepare step validates the frozen
 unsigned package and posts a GitHub commit status with the operation context in
 `pending` state on that anchor before writing the encrypted intent. A later run
 on an unrelated commit queries the same anchor and stops when it sees that
-context. The known wire
-digest from the prior ambiguous operation remains permanently blocked even if
-the source commit, manifest, or provenance files change.
+context. An existing status for the current target's operation key always
+blocks preparation. The known wire digest from the prior ambiguous operation
+also remains permanently blocked, even with a matching current-run recovery
+authorization and even if the source commit, manifest, or provenance files
+change.
+
+For a legacy migrated record that has no `targetOriginSha256`, a prior-run
+authorization can serve as evidence that the old ambiguous operation already
+completed successfully. This exception still requires a manual dispatch with
+both `confirm_external_signing=true` and `confirm_ambiguous_recovery=true`,
+approval by the protected reviewer for the current reviewed commit, and
+`GITHUB_RUN_ATTEMPT=1`. The authorization must name a different, prior run; its
+logical source identity must match both the migrated record and current
+package; its migrated wire digest must match the record; and its operation key
+must recompute from that identity and its own prior target hash. The prior
+target hash must differ from the current target, and the status ledger must
+show `success` for that prior operation key. The current operation key must
+have no status, and the current package's wire digest must differ from the
+migrated wire digest. Missing, pending, failed, or mismatched prior evidence
+blocks preparation. This proof does not bypass current-run reviewer approval,
+the current-target status check, or the permanent old-wire block.
 
 The status read uses the combined-status endpoint with `per_page=100` and
 walks every page. It requires the returned anchor SHA, total count, page shape,
