@@ -11,6 +11,7 @@ from unittest.mock import patch
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 import phase5a_build_upload as b
+import phase5a_compare_upload as c
 import phase5a_inspect_upload as i
 import phase5a_upload_signing as s
 TEST_RUNTIME_ORIGIN='https://runtime.example.invalid'
@@ -63,6 +64,57 @@ class UploadContractTests(unittest.TestCase):
         # The accepted upload tail still has validate/submit; Phase 5B adds
         # the separate device-approval request ahead of it.
         self.assertEqual(i.inspect(fixture(), runtime_origin=TEST_RUNTIME_ORIGIN)['networkActions'],3)
+
+    def test_complete_client_comparison_uses_explicit_runtime_origin_without_environment(self):
+        with tempfile.TemporaryDirectory(dir=TEST_TMP) as directory:
+            root = Path(directory)
+            first = root / 'first.shortcut'
+            second = root / 'second.shortcut'
+            client = plistlib.dumps(fixture())
+            first.write_bytes(client)
+            second.write_bytes(client)
+            env = dict(b.os.environ)
+            env.pop('WHT_RUNTIME_ORIGIN', None)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(Path(c.__file__).resolve()),
+                    str(first),
+                    str(second),
+                    '--runtime-origin',
+                    TEST_RUNTIME_ORIGIN,
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+                env=env,
+            )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        report = json.loads(result.stdout)
+        self.assertTrue(report['boundedNativeContractEqual'])
+        self.assertTrue(report['byteIdentical'])
+
+    def test_complete_client_comparison_uses_runtime_origin_environment_when_flag_is_omitted(self):
+        with tempfile.TemporaryDirectory(dir=TEST_TMP) as directory:
+            root = Path(directory)
+            first = root / 'first.shortcut'
+            second = root / 'second.shortcut'
+            client = plistlib.dumps(fixture())
+            first.write_bytes(client)
+            second.write_bytes(client)
+            env = dict(b.os.environ)
+            env['WHT_RUNTIME_ORIGIN'] = TEST_RUNTIME_ORIGIN
+            result = subprocess.run(
+                [sys.executable, str(Path(c.__file__).resolve()), str(first), str(second)],
+                capture_output=True,
+                text=True,
+                check=False,
+                env=env,
+            )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        report = json.loads(result.stdout)
+        self.assertTrue(report['boundedNativeContractEqual'])
+        self.assertTrue(report['byteIdentical'])
 
     def test_login_return_contract_matches_current_source(self):
         source = b.SOURCE.read_text(encoding='utf-8')
