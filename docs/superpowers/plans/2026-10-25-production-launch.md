@@ -116,11 +116,11 @@ Names above are intended deliverables, not files claimed to exist. Keep private 
 **Owner:** Orchestrator. **Inputs:** Completed Task 1 canonical repository and actual Phase 10 preview approval/review/check outputs. **Output:** Frozen production candidate and prerequisites list.
 
 - [ ] Record the user approval, exact unique preview deployment, app source tree/hash, schema/migrations, Shortcut source/artifact and known limitations.
-- [ ] Read the final Phase 10 report and inspect actual routes/stats/login behavior; update baseline assumptions if its implementation changed migrations or wire contracts.
-- [ ] Capture canonical repository status, branch, committed source identity and any later approved changes without resetting/stashing/deleting unrelated work. Verify the Task 1 legacy snapshot remains recoverable; preserve any additional evidence generated after cutover.
+- [x] Read the final Phase 10 report and inspect actual routes/stats/login behavior; update baseline assumptions if its implementation changed migrations or wire contracts. See [provisional Task 2 record](../../../daily-games-tracker/reports/production-task2-baseline.md); the later login has been reconciled in candidate `99e0b3aa` and deployed to a unique preview; acceptance and the settings-hash investigation remain open.
+- [x] Capture canonical repository status, branch, committed source identity and any later approved changes without resetting/stashing/deleting unrelated work. Verify the Task 1 legacy snapshot remains recoverable; preserve any additional evidence generated after cutover. See the provisional Task 2 record for the bounded verification and limitations.
 - [ ] Record the accepted canonical source commit/tree. Diagnose any blocked index/commit operation legitimately; do not treat an old baseline or an uncommitted workspace as the production release.
-- [ ] Carry forward each open Phase 5A/9 gate into the release record with its owner, test or explicit approved disposition; preserve waivers. Include current official game-terms review and public display-name/score consent before real rollout.
-- [ ] Choose the smallest reviewed release scope; no experimental route or admin diagnostic is automatically production scope.
+- [x] Carry forward each open Phase 5A/9 gate into the release record with its owner, test or explicit approved disposition; preserve waivers. Include current official game-terms review and public display-name/score consent before real rollout. See the provisional Task 2 record; the gates themselves remain open.
+- [ ] Choose the smallest reviewed release scope; no experimental route or admin diagnostic is automatically production scope. The provisional Task 2 record proposes a boundary, but the exact candidate and Shortcut remain subject to reconciliation and approval.
 
 **Exit:** We can reproduce exactly what the user approved and enumerate everything still required without relying on chat memory.
 
