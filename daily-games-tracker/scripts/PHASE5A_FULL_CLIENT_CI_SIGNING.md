@@ -22,8 +22,6 @@ The protected environment requires these private values:
 * `WHT_RUNTIME_ORIGIN`: the runtime HTTPS origin, without path, query,
   fragment, userinfo, whitespace, or trailing slash. Protected CI rejects
   `localhost` and reserved `.invalid`, `.example`, and `.test` hosts.
-* `WHT_REVIEWED_APPLICATION_COMMIT`: the exact reviewed run commit for both
-  automatic and manual runs. Both paths verify checkout identity before building.
 * `WHT_SIGNING_OUTPUT_KEY`: canonical base64 for exactly 32 random bytes. It
   encrypts intent and result envelopes with Node's authenticated AES-256-GCM.
 * `WHT_AMBIGUOUS_SIGNING_RECORD`: a base64-encoded AES-256-GCM envelope,
@@ -60,9 +58,8 @@ allowing only `main`. The job checks these settings through the GitHub API
 before building and fails closed on absent, malformed, or inaccessible evidence.
 The reviewer must approve the first attempt with the exact comment
 `reviewed <full-commit-sha>`, using the run's reviewed commit. Push and manual
-runs both require this approval and the reviewed commit pin. The existing
-production environment must have administrator bypass disabled before this
-combined guard can pass. A relevant push starts automatically after that
+runs both require this approval; the job also verifies checkout identity before
+building. A relevant push starts automatically after that
 protected approval. The migrated
 record blocks the old logical package by default. A bounded exception can be
 requested only by a manually dispatched run with both
@@ -73,16 +70,14 @@ status lease is still authoritative: once written, it blocks every rerun and
 the workflow has no retry path. The workflow does not contact a separate
 receipt service or accept a configurable signing endpoint.
 
-### Maintaining the reviewed commit pin
+### Approving a signing run
 
 For each intended signing run, review the exact `main` commit and its signing
-inputs, then update the `wht-shortcut-signing` environment secret
-`WHT_REVIEWED_APPLICATION_COMMIT` in GitHub settings to that full 40-character
-commit SHA. Compare the run's displayed SHA with the reviewed SHA before
-approving its protected environment job. A later documentation-only commit
-also changes the SHA and requires a new pin for a run on that commit. Updating
-the pin is not approval of a run or of an ambiguous recovery; the existing
-environment approval, package validation and ledger checks still apply.
+inputs. Compare the run's displayed SHA with the reviewed SHA, then approve
+its protected environment job with `reviewed <full-commit-sha>`. This can be
+done in GitHub without a development machine or a separately maintained commit
+secret. Approval does not bypass the package validation, ledger checks, or the
+separate authorization required for an ambiguous recovery.
 
 The separate manual `shortcut-approval-rehearsal.yml` workflow is a read-only
 experiment. It never builds or signs a Shortcut, contacts HubSign, or uses the
@@ -93,10 +88,8 @@ disabled, and main-only deployment policy. Dispatch it on the reviewed main
 commit; the configured reviewer must approve with the exact comment
 `reviewed <full-commit-sha>`. The job rejects reruns, missing or mismatched
 approval, a different reviewer or environment, and enabled administrator
-bypass. It requests only Actions and contents read permissions. This rehearsal
-does not replace the signing commit pin. The production job separately checks
-the exact-commit approval alongside the pin and verifies its main-only branch
-policy.
+bypass. It requests only Actions and contents read permissions. The production
+job separately checks the exact-commit approval and its main-only branch policy.
 
 To prove the production environment's actual protection and Actions-token API
 access without signing, use `shortcut-production-approval-proof.yml` after the
@@ -108,7 +101,7 @@ first attempt with `reviewed <full-commit-sha>` for that exact run. The job
 uses the production verifier and read-only token permissions; it does not read
 signing secrets, build packages, write a status, contact HubSign, or invoke the
 signing workflow. Inspect the job result before drawing conclusions. A passing
-proof does not alter or replace the production commit pin.
+proof does not itself authorize a signing run.
 
 ## Actions-only state machine
 
