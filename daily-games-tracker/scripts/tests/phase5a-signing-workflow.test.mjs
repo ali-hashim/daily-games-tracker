@@ -10,10 +10,20 @@ test('protected Actions-only workflow retains all boundaries', () => {
   assert.equal(verifySigningWorkflow(workflow, lock), true);
 });
 
+test('the exact approval check precedes any package build or provider transfer', () => {
+  const check = workflow.indexOf('node daily-games-tracker/scripts/phase5a-approval-rehearsal.mjs --production');
+  assert.ok(check > workflow.indexOf('name: Check out only the protected reviewed source commit'));
+  assert.ok(check < workflow.indexOf('name: Rebuild pinned compiler with verified module graph'));
+  assert.match(workflow, /\n  actions: read\n/);
+  assert.match(workflow, /WHT_REVIEWED_APPLICATION_COMMIT/);
+});
+
 const expression = '$' + '{{';
 const mutations = [
   ['automatic main trigger', '  push:\n    branches: [main]', '  removed-trigger:\n    branches: [main]'],
   ['environment protection', 'environment: wht-shortcut-signing', 'environment: unprotected'],
+  ['approval verification', 'node daily-games-tracker/scripts/phase5a-approval-rehearsal.mjs --production', 'true'],
+  ['approval read permission', '  actions: read', '  actions: none'],
   ['source allowlist', 'test "$REVIEWED_APPLICATION_COMMIT" = "$GITHUB_SHA"', 'true'],
   ['unset source stop', 'test "$REVIEWED_APPLICATION_COMMIT" !=', 'test "$REVIEWED_APPLICATION_COMMIT" ='],
   ['reviewed commit secret', 'REVIEWED_APPLICATION_COMMIT: ' + expression + ' secrets.WHT_REVIEWED_APPLICATION_COMMIT }}', 'REVIEWED_APPLICATION_COMMIT: https://runtime.example.invalid'],

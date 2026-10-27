@@ -54,8 +54,16 @@ metadata cannot create a new logical operation. A migrated ambiguity record is
 derived privately from the reviewed historical build and its preserved wire
 evidence; callers cannot supply an arbitrary logical identity to clear it.
 
-The environment also needs an administrator-configured required reviewer. A
-relevant push starts automatically after that protected approval. The migrated
+The environment also needs an administrator-configured individual required
+reviewer, administrator bypass disabled, and a custom deployment branch policy
+allowing only `main`. The job checks these settings through the GitHub API
+before building and fails closed on absent, malformed, or inaccessible evidence.
+The reviewer must approve the first attempt with the exact comment
+`reviewed <full-commit-sha>`, using the run's reviewed commit. Push and manual
+runs both require this approval and the reviewed commit pin. The existing
+production environment must have administrator bypass disabled before this
+combined guard can pass. A relevant push starts automatically after that
+protected approval. The migrated
 record blocks the old logical package by default. A bounded exception can be
 requested only by a manually dispatched run with both
 `confirm_external_signing=true` and `confirm_ambiguous_recovery=true`, the
@@ -86,9 +94,21 @@ commit; the configured reviewer must approve with the exact comment
 `reviewed <full-commit-sha>`. The job rejects reruns, missing or mismatched
 approval, a different reviewer or environment, and enabled administrator
 bypass. It requests only Actions and contents read permissions. This rehearsal
-does not replace the signing commit pin: provider response semantics, bypass
-behavior and real Actions-token access need independent verification before any
-change to the production guard.
+does not replace the signing commit pin. The production job separately checks
+the exact-commit approval alongside the pin and verifies its main-only branch
+policy.
+
+To prove the production environment's actual protection and Actions-token API
+access without signing, use `shortcut-production-approval-proof.yml` after the
+workflow and verifier have been reviewed and published. First configure the
+production environment with administrator bypass disabled, an individual
+required reviewer, and a custom branch policy containing only `main`. Dispatch
+the proof on the reviewed `main` commit. The configured reviewer approves its
+first attempt with `reviewed <full-commit-sha>` for that exact run. The job
+uses the production verifier and read-only token permissions; it does not read
+signing secrets, build packages, write a status, contact HubSign, or invoke the
+signing workflow. Inspect the job result before drawing conclusions. A passing
+proof does not alter or replace the production commit pin.
 
 ## Actions-only state machine
 
@@ -150,7 +170,7 @@ Run from a fresh repository clone with Python 3 and Node.js:
 
 ```text
 node daily-games-tracker/scripts/phase5a-verify-signing-workflow.mjs
-node --test daily-games-tracker/scripts/tests/phase5a-actions-signing.test.mjs daily-games-tracker/scripts/tests/phase5a-signing-workflow.test.mjs
+node --test daily-games-tracker/scripts/tests/phase5a-actions-signing.test.mjs daily-games-tracker/scripts/tests/phase5a-signing-workflow.test.mjs daily-games-tracker/scripts/tests/phase5a-approval-rehearsal.test.mjs daily-games-tracker/scripts/tests/phase5a-production-approval-proof.test.mjs
 python3 -m unittest daily-games-tracker/scripts/tests/test_phase5a_upload.py
 ```
 

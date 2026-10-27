@@ -2,9 +2,9 @@ import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 
-const environmentName = 'wht-signing-approval-rehearsal';
-
-export function verifyApproval({ environment, run, approvals, context }) {
+export function verifyApproval({ environment, run, approvals, context, mode = 'rehearsal', branchPolicies }) {
+  assert.ok(mode === 'rehearsal' || mode === 'production');
+  const environmentName = mode === 'production' ? 'wht-shortcut-signing' : 'wht-signing-approval-rehearsal';
   assert.match(context.sha, /^[0-9a-f]{40}$/);
   assert.match(context.runId, /^[1-9][0-9]*$/);
   assert.equal(context.ref, 'refs/heads/main');
@@ -12,7 +12,19 @@ export function verifyApproval({ environment, run, approvals, context }) {
   assert.equal(String(run.id), context.runId);
   assert.equal(run.head_sha, context.sha);
   assert.equal(run.head_branch, 'main');
-  assert.equal(run.event, 'workflow_dispatch');
+  if (mode === 'production') {
+    assert.ok(context.event === 'push' || context.event === 'workflow_dispatch');
+    assert.equal(run.event, context.event);
+    assert.equal(environment.deployment_branch_policy?.protected_branches, false);
+    assert.equal(environment.deployment_branch_policy?.custom_branch_policies, true);
+    assert.equal(branchPolicies?.total_count, 1);
+    assert.ok(Array.isArray(branchPolicies.branch_policies));
+    assert.equal(branchPolicies.branch_policies.length, 1);
+    assert.equal(branchPolicies.branch_policies[0].name, 'main');
+    assert.equal(branchPolicies.branch_policies[0].type, 'branch');
+  } else {
+    assert.equal(run.event, 'workflow_dispatch');
+  }
   assert.equal(run.run_attempt, 1);
   assert.equal(environment.name, environmentName);
   assert.ok(Number.isSafeInteger(environment.id) && environment.id > 0);
@@ -34,7 +46,10 @@ export function verifyApproval({ environment, run, approvals, context }) {
 }
 
 async function main() {
-  const { GITHUB_API_URL: api, GITHUB_REPOSITORY: repository, GITHUB_TOKEN: token, GITHUB_RUN_ID: runId, GITHUB_SHA: sha, GITHUB_REF: ref, GITHUB_RUN_ATTEMPT: attempt } = process.env;
+  assert.ok(process.argv.length === 2 || (process.argv.length === 3 && process.argv[2] === '--production'));
+  const mode = process.argv[2] === '--production' ? 'production' : 'rehearsal';
+  const environmentName = mode === 'production' ? 'wht-shortcut-signing' : 'wht-signing-approval-rehearsal';
+  const { GITHUB_API_URL: api, GITHUB_REPOSITORY: repository, GITHUB_TOKEN: token, GITHUB_RUN_ID: runId, GITHUB_SHA: sha, GITHUB_REF: ref, GITHUB_RUN_ATTEMPT: attempt, GITHUB_EVENT_NAME: event } = process.env;
   assert.equal(api, 'https://api.github.com');
   assert.match(repository, /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/);
   assert.ok(token);
@@ -47,11 +62,12 @@ async function main() {
     assert.ok(body.length <= 1_000_000);
     return JSON.parse(body);
   }
-  const [environment, run, approvals] = await Promise.all([
+  const [environment, run, approvals, branchPolicies] = await Promise.all([
     get(`/environments/${environmentName}`), get(`/actions/runs/${runId}`), get(`/actions/runs/${runId}/approvals`),
+    mode === 'production' ? get(`/environments/${environmentName}/deployment-branch-policies?per_page=100`) : undefined,
   ]);
-  verifyApproval({ environment, run, approvals, context: {runId, sha, ref, attempt} });
-  console.log('Read-only approval rehearsal passed.');
+  verifyApproval({ environment, run, approvals, branchPolicies, mode, context: {runId, sha, ref, attempt, event} });
+  console.log('Protected approval verification passed.');
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

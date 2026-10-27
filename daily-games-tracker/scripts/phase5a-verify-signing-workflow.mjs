@@ -21,6 +21,7 @@ export function verifySigningWorkflow(workflow, lock) {
   has('default: false');
   has('permissions:');
   has('  contents: read');
+  has('  actions: read');
   has('  statuses: write');
   has('concurrency:');
   has('group: full-upload-sign-' + expression + ' github.ref }}');
@@ -36,6 +37,8 @@ export function verifySigningWorkflow(workflow, lock) {
   has('base64.b64encode(decoded).decode("ascii") == key and len(decoded) == 32');
   has('uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683');
   has('fetch-depth: 0');
+  has('node daily-games-tracker/scripts/phase5a-approval-rehearsal.mjs --production');
+  assert.ok(workflow.indexOf('node daily-games-tracker/scripts/phase5a-approval-rehearsal.mjs --production') < workflow.indexOf('name: Rebuild pinned compiler with verified module graph'));
   has('name: Establish stable protected status anchor');
   has('git rev-list --max-parents=0 HEAD');
   has('WHT_SIGNING_STATUS_ANCHOR=${roots[0]}');
