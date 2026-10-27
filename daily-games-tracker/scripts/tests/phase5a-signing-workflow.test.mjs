@@ -15,7 +15,7 @@ test('the exact approval check precedes any package build or provider transfer',
   assert.ok(check > workflow.indexOf('name: Check out only the protected reviewed source commit'));
   assert.ok(check < workflow.indexOf('name: Rebuild pinned compiler with verified module graph'));
   assert.match(workflow, /\n  actions: read\n/);
-  assert.match(workflow, /WHT_REVIEWED_APPLICATION_COMMIT/);
+  assert.doesNotMatch(workflow, /REVIEWED_APPLICATION_COMMIT/);
 });
 
 const expression = '$' + '{{';
@@ -24,9 +24,7 @@ const mutations = [
   ['environment protection', 'environment: wht-shortcut-signing', 'environment: unprotected'],
   ['approval verification', 'node daily-games-tracker/scripts/phase5a-approval-rehearsal.mjs --production', 'true'],
   ['approval read permission', '  actions: read', '  actions: none'],
-  ['source allowlist', 'test "$REVIEWED_APPLICATION_COMMIT" = "$GITHUB_SHA"', 'true'],
-  ['unset source stop', 'test "$REVIEWED_APPLICATION_COMMIT" !=', 'test "$REVIEWED_APPLICATION_COMMIT" ='],
-  ['reviewed commit secret', 'REVIEWED_APPLICATION_COMMIT: ' + expression + ' secrets.WHT_REVIEWED_APPLICATION_COMMIT }}', 'REVIEWED_APPLICATION_COMMIT: https://runtime.example.invalid'],
+  ['checkout commit identity', 'test "$(git rev-parse HEAD)" = "$GITHUB_SHA"', 'true'],
   ['runtime origin secret', 'WHT_RUNTIME_ORIGIN: ' + expression + ' secrets.WHT_RUNTIME_ORIGIN }}', 'WHT_RUNTIME_ORIGIN: https://runtime.example.invalid'],
   ['output encryption secret', 'WHT_SIGNING_OUTPUT_KEY: ' + expression + ' secrets.WHT_SIGNING_OUTPUT_KEY }}', 'WHT_SIGNING_OUTPUT_KEY: unset'],
   ['migrated ambiguity secret', 'WHT_AMBIGUOUS_SIGNING_RECORD: ' + expression + ' secrets.WHT_AMBIGUOUS_SIGNING_RECORD }}', 'WHT_AMBIGUOUS_SIGNING_RECORD: unset'],

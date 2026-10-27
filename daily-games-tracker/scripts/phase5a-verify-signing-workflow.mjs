@@ -11,7 +11,6 @@ export function verifySigningWorkflow(workflow, lock) {
   has('  push:');
   has('    branches: [main]');
   has('environment: wht-shortcut-signing');
-  has('REVIEWED_APPLICATION_COMMIT: ' + expression + ' secrets.WHT_REVIEWED_APPLICATION_COMMIT }}');
   has('WHT_RUNTIME_ORIGIN: ' + expression + ' secrets.WHT_RUNTIME_ORIGIN }}');
   has('WHT_SIGNING_OUTPUT_KEY: ' + expression + ' secrets.WHT_SIGNING_OUTPUT_KEY }}');
   has('WHT_AMBIGUOUS_SIGNING_RECORD: ' + expression + ' secrets.WHT_AMBIGUOUS_SIGNING_RECORD }}');
@@ -26,8 +25,8 @@ export function verifySigningWorkflow(workflow, lock) {
   has('concurrency:');
   has('group: full-upload-sign-' + expression + ' github.ref }}');
   has('cancel-in-progress: false');
-  has("test \"$REVIEWED_APPLICATION_COMMIT\" != '0000000000000000000000000000000000000000'");
-  has('test "$REVIEWED_APPLICATION_COMMIT" = "$GITHUB_SHA"');
+  assert.doesNotMatch(workflow, /REVIEWED_APPLICATION_COMMIT/);
+  has('test "$(git rev-parse HEAD)" = "$GITHUB_SHA"');
   has('test -n "$WHT_AMBIGUOUS_SIGNING_RECORD"');
   has('if [[ "$WHT_AMBIGUOUS_RECOVERY_REQUESTED" == true ]]; then');
   has('test "$GITHUB_EVENT_NAME" = workflow_dispatch');

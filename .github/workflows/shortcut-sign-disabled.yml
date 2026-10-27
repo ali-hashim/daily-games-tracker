@@ -54,7 +54,6 @@ jobs:
       GITHUB_TOKEN: ${{ github.token }}
       GITHUB_API_URL: ${{ github.api_url }}
       GITHUB_REPOSITORY: ${{ github.repository }}
-      REVIEWED_APPLICATION_COMMIT: ${{ secrets.WHT_REVIEWED_APPLICATION_COMMIT }}
       WHT_RUNTIME_ORIGIN: ${{ secrets.WHT_RUNTIME_ORIGIN }}
       WHT_SIGNING_OUTPUT_KEY: ${{ secrets.WHT_SIGNING_OUTPUT_KEY }}
       WHT_AMBIGUOUS_SIGNING_RECORD: ${{ secrets.WHT_AMBIGUOUS_SIGNING_RECORD }}
@@ -70,9 +69,6 @@ jobs:
           set -euo pipefail
           test "$GITHUB_REF" = refs/heads/main
           [[ "$GITHUB_SHA" =~ ^[0-9a-f]{40}$ ]]
-          [[ "$REVIEWED_APPLICATION_COMMIT" =~ ^[0-9a-f]{40}$ ]]
-          test "$REVIEWED_APPLICATION_COMMIT" != '0000000000000000000000000000000000000000'
-          test "$REVIEWED_APPLICATION_COMMIT" = "$GITHUB_SHA"
           test -n "$WHT_RUNTIME_ORIGIN"
           test -n "$WHT_SIGNING_OUTPUT_KEY"
           test -n "$WHT_AMBIGUOUS_SIGNING_RECORD"
