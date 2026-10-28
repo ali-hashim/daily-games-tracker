@@ -2,17 +2,8 @@ import { latestWorldwideDay } from "../../../shared/day";
 import { apiJson, requireMethod } from "../../_lib/http";
 import { readAllTimeLeaderboard } from "../../_lib/leaderboards";
 import { authenticateSession, refreshSession, sessionCookie } from "../../_lib/sessions";
+import { shortcutDownloadUrl } from "../../_lib/shortcut-download";
 import type { AppData, AppEnv } from "../../_lib/runtime";
-
-const SUPPORTED_INSTALL_URL = /^https:\/\/www\.icloud\.com\/shortcuts\/[a-f0-9]{32}$/i;
-const TEST_INSTALL_URL = "https://example.invalid/shortcuts/EXAMPLE_SHORTCUT";
-
-function installUrl(env: AppEnv): string | null {
-  const value = env.SHORTCUT_INSTALL_URL ?? "";
-  return SUPPORTED_INSTALL_URL.test(value) || (env.APP_ENV === "test" && value === TEST_INSTALL_URL)
-    ? value
-    : null;
-}
 
 export const onRequest: PagesFunction<AppEnv, string, AppData> = async ({ request, env, data }) => {
   requireMethod(request, ["GET"]);
@@ -38,7 +29,7 @@ export const onRequest: PagesFunction<AppEnv, string, AppData> = async ({ reques
       status: "ok",
       player: { id: session.player_id, display_name: session.display_name },
       games,
-      install_url: installUrl(env),
+      install_url: shortcutDownloadUrl(env),
     },
     { headers: { "Set-Cookie": sessionCookie(session.token, session.absolute_expires_at) } },
   );

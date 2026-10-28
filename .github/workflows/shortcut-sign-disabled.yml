@@ -1,8 +1,8 @@
 name: Full upload signing (protected Actions automation)
 
 # The filename is retained for migration compatibility. Signing is now
-# Actions-only: encrypted intent/result artifacts and a GitHub commit-status
-# lease replace the previously deployed private Worker boundary.
+# Actions-only: private R2 intent/result/delivery state and a GitHub
+# commit-status lease replace the previously deployed private Worker boundary.
 on:
   push:
     branches: [main]
@@ -32,6 +32,35 @@ on:
         required: true
         type: boolean
         default: false
+      confirm_manual_resign:
+        description: Authorize one fresh signing attempt with the unique request ID below
+        required: true
+        type: boolean
+        default: false
+      manual_resign_request_id:
+        description: Unique lowercase UUIDv4 used once for this manual re-sign authorization
+        required: false
+        type: string
+        default: ''
+      manual_resign_source_commit:
+        description: Full reviewed main commit; must exactly match this workflow's checked-out commit
+        required: false
+        type: string
+        default: ''
+      manual_resign_reason:
+        description: Select the reviewed reason for this new signing request
+        required: false
+        type: choice
+        options:
+          - delivery-verification-failed
+          - prior-signature-unavailable
+          - previous-outcome-ambiguous
+          - post-delivery-integrity-check-failed
+      confirm_earlier_request_may_have_completed:
+        description: Confirm that a previous HubSign request may have completed
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -55,30 +84,42 @@ jobs:
       GITHUB_API_URL: ${{ github.api_url }}
       GITHUB_REPOSITORY: ${{ github.repository }}
       WHT_RUNTIME_ORIGIN: ${{ secrets.WHT_RUNTIME_ORIGIN }}
-      WHT_SIGNING_OUTPUT_KEY: ${{ secrets.WHT_SIGNING_OUTPUT_KEY }}
-      WHT_AMBIGUOUS_SIGNING_RECORD: ${{ secrets.WHT_AMBIGUOUS_SIGNING_RECORD }}
+      WHT_R2_ACCOUNT_ID: ${{ secrets.WHT_R2_ACCOUNT_ID }}
+      WHT_R2_BUCKET_NAME: ${{ secrets.WHT_R2_BUCKET_NAME }}
+      WHT_R2_ACCESS_KEY_ID: ${{ secrets.WHT_R2_ACCESS_KEY_ID }}
+      WHT_R2_SECRET_ACCESS_KEY: ${{ secrets.WHT_R2_SECRET_ACCESS_KEY }}
+      WHT_AMBIGUITY_RECORD_SHA256: ${{ secrets.WHT_AMBIGUITY_RECORD_SHA256 }}
       WHT_AMBIGUOUS_RECOVERY_AUTH: ${{ secrets.WHT_AMBIGUOUS_RECOVERY_AUTH }}
       WHT_AMBIGUOUS_RECOVERY_REQUESTED: ${{ github.event_name == 'workflow_dispatch' && inputs.confirm_ambiguous_recovery == true }}
+      WHT_MANUAL_RESIGN_REQUESTED: ${{ github.event_name == 'workflow_dispatch' && inputs.confirm_manual_resign == true }}
+      WHT_MANUAL_RESIGN_REQUEST_ID: ${{ inputs.manual_resign_request_id }}
+      WHT_MANUAL_RESIGN_SOURCE_COMMIT: ${{ inputs.manual_resign_source_commit }}
+      WHT_MANUAL_RESIGN_REASON: ${{ inputs.manual_resign_reason }}
+      WHT_CONFIRM_EARLIER_REQUEST_MAY_HAVE_COMPLETED: ${{ github.event_name == 'workflow_dispatch' && inputs.confirm_earlier_request_may_have_completed == true }}
       CHERRI_COMMIT: d2072c62ea708e7727099fab94fa28b0bcec747b
       PYTHONUTF8: "1"
       PYTHONOPTIMIZE: "0"
     steps:
-      - name: Require protected reviewed source and private encryption configuration
+      - name: Require protected reviewed source and private R2 configuration
         shell: bash
         run: |
           set -euo pipefail
           test "$GITHUB_REF" = refs/heads/main
           [[ "$GITHUB_SHA" =~ ^[0-9a-f]{40}$ ]]
           test -n "$WHT_RUNTIME_ORIGIN"
-          test -n "$WHT_SIGNING_OUTPUT_KEY"
-          test -n "$WHT_AMBIGUOUS_SIGNING_RECORD"
+          test -n "$WHT_R2_ACCOUNT_ID"
+          test -n "$WHT_R2_BUCKET_NAME"
+          test -n "$WHT_R2_ACCESS_KEY_ID"
+          test -n "$WHT_R2_SECRET_ACCESS_KEY"
+          [[ "$WHT_AMBIGUITY_RECORD_SHA256" =~ ^[0-9a-f]{64}$ ]]
+          echo "::add-mask::$WHT_AMBIGUITY_RECORD_SHA256"
           if [[ "$WHT_AMBIGUOUS_RECOVERY_REQUESTED" == true ]]; then
             test "$GITHUB_EVENT_NAME" = workflow_dispatch
             test "$GITHUB_RUN_ATTEMPT" = 1
             test -n "$WHT_AMBIGUOUS_RECOVERY_AUTH"
           fi
-          python3 - <<'PY'
-          import base64, os
+          python3 - 2>/dev/null <<'PY'
+          import os
           from urllib.parse import urlsplit
           origin = os.environ["WHT_RUNTIME_ORIGIN"]
           parsed = urlsplit(origin)
@@ -88,10 +129,7 @@ jobs:
           assert parsed.path in ("", "/") and not parsed.query and not parsed.fragment
           host = parsed.hostname.lower().rstrip(".")
           assert host != "localhost" and not host.endswith((".invalid", ".example", ".test"))
-          key = os.environ["WHT_SIGNING_OUTPUT_KEY"]
-          decoded = base64.b64decode(key, validate=True)
-          assert base64.b64encode(decoded).decode("ascii") == key and len(decoded) == 32
-          print("protected Actions signing configuration shape passed")
+          print("protected Actions R2 signing configuration shape passed")
           PY
 
       - name: Check out only the protected reviewed source commit
@@ -103,6 +141,9 @@ jobs:
 
       - name: Verify standing protected production authorization
         run: node daily-games-tracker/scripts/phase5a-approval-rehearsal.mjs --production
+
+      - name: Validate optional manual re-sign authorization
+        run: node daily-games-tracker/scripts/phase5a_actions_signing.mjs validate-manual-resign
 
       - name: Establish stable protected status anchor
         shell: bash
@@ -149,17 +190,17 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 daily-games-tracker/scripts/phase5a_build_upload.py --compiler "$RUNNER_TEMP/cherri" --runtime-origin "$WHT_RUNTIME_ORIGIN" --require-nonreserved-origin --output "$RUNNER_TEMP/upload-first"
-          python3 daily-games-tracker/scripts/phase5a_build_upload.py --compiler "$RUNNER_TEMP/cherri" --runtime-origin "$WHT_RUNTIME_ORIGIN" --require-nonreserved-origin --output "$RUNNER_TEMP/upload-second"
-          python3 daily-games-tracker/scripts/phase5a_compare_upload.py "$RUNNER_TEMP/upload-first/Upload To WHT_unsigned.shortcut" "$RUNNER_TEMP/upload-second/Upload To WHT_unsigned.shortcut" > "$RUNNER_TEMP/upload-first/reproducibility.json"
-          python3 daily-games-tracker/scripts/phase5a_upload_signing.py prepare --build-directory "$RUNNER_TEMP/upload-first" --runtime-origin "$WHT_RUNTIME_ORIGIN" --output "$RUNNER_TEMP/upload-review-package"
+          python3 daily-games-tracker/scripts/phase5a_build_upload.py --compiler "$RUNNER_TEMP/cherri" --runtime-origin "$WHT_RUNTIME_ORIGIN" --require-nonreserved-origin --output "$RUNNER_TEMP/upload-first" >/dev/null 2>&1
+          python3 daily-games-tracker/scripts/phase5a_build_upload.py --compiler "$RUNNER_TEMP/cherri" --runtime-origin "$WHT_RUNTIME_ORIGIN" --require-nonreserved-origin --output "$RUNNER_TEMP/upload-second" >/dev/null 2>&1
+          python3 daily-games-tracker/scripts/phase5a_compare_upload.py "$RUNNER_TEMP/upload-first/Upload To WHT_unsigned.shortcut" "$RUNNER_TEMP/upload-second/Upload To WHT_unsigned.shortcut" > "$RUNNER_TEMP/upload-first/reproducibility.json" 2>/dev/null
+          python3 daily-games-tracker/scripts/phase5a_upload_signing.py prepare --build-directory "$RUNNER_TEMP/upload-first" --runtime-origin "$WHT_RUNTIME_ORIGIN" --output "$RUNNER_TEMP/upload-review-package" >/dev/null 2>&1
 
       - name: Validate the frozen package and compute private digests
         id: digests
         shell: bash
         run: |
           set -euo pipefail
-          readarray -t digests < <(python3 - "$RUNNER_TEMP/upload-review-package" <<'PY'
+          readarray -t digests < <(python3 - "$RUNNER_TEMP/upload-review-package" 2>/dev/null <<'PY'
           import hashlib, pathlib, sys
           package = pathlib.Path(sys.argv[1])
           print(hashlib.sha256((package / "approval-manifest.json").read_bytes()).hexdigest())
@@ -168,19 +209,20 @@ jobs:
           )
           manifest_sha256="${digests[0]}"
           wire_sha256="${digests[1]}"
+          echo "::add-mask::$manifest_sha256"
+          echo "::add-mask::$wire_sha256"
           python3 daily-games-tracker/scripts/phase5a_upload_signing.py validate \
             --package "$RUNNER_TEMP/upload-review-package" \
             --runtime-origin "$WHT_RUNTIME_ORIGIN" \
             --expected-manifest-sha256 "$manifest_sha256" \
             --expected-wire-sha256 "$wire_sha256" \
-            > "$RUNNER_TEMP/package-validation.json"
+            > "$RUNNER_TEMP/package-validation.json" 2>/dev/null
           {
             echo "manifest_sha256=$manifest_sha256"
             echo "wire_sha256=$wire_sha256"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Persist encrypted signing intent before provider transfer
-        id: prepare
+      - name: Persist private R2 intent before provider transfer
         env:
           MANIFEST_SHA256: ${{ steps.digests.outputs.manifest_sha256 }}
           WIRE_SHA256: ${{ steps.digests.outputs.wire_sha256 }}
@@ -191,48 +233,47 @@ jobs:
             --package "$RUNNER_TEMP/upload-review-package" \
             --source-commit "$GITHUB_SHA" \
             --manifest-sha "$MANIFEST_SHA256" \
-            --wire-sha "$WIRE_SHA256" \
-            --intent-path "$RUNNER_TEMP/wht-signing-intent.enc"
-
-      - name: Upload encrypted signing intent
-        uses: actions/upload-artifact@615b319bd27bb32c3d64dca6b6ed6974d5fbe653 # v6.0.0
-        with:
-          name: ${{ steps.prepare.outputs.intent_artifact }}
-          path: ${{ steps.prepare.outputs.intent_path }}
-          if-no-files-found: error
-          retention-days: 90
+            --wire-sha "$WIRE_SHA256" >/dev/null 2>&1
 
       - name: Send exactly one direct HubSign request
         id: send
+        env:
+          MANIFEST_SHA256: ${{ steps.digests.outputs.manifest_sha256 }}
+          WIRE_SHA256: ${{ steps.digests.outputs.wire_sha256 }}
         shell: bash
         run: |
           set -euo pipefail
           node daily-games-tracker/scripts/phase5a_actions_signing.mjs send \
             --package "$RUNNER_TEMP/upload-review-package" \
-            --intent-path "$RUNNER_TEMP/wht-signing-intent.enc" \
-            --outcome-path "$RUNNER_TEMP/wht-signing-outcome.enc" \
-            --result-path "$RUNNER_TEMP/wht-signing-result.enc"
+            --source-commit "$GITHUB_SHA" \
+            --manifest-sha "$MANIFEST_SHA256" \
+            --wire-sha "$WIRE_SHA256" \
+            --signed-path "$RUNNER_TEMP/wht-signed.shortcut" >/dev/null 2>&1
 
-      - name: Upload encrypted provider outcome
-        if: ${{ always() && steps.send.outcome == 'failure' }}
-        uses: actions/upload-artifact@615b319bd27bb32c3d64dca6b6ed6974d5fbe653 # v6.0.0
-        with:
-          name: ${{ steps.prepare.outputs.intent_artifact }}-provider-outcome
-          path: ${{ runner.temp }}/wht-signing-outcome.enc
-          if-no-files-found: ignore
-          retention-days: 90
+      - name: Upload signed Shortcut and private latest manifest
+        env:
+          MANIFEST_SHA256: ${{ steps.digests.outputs.manifest_sha256 }}
+          WIRE_SHA256: ${{ steps.digests.outputs.wire_sha256 }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          node daily-games-tracker/scripts/phase5a_actions_signing.mjs publish \
+            --package "$RUNNER_TEMP/upload-review-package" \
+            --source-commit "$GITHUB_SHA" \
+            --manifest-sha "$MANIFEST_SHA256" \
+            --wire-sha "$WIRE_SHA256" \
+            --signed-path "$RUNNER_TEMP/wht-signed.shortcut" >/dev/null 2>&1
 
-      - name: Upload encrypted signed result
-        uses: actions/upload-artifact@615b319bd27bb32c3d64dca6b6ed6974d5fbe653 # v6.0.0
-        with:
-          name: ${{ steps.prepare.outputs.result_artifact }}
-          path: ${{ runner.temp }}/wht-signing-result.enc
-          if-no-files-found: error
-          retention-days: 90
-
-      - name: Mark encrypted result complete
+      - name: Mark private R2 delivery complete
+        env:
+          MANIFEST_SHA256: ${{ steps.digests.outputs.manifest_sha256 }}
+          WIRE_SHA256: ${{ steps.digests.outputs.wire_sha256 }}
         shell: bash
         run: |
           set -euo pipefail
           node daily-games-tracker/scripts/phase5a_actions_signing.mjs complete \
-            --result-path "$RUNNER_TEMP/wht-signing-result.enc"
+            --package "$RUNNER_TEMP/upload-review-package" \
+            --source-commit "$GITHUB_SHA" \
+            --manifest-sha "$MANIFEST_SHA256" \
+            --wire-sha "$WIRE_SHA256" \
+            --signed-path "$RUNNER_TEMP/wht-signed.shortcut" >/dev/null 2>&1

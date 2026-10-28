@@ -13,6 +13,8 @@ interface InstallUrlResponse {
   install_url: string | null;
 }
 
+const configuredBucket = {} as R2Bucket;
+
 async function decode<T>(response: Response): Promise<T> {
   return (await response.json()) as T;
 }
@@ -41,7 +43,7 @@ beforeAll(async () => {
 }, 30_000);
 
 beforeEach(async () => {
-  env.SHORTCUT_INSTALL_URL = undefined;
+  Object.assign(env, { SHORTCUT_BUCKET: undefined });
   for (const table of [
     "round_results",
     "submissions",
@@ -225,25 +227,16 @@ describe("authenticated personal stats", () => {
     expect(after).not.toBe(before);
   });
 
-  it("returns only the supported configured iCloud install URL", async () => {
+  it("offers the same-origin Shortcut download only when the private bucket is configured", async () => {
     await addPlayer("alex", "Alex");
     const token = await createSession("alex");
-    const valid = "https://example.invalid/shortcuts/EXAMPLE_SHORTCUT";
-    env.SHORTCUT_INSTALL_URL = valid;
+    Object.assign(env, { SHORTCUT_BUCKET: configuredBucket });
     expect(await decode<InstallUrlResponse>(await statsApi(context(token)))).toMatchObject({
-      install_url: valid,
+      install_url: "/api/shortcut/download",
     });
-
-    for (const value of [
-      undefined,
-      "http://example.invalid/shortcuts/EXAMPLE_SHORTCUT",
-      "https://example.invalid.attacker.test/shortcuts/0123456789abcdef0123456789abcdef",
-      `${valid}?secret=do-not-echo`,
-    ]) {
-      env.SHORTCUT_INSTALL_URL = value;
-      expect(await decode<InstallUrlResponse>(await statsApi(context(token)))).toMatchObject({
-        install_url: null,
-      });
-    }
+    Object.assign(env, { SHORTCUT_BUCKET: undefined });
+    expect(await decode<InstallUrlResponse>(await statsApi(context(token)))).toMatchObject({
+      install_url: null,
+    });
   });
 });

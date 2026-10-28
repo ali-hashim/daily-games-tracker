@@ -23,6 +23,7 @@ import { authenticateSession, refreshSession, sessionCookie } from "../../functi
 let runtime: Miniflare;
 let env: AppEnv;
 const admin = "admin@example.test";
+const configuredBucket = {} as R2Bucket;
 
 beforeAll(async () => {
   runtime = new Miniflare(
@@ -49,6 +50,7 @@ beforeAll(async () => {
 }, 30_000);
 
 beforeEach(async () => {
+  Object.assign(env, { SHORTCUT_BUCKET: undefined });
   for (const table of [
     "admin_audit_log",
     "web_sessions",
@@ -225,6 +227,7 @@ describe("D1 player and invitation onboarding", () => {
   it("enforces cookie, origin, replay, and logout policies through actual API handlers", async () => {
     const player = await createPlayer(env, "Alex", admin);
     const invite = await createInvite(env, player.id, admin);
+    Object.assign(env, { SHORTCUT_BUCKET: configuredBucket });
     const redeemPath = `/api/register/${invite.token}/redeem`;
     const foreign = await invoke(
       redeemApi as Handler,
@@ -242,9 +245,14 @@ describe("D1 player and invitation onboarding", () => {
     expect(response.status).toBe(201);
     expect(response.headers.get("Cache-Control")).toBe("no-store");
     expect(response.headers.get("Referrer-Policy")).toBe("no-referrer");
-    const body = (await response.json()) as { device_code: string; sessionToken?: string };
+    const body = (await response.json()) as {
+      device_code: string;
+      sessionToken?: string;
+      shortcut_install_url?: string | null;
+    };
     expect(body.device_code).toMatch(/^[A-Za-z0-9_-]{43}$/);
     expect(body.sessionToken).toBeUndefined();
+    expect(body.shortcut_install_url).toBe("/api/shortcut/download");
     const cookie = response.headers.get("Set-Cookie")!;
     expect(cookie).toContain("Secure; HttpOnly; SameSite=Lax");
     const retry = await invoke(

@@ -128,8 +128,7 @@ export default function RegistrationPage() {
             </a>
           ) : (
             <p className="notice">
-              The administrator is preparing the Shortcut pilot link. Keep this code until the link
-              is available.
+              The Shortcut download is currently unavailable. Keep this code until it is ready.
             </p>
           )}
           <p className="muted-note">

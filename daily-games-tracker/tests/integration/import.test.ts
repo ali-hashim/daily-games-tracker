@@ -12,6 +12,7 @@ let runtime: Miniflare;
 let env: AppEnv;
 let code: string;
 const now = new Date("2026-10-21T20:00:00Z");
+const configuredBucket = {} as R2Bucket;
 const fixture = (name: string) =>
   JSON.parse(readFileSync(`tests/fixtures/capture/${name}.json`, "utf8"));
 const map = () => fixture("2026-10-21-maptap-810.iphone");
@@ -56,7 +57,7 @@ beforeAll(async () => {
   env = {
     DB: (await runtime.getD1Database("DB")) as unknown as D1Database,
     APP_ENV: "test",
-    SHORTCUT_INSTALL_URL: "https://example.invalid/shortcuts/EXAMPLE_SHORTCUT",
+    SHORTCUT_BUCKET: configuredBucket,
   };
   const sql = readdirSync("migrations")
     .filter((name) => name.endsWith(".sql"))
@@ -74,7 +75,7 @@ afterAll(async () => {
   await runtime?.dispose();
 });
 beforeEach(async () => {
-  env.SHORTCUT_INSTALL_URL = "https://example.invalid/shortcuts/EXAMPLE_SHORTCUT";
+  env.SHORTCUT_BUCKET = configuredBucket;
   for (const table of [
     "round_results",
     "submissions",
@@ -754,7 +755,7 @@ describe("device authenticated D1 imports", () => {
     expect(required.body).toMatchObject({
       status: "update_required",
       latest_version: 2,
-      install_url: env.SHORTCUT_INSTALL_URL,
+      install_url: "/api/shortcut/download",
     });
     expect(required.body.error_message).toContain("Nothing was submitted");
     await env.DB.prepare(
@@ -769,48 +770,36 @@ describe("device authenticated D1 imports", () => {
       expect((await call("validate", map(), extra)).body.error_code).toBe("INVALID_REQUEST");
     expect(await count("submissions")).toBe(0);
   });
-  it.each([
-    undefined,
-    "",
-    "not a URL",
-    "http://example.invalid/shortcuts/0123456789abcdef0123456789abcdef",
-    "https://example.invalid.attacker.test/shortcuts/0123456789abcdef0123456789abcdef",
-    "https://example.invalid/shortcuts/not-a-shortcut",
-    "https://example.invalid/shortcuts/0123456789abcdef0123456789abcdef?secret=do-not-echo",
-    "https://user:do-not-echo@example.invalid/shortcuts/0123456789abcdef0123456789abcdef",
-  ])(
-    "returns safe update recovery without writes for an unusable install link (%s)",
-    async (url) => {
-      env.SHORTCUT_INSTALL_URL = url;
-      await env.DB.prepare(
-        "UPDATE app_meta SET value = '2' WHERE key IN ('minimum_shortcut_version','latest_shortcut_version')",
-      ).run();
-      for (const mode of ["validate", "submit"] as const) {
-        // Null capture proves this branch runs before parsing or any score write.
-        const result = await call(mode, null);
-        expect(result.response.status).toBe(503);
-        expect(result.body).toMatchObject({
-          status: "error",
-          error_code: "SHORTCUT_UPDATE_UNAVAILABLE",
-          request_id: "req_import_test",
-        });
-        expect(result.body.error_message).toContain("Contact the administrator");
-        expect(result.body.error_message).toContain("Nothing was submitted.");
-        expect(result.body).not.toHaveProperty("install_url");
-        expect(result.body).not.toHaveProperty("scoreboard_text");
-        expect(JSON.stringify(result.body)).not.toContain("do-not-echo");
-        expect(JSON.stringify(result.body)).not.toContain(code);
-        expect(result.response.headers.get("Cache-Control")).toBe("no-store");
-      }
-      for (const table of ["game_days", "submissions", "round_results"])
-        expect(await count(table)).toBe(0);
-      expect(
-        await env.DB.prepare("SELECT last_used_at FROM device_credentials").first("last_used_at"),
-      ).toBeNull();
-    },
-  );
+  it("returns safe update recovery without writes when the private bucket is unavailable", async () => {
+    env.SHORTCUT_BUCKET = undefined;
+    await env.DB.prepare(
+      "UPDATE app_meta SET value = '2' WHERE key IN ('minimum_shortcut_version','latest_shortcut_version')",
+    ).run();
+    for (const mode of ["validate", "submit"] as const) {
+      // Null capture proves this branch runs before parsing or any score write.
+      const result = await call(mode, null);
+      expect(result.response.status).toBe(503);
+      expect(result.body).toMatchObject({
+        status: "error",
+        error_code: "SHORTCUT_UPDATE_UNAVAILABLE",
+        request_id: "req_import_test",
+      });
+      expect(result.body.error_message).toContain("Contact the administrator");
+      expect(result.body.error_message).toContain("Nothing was submitted.");
+      expect(result.body).not.toHaveProperty("install_url");
+      expect(result.body).not.toHaveProperty("scoreboard_text");
+      expect(JSON.stringify(result.body)).not.toContain("do-not-echo");
+      expect(JSON.stringify(result.body)).not.toContain(code);
+      expect(result.response.headers.get("Cache-Control")).toBe("no-store");
+    }
+    for (const table of ["game_days", "submissions", "round_results"])
+      expect(await count(table)).toBe(0);
+    expect(
+      await env.DB.prepare("SELECT last_used_at FROM device_credentials").first("last_used_at"),
+    ).toBeNull();
+  });
   it("does not block supported or optional-update imports when the install link is unavailable", async () => {
-    env.SHORTCUT_INSTALL_URL = undefined;
+    env.SHORTCUT_BUCKET = undefined;
     expect((await call("validate")).body).toMatchObject({ status: "valid", install_url: null });
     await env.DB.prepare(
       "UPDATE app_meta SET value = '2' WHERE key = 'latest_shortcut_version'",
@@ -825,7 +814,7 @@ describe("device authenticated D1 imports", () => {
     expect(await count("submissions")).toBe(1);
     expect(await count("round_results")).toBe(5);
   });
-  it("returns a usable required-update URL from either endpoint before parsing without activity writes", async () => {
+  it("returns the same-origin required-update download URL before parsing without activity writes", async () => {
     await env.DB.prepare(
       "UPDATE app_meta SET value = '2' WHERE key IN ('minimum_shortcut_version','latest_shortcut_version')",
     ).run();
@@ -834,7 +823,7 @@ describe("device authenticated D1 imports", () => {
       expect(result.response.status).toBe(426);
       expect(result.body).toMatchObject({
         status: "update_required",
-        install_url: env.SHORTCUT_INSTALL_URL,
+        install_url: "/api/shortcut/download",
       });
       expect(result.body.error_message).toContain("Nothing was submitted.");
     }

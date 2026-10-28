@@ -2,6 +2,7 @@ import { apiJson, readJsonBody, requireMethod } from "../../../_lib/http";
 import { redeemInvite } from "../../../_lib/onboarding";
 import type { AppData, AppEnv } from "../../../_lib/runtime";
 import { sessionCookie } from "../../../_lib/sessions";
+import { shortcutDownloadUrl } from "../../../_lib/shortcut-download";
 import { objectBody, requireSameOrigin, textField } from "../../../_lib/tokens";
 
 export const onRequest: PagesFunction<AppEnv, "inviteToken", AppData> = async ({
@@ -18,11 +19,7 @@ export const onRequest: PagesFunction<AppEnv, "inviteToken", AppData> = async ({
     String(params.inviteToken),
     textField(body.label, 100, true),
   );
-  const installUrl = /^https:\/\/www\.icloud\.com\/shortcuts\/[a-f0-9]{32}$/i.test(
-    env.SHORTCUT_INSTALL_URL ?? "",
-  )
-    ? env.SHORTCUT_INSTALL_URL
-    : null;
+  const installUrl = shortcutDownloadUrl(env);
   return apiJson(
     data.requestId,
     {

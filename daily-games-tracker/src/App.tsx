@@ -213,13 +213,13 @@ function PlayHelpPage({ games }: { games: Game[] }) {
         type="button"
         className="primary-action"
         disabled
-        aria-label="Shortcut installation link is not published yet"
+        aria-label="Shortcut download after registration"
       >
-        Shortcut link pending pilot <Icon name="lock" size={20} />
+        Shortcut download after registration <Icon name="lock" size={20} />
       </button>
       <p className="muted-note">
-        Registration is invitation-only. Your administrator will send the device code and Shortcut
-        link.
+        Registration is invitation-only. Your administrator will send a device invitation, and your
+        private scorecard will offer the Shortcut download after setup.
       </p>
       <div className="info-strip">
         <Icon name="shield" size={18} />

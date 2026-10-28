@@ -66,6 +66,7 @@ const SAFE_PATHS = new Set([
   "/api/import/validate",
   "/api/import/submit",
   "/api/user/stats",
+  "/api/shortcut/download",
   "/api/auth/me",
   "/api/auth/logout",
   "/api/auth/device/start",
