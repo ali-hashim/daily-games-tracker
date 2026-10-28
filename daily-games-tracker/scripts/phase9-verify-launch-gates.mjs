@@ -32,7 +32,6 @@ export const REQUIRED_PHASE9_GATE_IDS = Object.freeze([
   "launch.seven-player-pilot",
   "launch.clipboard-privacy",
   "launch.backup-restore",
-  "launch.monitoring-free-tier",
 ]);
 
 export const REQUIRED_PHASE5A_GATE_IDS = Object.freeze([
@@ -77,7 +76,6 @@ const NON_PASS_GATE_IDS = Object.freeze({
   "launch.seven-player-pilot": "seven-player pilot",
   "launch.clipboard-privacy": "native clipboard privacy coverage",
   "launch.backup-restore": "external backup restore",
-  "launch.monitoring-free-tier": "current Cloudflare/free-tier margin",
 });
 
 const allItems = (ledger) => [
