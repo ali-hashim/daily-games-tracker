@@ -1,4 +1,5 @@
 {
+  "WFWorkflowName": "Upload to WHT",
   "WFWorkflowActions": [
     {
       "WFWorkflowActionIdentifier": "is.workflow.actions.setvariable",
