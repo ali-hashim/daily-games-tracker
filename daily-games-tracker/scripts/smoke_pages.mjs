@@ -152,9 +152,9 @@ try {
   const loginBody = await loginStart.json();
   const flowCookie = loginStart.headers.getSetCookie()[0].split(";")[0];
   const launchUrl = new URL(loginBody.shortcut_url);
-  assert.match(loginBody.shortcut_url, /name=Upload%20To%20WHT/);
+  assert.match(loginBody.shortcut_url, /name=Upload%20to%20WHT/);
   assert.doesNotMatch(loginBody.shortcut_url, /name=Upload\+/);
-  assert.equal(launchUrl.searchParams.get("name"), "Upload To WHT");
+  assert.equal(launchUrl.searchParams.get("name"), "Upload to WHT");
   const challenge = launchUrl.searchParams.get("text").slice("DGT_LOGIN_V1:".length);
   assert.equal((await browserPost("/api/auth/device/complete", flowCookie)).status, 202);
   const approval = await fetch(`${origin}/api/auth/device/approve`, {

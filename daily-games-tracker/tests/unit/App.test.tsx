@@ -401,7 +401,7 @@ describe("Phase 10 User behavior", () => {
         }
         if (path === "/api/auth/device/start") {
           return Response.json({
-            shortcut_url: "shortcuts://run-shortcut?name=Upload%20To%20WHT",
+            shortcut_url: "shortcuts://run-shortcut?name=Upload%20to%20WHT",
           });
         }
         if (path === "/api/auth/device/complete") {
@@ -418,7 +418,7 @@ describe("Phase 10 User behavior", () => {
     expect(requestPaths.filter((path) => path === "/api/auth/device/start")).toHaveLength(1);
     const shortcut = rendered.container.querySelector("a.primary-action");
     expect(shortcut?.textContent).toBe("Login with your device");
-    expect(shortcut?.getAttribute("href")).toBe("shortcuts://run-shortcut?name=Upload%20To%20WHT");
+    expect(shortcut?.getAttribute("href")).toBe("shortcuts://run-shortcut?name=Upload%20to%20WHT");
     expect(() => buttonWithText(rendered.container, "Login with Device")).toThrow();
   });
 
@@ -435,7 +435,7 @@ describe("Phase 10 User behavior", () => {
         }
         if (path === "/api/auth/device/start") {
           return Response.json({
-            shortcut_url: "shortcuts://run-shortcut?name=Upload%20To%20WHT",
+            shortcut_url: "shortcuts://run-shortcut?name=Upload%20to%20WHT",
           });
         }
         if (path === "/api/auth/device/complete") {
@@ -473,7 +473,7 @@ describe("Phase 10 User behavior", () => {
         if (path === "/api/auth/device/start") {
           startCalls += 1;
           return Response.json({
-            shortcut_url: `shortcuts://run-shortcut?name=Upload%20To%20WHT%20${startCalls}`,
+            shortcut_url: `shortcuts://run-shortcut?name=Upload%20to%20WHT%20${startCalls}`,
           });
         }
         if (path === "/api/auth/device/complete") {
@@ -520,7 +520,7 @@ describe("Phase 10 User behavior", () => {
 
     resolveStart(
       Response.json({
-        shortcut_url: "shortcuts://run-shortcut?name=Upload%20To%20WHT",
+        shortcut_url: "shortcuts://run-shortcut?name=Upload%20to%20WHT",
       }),
     );
     await flushBehavior();
@@ -541,7 +541,7 @@ describe("Phase 10 User behavior", () => {
             return Response.json({ error_message: "Device unavailable" }, { status: 503 });
           }
           return Response.json({
-            shortcut_url: "shortcuts://run-shortcut?name=Upload%20To%20WHT",
+            shortcut_url: "shortcuts://run-shortcut?name=Upload%20to%20WHT",
           });
         }
         if (path === "/api/auth/device/complete") {
@@ -578,7 +578,7 @@ describe("Phase 10 User behavior", () => {
         }
         if (path === "/api/auth/device/start") {
           return Response.json({
-            shortcut_url: "shortcuts://run-shortcut?name=Upload%20To%20WHT",
+            shortcut_url: "shortcuts://run-shortcut?name=Upload%20to%20WHT",
           });
         }
         if (path === "/api/auth/device/complete") {
@@ -611,7 +611,7 @@ describe("Phase 10 User behavior", () => {
         }
         if (path === "/api/auth/device/start") {
           return Response.json({
-            shortcut_url: "shortcuts://run-shortcut?name=Upload%20To%20WHT",
+            shortcut_url: "shortcuts://run-shortcut?name=Upload%20to%20WHT",
           });
         }
         if (path === "/api/auth/device/complete") {
@@ -642,7 +642,7 @@ describe("Phase 10 User behavior", () => {
         }
         if (path === "/api/auth/device/start") {
           return Response.json({
-            shortcut_url: "shortcuts://run-shortcut?name=Upload%20To%20WHT",
+            shortcut_url: "shortcuts://run-shortcut?name=Upload%20to%20WHT",
           });
         }
         if (path === "/api/auth/device/complete") {
@@ -660,7 +660,7 @@ describe("Phase 10 User behavior", () => {
     expect(requestPaths.filter((path) => path === "/api/auth/device/start")).toHaveLength(1);
     const shortcut = rendered.container.querySelector("a.primary-action");
     expect(shortcut?.textContent).toBe("Login with your device");
-    expect(shortcut?.getAttribute("href")).toBe("shortcuts://run-shortcut?name=Upload%20To%20WHT");
+    expect(shortcut?.getAttribute("href")).toBe("shortcuts://run-shortcut?name=Upload%20to%20WHT");
     expect(rendered.container.textContent).not.toContain("Open Upload to WHT");
     expect(rendered.container.textContent).not.toContain("Home Screen app");
     expect(rendered.container.textContent).not.toContain("If Shortcuts opens Safari");
@@ -704,7 +704,7 @@ describe("Phase 10 User behavior", () => {
         if (path === "/api/auth/logout") return Response.json({ status: "ok" });
         if (path === "/api/auth/device/start") {
           return Response.json({
-            shortcut_url: "shortcuts://run-shortcut?name=Upload%20To%20WHT",
+            shortcut_url: "shortcuts://run-shortcut?name=Upload%20to%20WHT",
           });
         }
         if (path === "/api/auth/device/complete") return Response.json({ status: "pending" });
@@ -753,7 +753,7 @@ describe("Phase 10 User behavior", () => {
         }
         if (path === "/api/auth/device/start") {
           return Response.json({
-            shortcut_url: "shortcuts://run-shortcut?name=Upload%20To%20WHT",
+            shortcut_url: "shortcuts://run-shortcut?name=Upload%20to%20WHT",
           });
         }
         if (path === "/api/auth/device/complete") return Response.json({ status: "pending" });
@@ -851,7 +851,7 @@ describe("Phase 10 User behavior", () => {
         }
         if (path === "/api/auth/device/start") {
           return Response.json({
-            shortcut_url: "shortcuts://run-shortcut?name=Upload%20To%20WHT",
+            shortcut_url: "shortcuts://run-shortcut?name=Upload%20to%20WHT",
           });
         }
         if (path === "/api/auth/device/complete") return Response.json({ status: "pending" });

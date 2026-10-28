@@ -306,7 +306,7 @@ class UploadContractTests(unittest.TestCase):
         raw=fixture();raw['WFWorkflowActions'].pop(2);raw['WFWorkflowImportQuestions'][0].pop('ActionIndex')
         raw_bytes=plistlib.dumps(raw);binary=plistlib.dumps(b.normalize(raw))
         (build/'compiler-output.shortcut').write_bytes(raw_bytes)
-        (build/'Upload To WHT_unsigned.shortcut').write_bytes(binary)
+        (build/'Upload to WHT_unsigned.shortcut').write_bytes(binary)
         (build/'upload-to-wht.cherri').write_text(b.render_source(TEST_RUNTIME_ORIGIN),encoding='utf-8')
         manifest={'sourceSha256':b.digest(b.SOURCE.read_bytes()),'artifactSha256':b.digest(binary),'rawArtifactSha256':b.digest(raw_bytes),'lockSha256':b.digest(b.LOCK.read_bytes()),'normalizerSha256':b.digest(Path(b.__file__).read_bytes()),'inspectorSha256':b.digest(Path(i.__file__).read_bytes()),'nativeContractSha256':b.digest(i.CONTRACT.read_bytes())}
         manifest['captureSha256']=b.digest(b.CAPTURE.read_bytes())

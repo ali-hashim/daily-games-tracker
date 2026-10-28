@@ -1,7 +1,7 @@
 #include 'actions/web'
 #include 'actions/text'
 #include 'actions/sharing'
-#define name Upload To WHT
+#define name Upload to WHT
 // Match the installed Shortcuts tile: green with Cherri's "locationPin" glyph.
 #define color green
 #define glyph locationPin

@@ -47,7 +47,7 @@ export const onRequest: PagesFunction<AppEnv, string, AppData> = async ({ reques
     return new Response(shortcutBytes, {
       headers: {
         "Cache-Control": "no-store",
-        "Content-Disposition": 'attachment; filename="WHT.shortcut"',
+        "Content-Disposition": 'attachment; filename="Upload to WHT.shortcut"',
         "Content-Type": "application/vnd.apple.shortcut",
         "X-Request-ID": data.requestId,
       },

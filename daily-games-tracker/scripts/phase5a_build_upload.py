@@ -18,6 +18,7 @@ CAPTURE = MIGRATION.parent/'capture-safari.js'
 LOCK = MIGRATION/'toolchain.lock.json'
 NOTE = 'PRIVATE DEVICE CODE: stored in the Text action immediately above, named deviceCode. Customize Shortcut asks for it on this iPhone. If setup was skipped, edit that Text action. Editing or sharing a configured shortcut can expose the code.'
 PROMPT = 'Paste your private WHT device code.'
+SHORTCUT_NAME = 'Upload to WHT'
 RUNTIME_ORIGIN_TOKEN = '__WHT_RUNTIME_ORIGIN__'
 RESERVED_RUNTIME_HOST_SUFFIXES = ('.invalid', '.example', '.test')
 
@@ -67,6 +68,8 @@ def render_source(origin: str | None = None, *, allow_fixture: bool = True):
 
 def normalize(workflow):
     result = copy.deepcopy(workflow)
+    # Pin the installed display name in the delivered plist.
+    result['WFWorkflowName'] = SHORTCUT_NAME
     actions = result['WFWorkflowActions']
     targets = [(i,a) for i,a in enumerate(actions) if a['WFWorkflowActionIdentifier']=='is.workflow.actions.gettext' and a['WFWorkflowActionParameters'].get('CustomOutputName')=='deviceCode']
     assert len(targets) == 1
@@ -144,7 +147,7 @@ def build(compiler: Path, output: Path, origin: str | None = None, *, allow_fixt
         'flags': list(flags),
         'actions': semantic_actions,
     }
-    manifest = {'schemaVersion':1,'status':'unsigned full client compiled; native acceptance pending','sourceSha256':digest(SOURCE.read_bytes()),'renderedSourceSha256':digest(source.read_bytes()),'captureSha256':digest(CAPTURE.read_bytes()),'lockSha256':digest(LOCK.read_bytes()),'compilerSha256':digest(compiler.read_bytes()),'compilerCommit':lock['compiler']['commit'],'goVersion':lock['go']['version'],'flags':flags,'toolchainSemantic':semantic_toolchain,'rawArtifactSha256':digest(raw),'artifactSha256':digest(artifacts[0].read_bytes()),'normalizerSha256':digest(Path(__file__).read_bytes()),'inspectorSha256':digest((Path(__file__).parent/'phase5a_inspect_upload.py').read_bytes()),'nativeContractSha256':digest((MIGRATION/'build/upload-native-contract.json').read_bytes()),'runtimeOrigin':'injected at build time; value intentionally omitted','transformation':'runtime origin injected only in runner temporary source; explicit actual Import Question action index; editor note after deviceCode Text; deterministic unique control groups from native nesting; each menu options rebuilt from its own native branch titles; action order preserved','inspection':inspection,'nativeExecution':'not performed','signing':'not performed','reproducibility':'not established; action/control-flow arrays are never sorted'}
+    manifest = {'schemaVersion':1,'status':'unsigned full client compiled; native acceptance pending','sourceSha256':digest(SOURCE.read_bytes()),'renderedSourceSha256':digest(source.read_bytes()),'captureSha256':digest(CAPTURE.read_bytes()),'lockSha256':digest(LOCK.read_bytes()),'compilerSha256':digest(compiler.read_bytes()),'compilerCommit':lock['compiler']['commit'],'goVersion':lock['go']['version'],'flags':flags,'toolchainSemantic':semantic_toolchain,'rawArtifactSha256':digest(raw),'artifactSha256':digest(artifacts[0].read_bytes()),'normalizerSha256':digest(Path(__file__).read_bytes()),'inspectorSha256':digest((Path(__file__).parent/'phase5a_inspect_upload.py').read_bytes()),'nativeContractSha256':digest((MIGRATION/'build/upload-native-contract.json').read_bytes()),'runtimeOrigin':'injected at build time; value intentionally omitted','transformation':'runtime origin injected only in runner temporary source; WFWorkflowName pinned to SHORTCUT_NAME; explicit actual Import Question action index; editor note after deviceCode Text; deterministic unique control groups from native nesting; each menu options rebuilt from its own native branch titles; action order preserved','inspection':inspection,'nativeExecution':'not performed','signing':'not performed','reproducibility':'not established; action/control-flow arrays are never sorted'}
     (output/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n',encoding='utf-8')
     return artifacts[0]
 

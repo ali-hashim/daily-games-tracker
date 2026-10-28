@@ -84,7 +84,7 @@ export function verifySigningWorkflow(workflow, lock) {
   }
   has('phase5a_build_upload.py --compiler "$RUNNER_TEMP/cherri" --runtime-origin "$WHT_RUNTIME_ORIGIN" --require-nonreserved-origin --output "$RUNNER_TEMP/upload-first"');
   has('phase5a_build_upload.py --compiler "$RUNNER_TEMP/cherri" --runtime-origin "$WHT_RUNTIME_ORIGIN" --require-nonreserved-origin --output "$RUNNER_TEMP/upload-second"');
-  has('phase5a_compare_upload.py "$RUNNER_TEMP/upload-first/Upload To WHT_unsigned.shortcut" "$RUNNER_TEMP/upload-second/Upload To WHT_unsigned.shortcut"');
+  has('phase5a_compare_upload.py "$RUNNER_TEMP/upload-first/Upload to WHT_unsigned.shortcut" "$RUNNER_TEMP/upload-second/Upload to WHT_unsigned.shortcut"');
   has('phase5a_upload_signing.py prepare --build-directory "$RUNNER_TEMP/upload-first" --runtime-origin "$WHT_RUNTIME_ORIGIN" --output "$RUNNER_TEMP/upload-review-package"');
   has('phase5a_upload_signing.py validate');
   has('phase5a_actions_signing.mjs prepare');

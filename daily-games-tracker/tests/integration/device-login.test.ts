@@ -106,9 +106,9 @@ describe("browser-bound device login", () => {
     const flow = await start();
     const url = new URL(flow.body.shortcut_url);
     expect(url.protocol).toBe("shortcuts:");
-    expect(flow.body.shortcut_url).toContain("name=Upload%20To%20WHT");
+    expect(flow.body.shortcut_url).toContain("name=Upload%20to%20WHT");
     expect(flow.body.shortcut_url).not.toContain("name=Upload+");
-    expect(url.searchParams.get("name")).toBe("Upload To WHT");
+    expect(url.searchParams.get("name")).toBe("Upload to WHT");
     expect(url.searchParams.get("input")).toBe("text");
     expect(url.searchParams.get("text")).toBe(`DGT_LOGIN_V1:${flow.challenge}`);
     expect(flow.response.headers.get("Set-Cookie")).toContain(
