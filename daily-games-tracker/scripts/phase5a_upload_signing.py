@@ -11,21 +11,22 @@ from pathlib import Path
 import plistlib
 import sys
 
-from phase5a_build_upload import SOURCE, CAPTURE, LOCK, MIGRATION, digest, normalize
+from phase5a_build_upload import SOURCE, CAPTURE, LOCK, MIGRATION, SHORTCUT_NAME, digest, normalize
 from phase5a_inspect_upload import inspect, CONTRACT
 from phase5a_send_hubsign import json_request_body
 
 STATUS='offline full upload signing-review package prepared; no transfer or signing performed'
-NAME='Upload To WHT'
+NAME=SHORTCUT_NAME
 
 def encoded(value): return (json.dumps(value,indent=2,sort_keys=True)+'\n').encode()
 
 def freeze(build_dir:Path, output:Path, runtime_origin: str | None = None):
     assert not output.exists() or not any(output.iterdir()), 'Use a new output directory.'
     output.mkdir(parents=True,exist_ok=True)
-    artifact=build_dir/'Upload To WHT_unsigned.shortcut'
+    artifact=build_dir/f'{SHORTCUT_NAME}_unsigned.shortcut'
     raw=(build_dir/'compiler-output.shortcut').read_bytes()
     binary=artifact.read_bytes(); workflow=plistlib.loads(binary)
+    assert workflow.get('WFWorkflowName') == NAME
     inspection=inspect(workflow, runtime_origin=runtime_origin)
     assert normalize(plistlib.loads(raw))==workflow
     manifest=json.loads((build_dir/'manifest.json').read_bytes())
@@ -72,6 +73,7 @@ def validate(package:Path, expected_manifest:str,expected_wire:str, runtime_orig
     hashes['approval-manifest.json']=expected_manifest
     assert (package/'PACKAGE-SHA256SUMS').read_text(encoding='utf-8')==''.join(f'{v}  {k}\n' for k,v in sorted(hashes.items()))
     workflow=plistlib.loads((package/'upload_unsigned.shortcut').read_bytes())
+    assert workflow.get('WFWorkflowName') == NAME
     inspect(workflow, runtime_origin=runtime_origin)
     assert plistlib.loads((package/'upload.xml').read_bytes())==workflow
     payload=(package/'upload.xml').read_bytes(); wire=(package/'hubsign-request.json').read_bytes()

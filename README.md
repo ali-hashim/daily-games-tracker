@@ -41,7 +41,7 @@ See [PUBLIC_REVIEW.md](PUBLIC_REVIEW.md) for the historical one-time export revi
 
 ## Full upload Shortcut source
 
-The source for `Upload To WHT` is in `daily-games-tracker/shortcut/cherri-migration/source/upload-to-wht.cherri`. It uses native icon color `431817727`, glyph `59742`, and the confirmation option `Submit Results`. The normalizer, strict native contract, unsigned build harness and synthetic mutation tests are included. The earlier synthetic routing probe keeps its independent fixture labels.
+The source for `Upload to WHT` is in `daily-games-tracker/shortcut/cherri-migration/source/upload-to-wht.cherri`. It uses native icon color `431817727`, glyph `59742`, and the confirmation option `Submit Results`. The normalizer, strict native contract, unsigned build harness and synthetic mutation tests are included. The earlier synthetic routing probe keeps its independent fixture labels.
 
 The full client receives its runtime origin from private external configuration when it validates and submits captures. Safari capture reads the user-shared page. Completion can open a server-returned WHT URL; update-required branches can open a server-returned install URL. Hosted origins, deployment identities and install links are intentionally omitted from this public source. Signing is handled by the protected GitHub Actions workflow; no runtime signing worker or endpoint is required.
 

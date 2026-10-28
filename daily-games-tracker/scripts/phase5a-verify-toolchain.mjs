@@ -108,7 +108,7 @@ expect(has('daily-games-tracker/scripts/tests/fixtures/**'), 'workflow must trig
 expect(has('inspector_flags+=(--strict-current)'), 'workflow must pass --strict-current to the maintained 06/07 inspector checks');
 expect(has('phase5a_build_upload.py --compiler "$RUNNER_TEMP/cherri" --runtime-origin "https://runtime.example.invalid" --output "$RUNNER_TEMP/upload-first"'), 'workflow must build the first complete unsigned client with a sanitized origin');
 expect(has('phase5a_build_upload.py --compiler "$RUNNER_TEMP/cherri" --runtime-origin "https://runtime.example.invalid" --output "$RUNNER_TEMP/upload-second"'), 'workflow must build the second complete unsigned client with a sanitized origin');
-expect(has('phase5a_compare_upload.py "$RUNNER_TEMP/upload-first/Upload To WHT_unsigned.shortcut" "$RUNNER_TEMP/upload-second/Upload To WHT_unsigned.shortcut" --runtime-origin "https://runtime.example.invalid"'), 'workflow must compare both complete unsigned clients with the same sanitized test origin');
+expect(has('phase5a_compare_upload.py "$RUNNER_TEMP/upload-first/Upload to WHT_unsigned.shortcut" "$RUNNER_TEMP/upload-second/Upload to WHT_unsigned.shortcut" --runtime-origin "https://runtime.example.invalid"'), 'workflow must compare both complete unsigned clients with the same sanitized test origin');
 expect(has('phase5a_upload_signing.py prepare --build-directory "$RUNNER_TEMP/upload-first" --output "$RUNNER_TEMP/upload-review-package" --runtime-origin "https://runtime.example.invalid"'), 'workflow must freeze and inspect the complete-client package with the same sanitized test origin');
 expect(!has('phase5a_upload_signing.py send'), 'routine workflow must not send a signing payload');
 

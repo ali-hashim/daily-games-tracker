@@ -6,7 +6,7 @@ import { hashToken, invalid, isToken, objectBody, randomToken, requireSameOrigin
 
 export const LOGIN_TTL_MS = 120_000;
 const FLOW_COOKIE = "dgt_login_flow";
-const SHORTCUT_NAME = "Upload To WHT";
+const SHORTCUT_NAME = "Upload to WHT";
 const DEFAULT_RETURN_URL = "/user";
 const DAILY_RETURN_PATH = /^\/daily\/\d{4}-\d{2}-\d{2}$/;
 const clearFlow = `${FLOW_COOKIE}=; Path=/; Secure; HttpOnly; SameSite=Lax; Max-Age=0`;
