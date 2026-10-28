@@ -28,24 +28,35 @@ Cloudflare Pages supports separate `env.preview` and `env.production` overrides.
 
 ## 3. Configure private Shortcut delivery
 
-Before enabling Shortcut signing, create a private R2 bucket and an S3 API token scoped to that
-bucket. Configure the `SHORTCUT_BUCKET` R2 binding in each private preview and production Wrangler
-configuration. Configure the signing GitHub environment with these secrets, keeping their values private:
+Complete this owner checklist before enabling signing. Keep resource values and credentials private;
+the tracked `wrangler.jsonc` uses the inert bucket placeholder `example-shortcut-bucket`.
 
-- `WHT_R2_ACCOUNT_ID`
-- `WHT_R2_BUCKET_NAME`
-- `WHT_R2_ACCESS_KEY_ID`
-- `WHT_R2_SECRET_ACCESS_KEY`
+1. Create a private R2 bucket for signed Shortcuts and signing state.
+2. Create an S3 API token scoped to that bucket with only the required object read/write access.
+3. Add these four secrets to the GitHub `wht-shortcut-signing` environment:
+   `WHT_R2_ACCOUNT_ID`, `WHT_R2_BUCKET_NAME`, `WHT_R2_ACCESS_KEY_ID`, and
+   `WHT_R2_SECRET_ACCESS_KEY`.
+4. Bind the bucket as `SHORTCUT_BUCKET` in Cloudflare Pages preview and production. Use the same
+   binding name in the private Wrangler configuration copies for both environments.
+5. Save the credentials in a password manager. Do not put values in tracked Wrangler files, docs,
+   test fixtures, pull-request text, or workflow output.
 
-The checked-in Wrangler configuration uses only `example-shortcut-bucket`; replace it only in the
-private Wrangler copies. Keep credential copies in a password manager.
+The tracked Wrangler configuration uses only `example-shortcut-bucket`; substitute the real resource
+name only in ignored private Wrangler copies.
 
-Before the new signing workflow is enabled, privately migrate and verify the existing ambiguity
-record. Use the reviewed legacy helper to decrypt and verify the old record, copy the exact verified
-record into private R2, and configure `WHT_AMBIGUITY_RECORD_SHA256` in the signing GitHub
-environment with that record's SHA-256 digest. Verify the new guard against the stored record
-before retiring the legacy key and record secrets. Missing or mismatched state must keep signing
-blocked. No bucket, credential, secret, or state migration is performed by this checklist.
+### One-time legacy state migration
+
+The new signing guard requires the existing ambiguity record to be migrated before signing. After
+the workflow changes reach protected `main`, dispatch
+`.github/workflows/shortcut-r2-migrate.yml` with `confirm_migration=true`. The default is false.
+That workflow uses the pinned legacy decoder, writes the exact verified plaintext record to private
+R2, and verifies the stored bytes without signing or changing the lease. After it succeeds, download
+the record to private local storage, compute its SHA-256 there, and set
+`WHT_AMBIGUITY_RECORD_SHA256` in the `wht-shortcut-signing` environment. Verify the protected
+signing guard accepts the stored record, then remove the legacy
+`WHT_AMBIGUOUS_SIGNING_RECORD` and `WHT_SIGNING_OUTPUT_KEY` secrets. Keep the plaintext, envelope,
+digest, and credentials out of logs and tracked files. Missing or mismatched state must keep signing
+blocked. This documentation is a checklist; it does not execute the migration or configure secrets.
 
 ## 4. Migrate and deploy preview
 

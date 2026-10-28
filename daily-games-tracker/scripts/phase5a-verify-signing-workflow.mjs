@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
+import { MANUAL_RESIGN_REASON_CODES } from './phase5a_actions_signing.mjs';
 
 export function verifySigningWorkflow(workflow, lock) {
   const has = text => assert.ok(workflow.includes(text), 'Missing Actions signing guard: ' + text);
@@ -20,6 +21,29 @@ export function verifySigningWorkflow(workflow, lock) {
   has('WHT_AMBIGUOUS_RECOVERY_AUTH: ' + expression + ' secrets.WHT_AMBIGUOUS_RECOVERY_AUTH }}');
   has('WHT_AMBIGUOUS_RECOVERY_REQUESTED: ' + expression + " github.event_name == 'workflow_dispatch' && inputs.confirm_ambiguous_recovery == true }}");
   has('confirm_ambiguous_recovery:');
+  has('confirm_manual_resign:');
+  has('default: false');
+  has('manual_resign_request_id:');
+  has('manual_resign_source_commit:');
+  const reasonStart = workflow.indexOf('      manual_resign_reason:');
+  const reasonEnd = workflow.indexOf('      confirm_earlier_request_may_have_completed:', reasonStart);
+  assert.ok(reasonStart >= 0 && reasonEnd > reasonStart, 'Manual re-sign reason choice input must be present');
+  const reasonInput = workflow.slice(reasonStart, reasonEnd);
+  assert.match(reasonInput, /^        type: choice$/m, 'Manual re-sign reason must be a finite workflow choice');
+  assert.match(reasonInput, /^        options:$/m, 'Manual re-sign reason choices must be explicit');
+  for (const reasonCode of MANUAL_RESIGN_REASON_CODES) {
+    assert.ok(reasonInput.split(/\r?\n/).includes('          - ' + reasonCode), 'Workflow reason choices must include ' + reasonCode);
+  }
+  assert.equal(reasonInput.match(/^          - /gm)?.length, MANUAL_RESIGN_REASON_CODES.length, 'Workflow and state-machine reason choices must match exactly');
+  has('confirm_earlier_request_may_have_completed:');
+  has('WHT_MANUAL_RESIGN_REQUESTED: ' + expression + " github.event_name == 'workflow_dispatch' && inputs.confirm_manual_resign == true }}");
+  has('WHT_MANUAL_RESIGN_REQUEST_ID: ' + expression + ' inputs.manual_resign_request_id }}');
+  has('WHT_MANUAL_RESIGN_SOURCE_COMMIT: ' + expression + ' inputs.manual_resign_source_commit }}');
+  has('WHT_MANUAL_RESIGN_REASON: ' + expression + ' inputs.manual_resign_reason }}');
+  has('WHT_CONFIRM_EARLIER_REQUEST_MAY_HAVE_COMPLETED: ' + expression + " github.event_name == 'workflow_dispatch' && inputs.confirm_earlier_request_may_have_completed == true }}");
+  has('node daily-games-tracker/scripts/phase5a_actions_signing.mjs validate-manual-resign');
+  assert.ok(workflow.indexOf('name: Validate optional manual re-sign authorization')
+    < workflow.indexOf('name: Rebuild pinned compiler with verified module graph'));
   has('default: false');
   has('permissions:');
   has('  contents: read');
@@ -78,6 +102,7 @@ export function verifySigningWorkflow(workflow, lock) {
   has('echo "::add-mask::$manifest_sha256"');
   has('echo "::add-mask::$wire_sha256"');
   assert.doesNotMatch(workflow, /WHT_SIGNING_OUTPUT_KEY|WHT_AMBIGUOUS_SIGNING_RECORD|\.enc\b|actions\/upload-artifact@/);
+  assert.doesNotMatch(workflow, /echo[^\n]*WHT_MANUAL_RESIGN_REASON|WHT_MANUAL_RESIGN_REASON[^\n]*GITHUB_OUTPUT/);
   const prepare = workflow.indexOf('name: Persist private R2 intent before provider transfer');
   const send = workflow.indexOf('name: Send exactly one direct HubSign request');
   const publish = workflow.indexOf('name: Upload signed Shortcut and private latest manifest');

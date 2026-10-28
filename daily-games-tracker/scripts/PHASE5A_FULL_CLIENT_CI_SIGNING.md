@@ -3,7 +3,8 @@
 The authoritative workflow is
 `.github/workflows/shortcut-sign-disabled.yml`. Its filename remains a stable
 ledger reference. The protected job runs automatically for relevant pushes to
-`main` and offers a manual `workflow_dispatch` recovery path. It requires the
+`main` and offers manual recovery and explicitly authorized re-sign paths via
+`workflow_dispatch`. It requires the
 `wht-shortcut-signing` environment and has no pull request trigger. GitHub
 commit status remains the durable lease; private R2 holds the durable intent,
 provider outcome, result metadata, migrated ambiguity record, and one canonical
@@ -43,15 +44,38 @@ The protected `wht-shortcut-signing` environment requires these values:
   hash, under the extra checks below. It does not approve the current run and
   is ignored on automatic pushes. Neither form clears or rewrites the record.
 
-Before enabling the new workflow, the owner must privately decrypt and verify
-the old ambiguity record with the reviewed legacy decoder, then copy the exact
-verified plaintext record to private R2 at
-`signing/migrated-ambiguity.json`. Compute the digest from those exact stored
-bytes and configure `WHT_AMBIGUITY_RECORD_SHA256` in the protected GitHub
-environment. Verify that the new guard accepts the object before retiring
-`WHT_AMBIGUOUS_SIGNING_RECORD` and `WHT_SIGNING_OUTPUT_KEY`. Do not print the
-record or its old envelope into logs or tracked files. This PR performs no
-signing run, deployment, R2 resource creation or update, or secret change.
+## One-time private state migration
+
+Before the signing workflow can use the migrated-state guard, the owner must
+configure the private bucket credentials and the existing
+`WHT_AMBIGUOUS_SIGNING_RECORD` and `WHT_SIGNING_OUTPUT_KEY` secrets in the
+`wht-shortcut-signing` environment. Keep both legacy secrets available until
+the new R2 record and its digest pin have been verified.
+
+Dispatch `.github/workflows/shortcut-r2-migrate.yml` from protected `main` and
+set its required `confirm_migration` input to `true`. Its default is `false`.
+The job first checks the run SHA against the protected `main` tip and verifies
+the production environment policy with the existing approval proof helper.
+Only then does it load the legacy decoder from immutable commit
+`5aa8b090221a89791486a328fba49b7e2144873f` into runner temporary storage and
+provide the legacy secrets and R2 credentials to the migration step. The
+helper validates and decrypts the existing envelope with that decoder, then
+writes the original plaintext bytes to
+`signing/migrated-ambiguity.json` using a bounded, readback-verified R2 write.
+An identical existing object is accepted without rewriting it; different
+existing bytes fail closed. Private command output is suppressed and errors
+remain generic. The migration has no signing, HubSign, lease, status, signed
+object, latest manifest, GitHub secret, or Actions artifact operation.
+
+After a successful migration, use the existing authenticated Wrangler setup to
+download only `signing/migrated-ambiguity.json` into private local temporary
+storage. Compute the SHA-256 from those exact bytes locally and configure
+`WHT_AMBIGUITY_RECORD_SHA256` as a protected environment secret. Keep the old
+record and encryption-key secrets until the owner has verified that the
+downloaded bytes match the configured digest and the protected signing guard
+accepts the private record. Then retire the two old secrets. Do not print the
+record, decrypted plaintext, old envelope, or its digest into logs or tracked
+files.
 
 The private record plaintext has the bounded shape
 `{"schemaVersion":1,"status":"ambiguous","logicalSourceIdentity":"<sha256>","wireSha256":"<sha256>"}`;
@@ -218,14 +242,42 @@ outcome, result metadata, or signed object already present blocks another send;
 the pending status remains ambiguous and no retry is enabled.
 
 If the runner loses the response after the provider request, the pending
-status remains ambiguous forever. R2 is the durable state store, not a backup
-Actions artifact. A later commit cannot clear that status or authorize a
-second request. The workflow therefore gives at-most-one provider attempt and
-honest post-send crash behavior; a human must resolve any provider-side
-ambiguity outside this workflow before a future logical operation can be
-authorized. Delivery publication does not authorize re-signing an already
-signed logical package; existing pending or success operation statuses remain
-blocking.
+status remains ambiguous. R2 is the durable state store, not a backup Actions
+artifact. The automatic path and legacy ambiguity-recovery path cannot clear
+an existing status or repeat a provider request for that logical operation or
+its old wire. This preserves at-most-one provider attempt for those paths.
+
+### Explicit manual re-sign
+
+A separately reviewed manual re-sign can authorize one new provider request
+for a logical package with an existing success, failure, error, or ambiguous
+attempt, including the same wire digest. It does not remove or rewrite prior
+statuses or the migrated ambiguity record. Every dispatch rebuilds and checks
+the exact current package, binds the new private intent to the actor, run,
+source commit, reason, package digests and logical operation, then takes a
+request-specific send lease before its single HubSign POST. The new request ID
+is single-use; a rerun or reuse is rejected. If another request is needed,
+review it again and use a new ID.
+
+On protected `main`, dispatch
+`.github/workflows/shortcut-sign-disabled.yml` with all of these inputs:
+
+* `confirm_external_signing=true` and `confirm_manual_resign=true`.
+* `manual_resign_request_id`: a fresh lowercase UUIDv4 used for this one
+  authorization only. Never reuse it or rerun its workflow.
+* `manual_resign_source_commit`: the full reviewed commit SHA; it must equal
+  the protected workflow run's checked-out commit.
+* `manual_resign_reason`: choose one of `delivery-verification-failed`,
+  `prior-signature-unavailable`, `previous-outcome-ambiguous`, or
+  `post-delivery-integrity-check-failed`.
+* `confirm_earlier_request_may_have_completed=true`, acknowledging that an
+  earlier request might already have completed.
+
+The workflow also requires prior evidence for that exact logical package and
+its ordinary production, source, digest, concurrency and R2 checks. Manual
+re-sign is not an automatic retry: it is a new, actor- and run-bound
+authorization for a reviewed package. The automatic push path and legacy
+recovery guard remain unchanged.
 
 ## Offline checks
 
@@ -233,7 +285,7 @@ Run from a fresh repository clone with Python 3 and Node.js:
 
 ```text
 node daily-games-tracker/scripts/phase5a-verify-signing-workflow.mjs
-node --test daily-games-tracker/scripts/tests/phase5a-actions-signing.test.mjs daily-games-tracker/scripts/tests/phase5a-r2-store.test.mjs daily-games-tracker/scripts/tests/phase5a-signing-workflow.test.mjs daily-games-tracker/scripts/tests/phase5a-approval-rehearsal.test.mjs daily-games-tracker/scripts/tests/phase5a-production-approval-proof.test.mjs
+node --test daily-games-tracker/scripts/tests/phase5a-actions-signing.test.mjs daily-games-tracker/scripts/tests/phase5a-r2-store.test.mjs daily-games-tracker/scripts/tests/phase5a-signing-workflow.test.mjs daily-games-tracker/scripts/tests/phase5a-approval-rehearsal.test.mjs daily-games-tracker/scripts/tests/phase5a-production-approval-proof.test.mjs daily-games-tracker/scripts/tests/phase5a-r2-migration.test.mjs
 python3 -m unittest daily-games-tracker/scripts/tests/test_phase5a_upload.py
 ```
 

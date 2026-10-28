@@ -7,12 +7,14 @@
  * GitHub commit status is the durable lease: pending means permanently
  * ambiguous and blocks every later attempt for the same logical operation.
  * A digest-bound private migrated record blocks the prior ambiguous logical
- * package. Its exact old wire digest stays permanently blocked. A legacy
- * record without a target hash can be authorized by exact current-run auth or
- * successful prior-run proof for a different target; a populated target hash
- * scopes the block to that target. Current-target status and protected
- * first-attempt recovery checks remain mandatory, and the status lease blocks
- * reruns.
+ * package for automatic and legacy-recovery runs. A separately confirmed
+ * manual re-sign request gets a distinct actor/run-bound lease while leaving
+ * the migrated record unchanged. The legacy recovery path still permanently
+ * blocks its exact old wire; a record without a target hash otherwise requires
+ * exact current-run authorization or successful prior-run proof for a
+ * different target. A populated target hash scopes that block to the target.
+ * Current-target status and protected first-attempt recovery checks remain
+ * mandatory, and the status lease blocks reruns.
  */
 import { createHash } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
@@ -25,6 +27,16 @@ export const MAX_SIGNED_BYTES = 8 * 1024 * 1024;
 const MAX_PROVIDER_BODY_EVIDENCE_BYTES = 8 * 1024 * 1024;
 const STATUS_PREFIX = 'wht-shortcut-signing/';
 const KEY_PREFIX = 'wht-shortcut-signing-v3\n';
+const RESIGN_KEY_PREFIX = 'wht-shortcut-manual-resign-v1\n';
+const RESIGN_STATUS_PREFIX = 'wht-shortcut-resign/';
+const RESIGN_SEND_STATUS_PREFIX = 'wht-shortcut-resign-send/';
+export const MANUAL_RESIGN_REASON_CODES = Object.freeze([
+  'delivery-verification-failed',
+  'prior-signature-unavailable',
+  'previous-outcome-ambiguous',
+  'post-delivery-integrity-check-failed',
+]);
+const MANUAL_RESIGN_REASON_CODE_SET = new Set(MANUAL_RESIGN_REASON_CODES);
 export const MIGRATED_AMBIGUITY_OBJECT_KEY = 'signing/migrated-ambiguity.json';
 export const LATEST_MANIFEST_OBJECT_KEY = 'latest.json';
 
@@ -41,6 +53,84 @@ function assertHex(value, length, label) {
 
 function assertCommit(value) {
   return assertHex(value, 40, 'source commit');
+}
+
+function validateManualResignRequestId(value) {
+  if (typeof value !== 'string'
+    || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(value)) {
+    throw new Error('manual re-sign request ID must be a lowercase UUIDv4');
+  }
+  return value;
+}
+
+export function manualResignAuthorizationFromEnvironment(environment, sourceCommit) {
+  if (environment.WHT_MANUAL_RESIGN_REQUESTED !== 'true') return null;
+  if (environment.WHT_AMBIGUOUS_RECOVERY_REQUESTED === 'true') {
+    throw new Error('manual re-sign cannot be combined with migrated ambiguity recovery');
+  }
+  if (environment.GITHUB_EVENT_NAME !== 'workflow_dispatch') {
+    throw new Error('manual re-sign authorization requires workflow_dispatch');
+  }
+  if (environment.GITHUB_RUN_ATTEMPT !== '1') {
+    throw new Error('manual re-sign authorization cannot be rerun');
+  }
+  const requestedCommit = assertCommit(environment.WHT_MANUAL_RESIGN_SOURCE_COMMIT);
+  const workflowCommit = assertCommit(environment.GITHUB_SHA);
+  if (requestedCommit !== workflowCommit || requestedCommit !== assertCommit(sourceCommit)) {
+    throw new Error('manual re-sign source commit does not match the protected workflow commit');
+  }
+  const requestId = validateManualResignRequestId(environment.WHT_MANUAL_RESIGN_REQUEST_ID);
+  if (environment.WHT_CONFIRM_EARLIER_REQUEST_MAY_HAVE_COMPLETED !== 'true') {
+    throw new Error('manual re-sign requires confirmation that an earlier request may have completed');
+  }
+  const reason = environment.WHT_MANUAL_RESIGN_REASON;
+  if (typeof reason !== 'string' || !MANUAL_RESIGN_REASON_CODE_SET.has(reason)) {
+    throw new Error('manual re-sign reason must match a reviewed workflow choice');
+  }
+  const actor = environment.GITHUB_ACTOR;
+  if (typeof actor !== 'string' || !/^[A-Za-z0-9-]{1,39}$/.test(actor)) {
+    throw new Error('manual re-sign actor context is invalid');
+  }
+  const runId = environment.GITHUB_RUN_ID;
+  if (typeof runId !== 'string' || !/^[A-Za-z0-9._-]{1,128}$/.test(runId)) {
+    throw new Error('manual re-sign workflow run context is missing');
+  }
+  return {
+    requestIdSha256: sha256(Buffer.from(requestId, 'utf8')),
+    sourceCommit: requestedCommit,
+    reason,
+    actor,
+    runId,
+    runAttempt: 1,
+  };
+}
+
+function assertManualResignAuthorization(authorization, sourceCommit) {
+  const current = manualResignAuthorizationFromEnvironment(process.env, sourceCommit);
+  if (current === null) {
+    if (authorization !== undefined && authorization !== null) throw new Error('manual re-sign authorization is not active');
+    return null;
+  }
+  const fields = ['requestIdSha256', 'sourceCommit', 'reason', 'actor', 'runId', 'runAttempt'];
+  if (!authorization || typeof authorization !== 'object' || Array.isArray(authorization)
+    || Object.keys(authorization).length !== fields.length
+    || fields.some(field => !Object.hasOwn(authorization, field) || authorization[field] !== current[field])
+    || assertCommit(authorization.sourceCommit) !== sourceCommit
+    || assertHex(authorization.requestIdSha256, 64, 'manual re-sign request ID SHA-256') !== current.requestIdSha256) {
+    throw new Error('manual re-sign authorization does not match this actor, run, or source commit');
+  }
+  return current;
+}
+
+function authorizedPackageMetadata(metadata, authorization) {
+  const logicalOperationKey = metadata.key;
+  return {
+    ...metadata,
+    logicalOperationKey,
+    key: authorization
+      ? manualResignKeyFromHash(logicalOperationKey, authorization.requestIdSha256)
+      : logicalOperationKey,
+  };
 }
 
 function assertActionPin(value, label) {
@@ -121,6 +211,26 @@ export function statusContext(key) {
   return `${STATUS_PREFIX}${key}`;
 }
 
+export function manualResignOperationKey(logicalOperationKey, requestId) {
+  assertHex(logicalOperationKey, 64, 'logical operation key');
+  const id = validateManualResignRequestId(requestId);
+  return manualResignKeyFromHash(logicalOperationKey, sha256(Buffer.from(id, 'utf8')));
+}
+
+function manualResignKeyFromHash(logicalOperationKey, requestIdSha256) {
+  assertHex(logicalOperationKey, 64, 'logical operation key');
+  assertHex(requestIdSha256, 64, 'manual re-sign request ID SHA-256');
+  return sha256(`${RESIGN_KEY_PREFIX}${logicalOperationKey}\n${requestIdSha256}`);
+}
+
+export function manualResignStatusContext(requestIdSha256) {
+  return `${RESIGN_STATUS_PREFIX}${assertHex(requestIdSha256, 64, 'manual re-sign request ID SHA-256')}`;
+}
+
+export function manualResignSendStatusContext(requestIdSha256) {
+  return `${RESIGN_SEND_STATUS_PREFIX}${assertHex(requestIdSha256, 64, 'manual re-sign request ID SHA-256')}`;
+}
+
 export function statusBlocks(statuses, context) {
   return Array.isArray(statuses) && statuses.some(value => value?.context === context);
 }
@@ -184,6 +294,13 @@ export function migratedRecordBlocks(record, sourceIdentity, targetOriginSha256,
   if (record.wireSha256 === wireSha256) return true;
   if (record.logicalSourceIdentity !== sourceIdentity) return false;
   return !record.targetOriginSha256 || record.targetOriginSha256 === targetOriginSha256;
+}
+
+function migratedRecordMatchesLogicalPackage(record, sourceIdentity, targetOriginSha256) {
+  return record?.schemaVersion === 1
+    && record.status === 'ambiguous'
+    && record.logicalSourceIdentity === sourceIdentity
+    && (!record.targetOriginSha256 || record.targetOriginSha256 === targetOriginSha256);
 }
 
 function validateMigratedRecord(record) {
@@ -487,10 +604,35 @@ const INTENT_FIELDS = [
   'compilerVersion', 'statusAnchor', 'runId', 'runAttempt', 'targetOriginSha256',
   'manifestSha256', 'wireSha256',
 ];
-const RESULT_FIELDS = [
-  ...INTENT_FIELDS.filter(field => field !== 'status'), 'status', 'signedShortcutSha256',
-  'signedShortcutLength', 'signedShortcutObjectKey',
+const RESIGN_INTENT_FIELDS = [
+  ...INTENT_FIELDS,
+  'logicalOperationKey', 'authorizationIdSha256', 'authorizationActor', 'authorizationReason',
 ];
+
+function intentFields(intent) {
+  return intent?.schemaVersion === 2 ? RESIGN_INTENT_FIELDS : INTENT_FIELDS;
+}
+
+function resultFields(intent) {
+  return [
+    ...intentFields(intent).filter(field => field !== 'status'), 'status', 'signedShortcutSha256',
+    'signedShortcutLength', 'signedShortcutObjectKey',
+  ];
+}
+
+function statusContextForIntent(intent) {
+  return intent.schemaVersion === 2
+    ? manualResignStatusContext(intent.authorizationIdSha256)
+    : statusContext(intent.operationKey);
+}
+
+function manualResignLeaseDescription() {
+  return 'Manual re-sign authorization reserved';
+}
+
+function manualResignSendDescription() {
+  return 'Manual re-sign provider POST consumed';
+}
 
 function hasExactFields(value, fields) {
   return value && typeof value === 'object' && !Array.isArray(value)
@@ -499,7 +641,9 @@ function hasExactFields(value, fields) {
 }
 
 function validateIntent(intent) {
-  if (!hasExactFields(intent, INTENT_FIELDS) || intent.schemaVersion !== 1 || intent.status !== 'pending') {
+  const isResign = intent?.schemaVersion === 2;
+  const fields = isResign ? RESIGN_INTENT_FIELDS : INTENT_FIELDS;
+  if (!hasExactFields(intent, fields) || ![1, 2].includes(intent.schemaVersion) || intent.status !== 'pending') {
     throw new Error('private signing intent is invalid');
   }
   assertHex(intent.operationKey, 64, 'operation key');
@@ -516,13 +660,25 @@ function validateIntent(intent) {
   if (typeof intent.compilerVersion !== 'string' || !/^v\d+\.\d+\.\d+$/.test(intent.compilerVersion)) {
     throw new Error('private signing intent Cherri version is invalid');
   }
-  if (operationKey(intent.logicalSourceIdentity, intent.targetOriginSha256) !== intent.operationKey) {
+  const logicalOperationKey = operationKey(intent.logicalSourceIdentity, intent.targetOriginSha256);
+  if (!isResign && logicalOperationKey !== intent.operationKey) {
     throw new Error('private signing intent key mismatch');
+  }
+  if (isResign) {
+    assertHex(intent.logicalOperationKey, 64, 'logical operation key');
+    assertHex(intent.authorizationIdSha256, 64, 'manual re-sign request ID SHA-256');
+    if (intent.logicalOperationKey !== logicalOperationKey
+      || manualResignKeyFromHash(intent.logicalOperationKey, intent.authorizationIdSha256) !== intent.operationKey
+      || typeof intent.authorizationActor !== 'string' || !/^[A-Za-z0-9-]{1,39}$/.test(intent.authorizationActor)
+      || typeof intent.authorizationReason !== 'string'
+      || !MANUAL_RESIGN_REASON_CODE_SET.has(intent.authorizationReason)) {
+      throw new Error('private manual re-sign intent identity is invalid');
+    }
   }
   return intent;
 }
 
-function assertIntentMatchesPackage(intent, metadata, sourceCommit) {
+function assertIntentMatchesPackage(intent, metadata, sourceCommit, manualResign) {
   if (intent.sourceCommit !== assertCommit(sourceCommit)
     || intent.operationKey !== metadata.key
     || intent.logicalSourceIdentity !== metadata.sourceIdentity
@@ -533,15 +689,33 @@ function assertIntentMatchesPackage(intent, metadata, sourceCommit) {
     || intent.wireSha256 !== metadata.wireSha) {
     throw new Error('private signing intent does not match the frozen package');
   }
+  if (intent.schemaVersion === 2) {
+    if (!manualResign
+      || intent.logicalOperationKey !== metadata.logicalOperationKey
+      || intent.authorizationIdSha256 !== manualResign.requestIdSha256
+      || intent.authorizationActor !== manualResign.actor
+      || intent.authorizationReason !== manualResign.reason
+      || intent.sourceCommit !== manualResign.sourceCommit) {
+      throw new Error('private manual re-sign intent does not match this authorization');
+    }
+  } else if (manualResign) {
+    throw new Error('manual re-sign authorization has no matching private intent');
+  }
   if (process.env.GITHUB_RUN_ID !== intent.runId
     || process.env.GITHUB_RUN_ATTEMPT !== String(intent.runAttempt)) {
     throw new Error('private signing intent belongs to a different workflow run');
   }
+  if (intent.schemaVersion === 2 && (process.env.GITHUB_ACTOR !== intent.authorizationActor
+    || intent.runId !== manualResign.runId || intent.runAttempt !== manualResign.runAttempt)) {
+    throw new Error('private manual re-sign intent belongs to a different actor or workflow run');
+  }
 }
 
 async function assertPendingLease(intent) {
-  const latest = await currentStatus(statusContext(intent.operationKey));
-  if (!latest || latest.state !== 'pending') {
+  const context = statusContextForIntent(intent);
+  const latest = await currentStatus(context);
+  if (!latest || latest.state !== 'pending'
+    || (intent.schemaVersion === 2 && latest.description !== manualResignLeaseDescription())) {
     throw new Error('pending signing lease is not active');
   }
 }
@@ -649,12 +823,40 @@ async function authorizedMigratedRecord(args, store, metadata, sourceCommit, sta
 
 export async function prepareSigning(args) {
   const sourceCommit = assertCommit(args.sourceCommit);
-  const metadata = await packageMetadata(args.package, args.runtimeOrigin, args.manifestSha, args.wireSha);
+  const authorization = assertManualResignAuthorization(args.manualResign, sourceCommit);
+  const metadata = authorizedPackageMetadata(
+    await packageMetadata(args.package, args.runtimeOrigin, args.manifestSha, args.wireSha),
+    authorization,
+  );
   const store = privateStore(args);
-  const context = statusContext(metadata.key);
   const statuses = await readStatusLedger();
-  if (statusBlocks(statuses, context)) throw new Error('existing signing status blocks this operation');
-  await authorizedMigratedRecord(args, store, metadata, sourceCommit, statuses);
+  if (authorization) {
+    const migratedRecord = await readMigratedAmbiguityRecord(store);
+    const priorStatusExists = statusBlocks(statuses, statusContext(metadata.logicalOperationKey));
+    const migratedRecordMatches = migratedRecordMatchesLogicalPackage(
+      migratedRecord,
+      metadata.sourceIdentity,
+      metadata.targetOriginSha256,
+    );
+    if (!priorStatusExists && !migratedRecordMatches) {
+      throw new Error('manual re-sign requires prior logical-package evidence');
+    }
+    if (statusBlocks(statuses, manualResignStatusContext(authorization.requestIdSha256))) {
+      throw new Error('manual re-sign request ID has already been used');
+    }
+    if (statusBlocks(statuses, manualResignSendStatusContext(authorization.requestIdSha256))) {
+      throw new Error('manual re-sign provider lease has already been consumed');
+    }
+    // Manual confirmation authorizes a fresh attempt for the same frozen
+    // logical package. Require either its original status or the matching
+    // legacy ambiguity record as prior evidence. Keep validating the legacy
+    // record and its digest, but let this new request ID create a separate
+    // lease without modifying that record.
+  } else {
+    const context = statusContext(metadata.key);
+    if (statusBlocks(statuses, context)) throw new Error('existing signing status blocks this operation');
+    await authorizedMigratedRecord(args, store, metadata, sourceCommit, statuses);
+  }
   const intentKey = intentObjectKey(metadata.key);
   if (await store.getOptional(intentKey)) throw new Error('private signing intent already exists; operation is permanently leased');
 
@@ -666,7 +868,7 @@ export async function prepareSigning(args) {
   const runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT);
   if (!Number.isInteger(runAttempt) || runAttempt < 1) throw new Error('GitHub workflow attempt context is missing');
   const intent = {
-    schemaVersion: 1,
+    schemaVersion: authorization ? 2 : 1,
     status: 'pending',
     operationKey: metadata.key,
     sourceCommit,
@@ -678,8 +880,18 @@ export async function prepareSigning(args) {
     targetOriginSha256: metadata.targetOriginSha256,
     manifestSha256: metadata.manifestSha,
     wireSha256: metadata.wireSha,
+    ...(authorization ? {
+      logicalOperationKey: metadata.logicalOperationKey,
+      authorizationIdSha256: authorization.requestIdSha256,
+      authorizationActor: authorization.actor,
+      authorizationReason: authorization.reason,
+    } : {}),
   };
-  await createStatus(context, 'pending', 'Signing attempt reserved; interruption remains ambiguous');
+  await createStatus(
+    statusContextForIntent(intent),
+    'pending',
+    authorization ? manualResignLeaseDescription() : 'Signing attempt reserved; interruption remains ambiguous',
+  );
   await writePrivateJson(store, intentKey, intent, 'private signing intent');
   process.stdout.write('private R2 signing intent recorded\n');
 }
@@ -687,10 +899,10 @@ export async function prepareSigning(args) {
 async function readRecoveryResult(store, key) {
   const intent = await readIntent(store, key);
   const result = await readPrivateJson(store, resultMetadataObjectKey(key), 'private signing result');
-  if (!hasExactFields(result, RESULT_FIELDS) || result.schemaVersion !== 1 || result.status !== 'completed') {
+  if (!hasExactFields(result, resultFields(intent)) || result.schemaVersion !== intent.schemaVersion || result.status !== 'completed') {
     throw new Error('private signing result is invalid');
   }
-  for (const field of INTENT_FIELDS) {
+  for (const field of intentFields(intent)) {
     if (field === 'status') continue;
     const expected = field === 'status' ? intent.status : intent[field];
     if (result[field] !== expected) throw new Error('private signing result does not match its intent');
@@ -706,13 +918,20 @@ async function readRecoveryResult(store, key) {
 
 export async function sendSigning(args) {
   const sourceCommit = assertCommit(args.sourceCommit);
-  const metadata = await packageMetadata(args.package, args.runtimeOrigin, args.manifestSha, args.wireSha);
+  const authorization = assertManualResignAuthorization(args.manualResign, sourceCommit);
+  const metadata = authorizedPackageMetadata(
+    await packageMetadata(args.package, args.runtimeOrigin, args.manifestSha, args.wireSha),
+    authorization,
+  );
   const store = privateStore(args);
   const intent = await readIntent(store, metadata.key);
-  assertIntentMatchesPackage(intent, metadata, sourceCommit);
+  assertIntentMatchesPackage(intent, metadata, sourceCommit, authorization);
   await assertPendingLease(intent);
   const migratedRecord = await readMigratedAmbiguityRecord(store);
-  if (migratedRecordBlocks(migratedRecord, metadata.sourceIdentity, metadata.targetOriginSha256, metadata.wireSha)) {
+  // The manual authorization is the only exception to a matching migrated
+  // record. Its digest and schema are still required on every step.
+  if (!authorization
+    && migratedRecordBlocks(migratedRecord, metadata.sourceIdentity, metadata.targetOriginSha256, metadata.wireSha)) {
     const statuses = await readStatusLedger();
     await authorizedMigratedRecord(args, store, metadata, sourceCommit, statuses, migratedRecord);
   }
@@ -722,6 +941,19 @@ export async function sendSigning(args) {
   }
   const wire = await readFile(resolve(metadata.packagePath, 'hubsign-request.json'));
   if (sha256(wire) !== intent.wireSha256) throw new Error('frozen wire does not match the pending intent');
+
+  if (authorization) {
+    const context = manualResignSendStatusContext(intent.authorizationIdSha256);
+    const statuses = await readStatusLedger();
+    if (statusBlocks(statuses, context)) {
+      throw new Error('manual re-sign provider lease has already been consumed');
+    }
+    await createStatus(context, 'pending', manualResignSendDescription());
+    const lease = await currentStatus(context);
+    if (!lease || lease.state !== 'pending' || lease.description !== manualResignSendDescription()) {
+      throw new Error('manual re-sign provider lease was not confirmed');
+    }
+  }
 
   let response;
   try {
@@ -795,18 +1027,8 @@ export async function sendSigning(args) {
   const signedPath = outputPath(args.signedPath);
   await writeFile(signedPath, signed, { mode: 0o600, flag: 'wx' });
   const result = {
-    schemaVersion: 1,
+    ...intent,
     status: 'completed',
-    operationKey: intent.operationKey,
-    sourceCommit: intent.sourceCommit,
-    logicalSourceIdentity: intent.logicalSourceIdentity,
-    compilerVersion: intent.compilerVersion,
-    statusAnchor: intent.statusAnchor,
-    runId: intent.runId,
-    runAttempt: intent.runAttempt,
-    targetOriginSha256: intent.targetOriginSha256,
-    manifestSha256: intent.manifestSha256,
-    wireSha256: intent.wireSha256,
     signedShortcutSha256: signedSha256,
     signedShortcutLength: signed.length,
     signedShortcutObjectKey: signedShortcutObjectKey(intent.sourceCommit, signedSha256),
@@ -816,22 +1038,25 @@ export async function sendSigning(args) {
 }
 
 export async function sendSigningFromCli(args, environment = process.env, r2Store) {
+  const sourceCommit = assertCommit(args.sourceCommit);
+  const manualResign = manualResignAuthorizationFromEnvironment(environment, sourceCommit);
   return sendSigning({
     package: args.package,
-    sourceCommit: assertCommit(args.sourceCommit),
+    sourceCommit,
     runtimeOrigin: environment.WHT_RUNTIME_ORIGIN,
     manifestSha: args.manifestSha,
     wireSha: args.wireSha,
     signedPath: args.signedPath,
     recoveryRequested: environment.WHT_AMBIGUOUS_RECOVERY_REQUESTED === 'true',
     recoveryAuthorization: environment.WHT_AMBIGUOUS_RECOVERY_AUTH,
+    manualResign,
     ...(r2Store ? { r2Store } : {}),
   });
 }
 
-async function verifyLocalAndPrivateResult(args, store, metadata, sourceCommit) {
+async function verifyLocalAndPrivateResult(args, store, metadata, sourceCommit, manualResign) {
   const intent = await readIntent(store, metadata.key);
-  assertIntentMatchesPackage(intent, metadata, sourceCommit);
+  assertIntentMatchesPackage(intent, metadata, sourceCommit, manualResign);
   await assertPendingLease(intent);
   const { result } = await readRecoveryResult(store, metadata.key);
   const signed = await readFile(outputPath(args.signedPath));
@@ -844,9 +1069,13 @@ async function verifyLocalAndPrivateResult(args, store, metadata, sourceCommit) 
 
 export async function publishSigning(args) {
   const sourceCommit = assertCommit(args.sourceCommit);
-  const metadata = await packageMetadata(args.package, args.runtimeOrigin, args.manifestSha, args.wireSha);
+  const authorization = assertManualResignAuthorization(args.manualResign, sourceCommit);
+  const metadata = authorizedPackageMetadata(
+    await packageMetadata(args.package, args.runtimeOrigin, args.manifestSha, args.wireSha),
+    authorization,
+  );
   const store = privateStore(args);
-  const { intent, result, signed } = await verifyLocalAndPrivateResult(args, store, metadata, sourceCommit);
+  const { intent, result, signed } = await verifyLocalAndPrivateResult(args, store, metadata, sourceCommit, authorization);
   const expectedObjectKey = signedShortcutObjectKey(intent.sourceCommit, result.signedShortcutSha256);
   if (result.signedShortcutObjectKey !== expectedObjectKey) throw new Error('private delivery object key is invalid');
   const objectDigest = await store.putVerified(expectedObjectKey, signed, 'application/octet-stream');
@@ -859,9 +1088,13 @@ export async function publishSigning(args) {
 
 export async function completeSigning(args) {
   const sourceCommit = assertCommit(args.sourceCommit);
-  const metadata = await packageMetadata(args.package, args.runtimeOrigin, args.manifestSha, args.wireSha);
+  const authorization = assertManualResignAuthorization(args.manualResign, sourceCommit);
+  const metadata = authorizedPackageMetadata(
+    await packageMetadata(args.package, args.runtimeOrigin, args.manifestSha, args.wireSha),
+    authorization,
+  );
   const store = privateStore(args);
-  const { intent, result, signed } = await verifyLocalAndPrivateResult(args, store, metadata, sourceCommit);
+  const { intent, result, signed } = await verifyLocalAndPrivateResult(args, store, metadata, sourceCommit, authorization);
   const expectedObjectKey = signedShortcutObjectKey(intent.sourceCommit, result.signedShortcutSha256);
   if (result.signedShortcutObjectKey !== expectedObjectKey) throw new Error('private delivery object key is invalid');
   const delivered = await store.get(expectedObjectKey);
@@ -873,8 +1106,10 @@ export async function completeSigning(args) {
   const latestBytes = await store.get(LATEST_MANIFEST_OBJECT_KEY);
   const expectedLatestBytes = Buffer.from(`${JSON.stringify(expectedLatest)}\n`, 'utf8');
   if (!latestBytes.equals(expectedLatestBytes)) throw new Error('private latest manifest does not match the frozen result');
-  const context = statusContext(intent.operationKey);
-  await createStatus(context, 'success', 'Signed Shortcut object and latest manifest verified in private R2');
+  const description = intent.schemaVersion === 2
+    ? 'Manual re-sign delivery verified'
+    : 'Signed Shortcut object and latest manifest verified in private R2';
+  await createStatus(statusContextForIntent(intent), 'success', description);
   process.stdout.write('private R2 delivery verified and signing status recorded\n');
 }
 
@@ -906,33 +1141,38 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const [command, ...rest] = process.argv.slice(2);
   const args = argsFrom(rest);
   try {
-    if (command === 'prepare') await prepareSigning({
-      package: args.package,
-      sourceCommit: assertCommit(args.sourceCommit),
-      runtimeOrigin: process.env.WHT_RUNTIME_ORIGIN,
-      manifestSha: args.manifestSha,
-      wireSha: args.wireSha,
-      recoveryRequested: process.env.WHT_AMBIGUOUS_RECOVERY_REQUESTED === 'true',
-      recoveryAuthorization: process.env.WHT_AMBIGUOUS_RECOVERY_AUTH,
-    });
-    else if (command === 'send') await sendSigningFromCli(args);
-    else if (command === 'publish') await publishSigning({
-      package: args.package,
-      sourceCommit: assertCommit(args.sourceCommit),
-      runtimeOrigin: process.env.WHT_RUNTIME_ORIGIN,
-      manifestSha: args.manifestSha,
-      wireSha: args.wireSha,
-      signedPath: args.signedPath,
-    });
-    else if (command === 'complete') await completeSigning({
-      package: args.package,
-      sourceCommit: assertCommit(args.sourceCommit),
-      runtimeOrigin: process.env.WHT_RUNTIME_ORIGIN,
-      manifestSha: args.manifestSha,
-      wireSha: args.wireSha,
-      signedPath: args.signedPath,
-    });
-    else if (command === 'recover') await recoverSigning({ output: args.output, operationKey: args.operationKey });
+    if (command === 'validate-manual-resign') {
+      manualResignAuthorizationFromEnvironment(process.env, process.env.GITHUB_SHA);
+      process.stdout.write('manual re-sign authorization checks passed\n');
+    } else if (command === 'prepare') {
+      const sourceCommit = assertCommit(args.sourceCommit);
+      const manualResign = manualResignAuthorizationFromEnvironment(process.env, sourceCommit);
+      await prepareSigning({
+        package: args.package,
+        sourceCommit,
+        runtimeOrigin: process.env.WHT_RUNTIME_ORIGIN,
+        manifestSha: args.manifestSha,
+        wireSha: args.wireSha,
+        recoveryRequested: process.env.WHT_AMBIGUOUS_RECOVERY_REQUESTED === 'true',
+        recoveryAuthorization: process.env.WHT_AMBIGUOUS_RECOVERY_AUTH,
+        manualResign,
+      });
+    } else if (command === 'send') await sendSigningFromCli(args);
+    else if (command === 'publish' || command === 'complete') {
+      const sourceCommit = assertCommit(args.sourceCommit);
+      const manualResign = manualResignAuthorizationFromEnvironment(process.env, sourceCommit);
+      const signingArgs = {
+        package: args.package,
+        sourceCommit,
+        runtimeOrigin: process.env.WHT_RUNTIME_ORIGIN,
+        manifestSha: args.manifestSha,
+        wireSha: args.wireSha,
+        signedPath: args.signedPath,
+        manualResign,
+      };
+      if (command === 'publish') await publishSigning(signingArgs);
+      else await completeSigning(signingArgs);
+    } else if (command === 'recover') await recoverSigning({ output: args.output, operationKey: args.operationKey });
     else throw new Error('unknown signing command');
   } catch (error) {
     process.stderr.write(`protected Actions signing stopped: ${error instanceof Error ? error.message : 'unknown failure'}\n`);

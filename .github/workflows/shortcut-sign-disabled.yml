@@ -32,6 +32,35 @@ on:
         required: true
         type: boolean
         default: false
+      confirm_manual_resign:
+        description: Authorize one fresh signing attempt with the unique request ID below
+        required: true
+        type: boolean
+        default: false
+      manual_resign_request_id:
+        description: Unique lowercase UUIDv4 used once for this manual re-sign authorization
+        required: false
+        type: string
+        default: ''
+      manual_resign_source_commit:
+        description: Full reviewed main commit; must exactly match this workflow's checked-out commit
+        required: false
+        type: string
+        default: ''
+      manual_resign_reason:
+        description: Select the reviewed reason for this new signing request
+        required: false
+        type: choice
+        options:
+          - delivery-verification-failed
+          - prior-signature-unavailable
+          - previous-outcome-ambiguous
+          - post-delivery-integrity-check-failed
+      confirm_earlier_request_may_have_completed:
+        description: Confirm that a previous HubSign request may have completed
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -62,6 +91,11 @@ jobs:
       WHT_AMBIGUITY_RECORD_SHA256: ${{ secrets.WHT_AMBIGUITY_RECORD_SHA256 }}
       WHT_AMBIGUOUS_RECOVERY_AUTH: ${{ secrets.WHT_AMBIGUOUS_RECOVERY_AUTH }}
       WHT_AMBIGUOUS_RECOVERY_REQUESTED: ${{ github.event_name == 'workflow_dispatch' && inputs.confirm_ambiguous_recovery == true }}
+      WHT_MANUAL_RESIGN_REQUESTED: ${{ github.event_name == 'workflow_dispatch' && inputs.confirm_manual_resign == true }}
+      WHT_MANUAL_RESIGN_REQUEST_ID: ${{ inputs.manual_resign_request_id }}
+      WHT_MANUAL_RESIGN_SOURCE_COMMIT: ${{ inputs.manual_resign_source_commit }}
+      WHT_MANUAL_RESIGN_REASON: ${{ inputs.manual_resign_reason }}
+      WHT_CONFIRM_EARLIER_REQUEST_MAY_HAVE_COMPLETED: ${{ github.event_name == 'workflow_dispatch' && inputs.confirm_earlier_request_may_have_completed == true }}
       CHERRI_COMMIT: d2072c62ea708e7727099fab94fa28b0bcec747b
       PYTHONUTF8: "1"
       PYTHONOPTIMIZE: "0"
@@ -107,6 +141,9 @@ jobs:
 
       - name: Verify standing protected production authorization
         run: node daily-games-tracker/scripts/phase5a-approval-rehearsal.mjs --production
+
+      - name: Validate optional manual re-sign authorization
+        run: node daily-games-tracker/scripts/phase5a_actions_signing.mjs validate-manual-resign
 
       - name: Establish stable protected status anchor
         shell: bash

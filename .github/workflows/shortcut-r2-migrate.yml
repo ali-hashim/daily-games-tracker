@@ -1,0 +1,61 @@
+name: Migrate existing signing state to private R2
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_migration:
+        description: Confirm the one-time private ambiguity-state migration
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: shortcut-r2-migrate-state
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.confirm_migration == true
+    runs-on: ubuntu-24.04
+    environment: wht-shortcut-signing
+    timeout-minutes: 10
+    steps:
+      - name: Check out the protected run revision
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify standing protected production authorization
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node daily-games-tracker/scripts/phase5a-approval-rehearsal.mjs --production
+
+      - name: Load the immutable legacy decoder into runner temporary storage
+        shell: bash
+        run: |
+          if ! git show '5aa8b090221a89791486a328fba49b7e2144873f:daily-games-tracker/scripts/phase5a_actions_signing.mjs' > "$RUNNER_TEMP/phase5a_actions_signing_legacy.mjs" 2>/dev/null; then
+            echo "Private signing state migration failed closed." >&2
+            exit 1
+          fi
+
+      - name: Migrate the original ambiguity record into private R2
+        env:
+          WHT_CONFIRM_MIGRATION: ${{ inputs.confirm_migration }}
+          WHT_LEGACY_DECODER_PATH: ${{ runner.temp }}/phase5a_actions_signing_legacy.mjs
+          WHT_AMBIGUOUS_SIGNING_RECORD: ${{ secrets.WHT_AMBIGUOUS_SIGNING_RECORD }}
+          WHT_SIGNING_OUTPUT_KEY: ${{ secrets.WHT_SIGNING_OUTPUT_KEY }}
+          WHT_R2_ACCOUNT_ID: ${{ secrets.WHT_R2_ACCOUNT_ID }}
+          WHT_R2_BUCKET_NAME: ${{ secrets.WHT_R2_BUCKET_NAME }}
+          WHT_R2_ACCESS_KEY_ID: ${{ secrets.WHT_R2_ACCESS_KEY_ID }}
+          WHT_R2_SECRET_ACCESS_KEY: ${{ secrets.WHT_R2_SECRET_ACCESS_KEY }}
+        shell: bash
+        run: |
+          if ! node daily-games-tracker/scripts/phase5a-migrate-r2-state.mjs >/dev/null 2>&1; then
+            echo "Private signing state migration failed closed." >&2
+            exit 1
+          fi

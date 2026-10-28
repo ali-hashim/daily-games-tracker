@@ -13,7 +13,12 @@ import {
   hubSignResponseAccepted,
   hubSignRequestOptions,
   logicalSourceIdentity,
+  MANUAL_RESIGN_REASON_CODES,
   migratedRecordBlocks,
+  manualResignAuthorizationFromEnvironment,
+  manualResignOperationKey,
+  manualResignSendStatusContext,
+  manualResignStatusContext,
   operationKey,
   prepareSigning as prepareSigningImpl,
   publishSigning as publishSigningImpl,
@@ -1088,6 +1093,371 @@ test('migrated ambiguity recovery is default-off, run-bound, and one-use through
       globalThis.fetch = originalFetch;
     }
   });
+});
+
+test('manual re-sign requires complete workflow-dispatch authorization bound to the exact protected commit', () => {
+  const env = {
+    GITHUB_EVENT_NAME: 'workflow_dispatch',
+    GITHUB_SHA: SOURCE_COMMIT,
+    GITHUB_RUN_ID: 'manual-run-1',
+    GITHUB_RUN_ATTEMPT: '1',
+    GITHUB_ACTOR: 'reviewer-user',
+    WHT_MANUAL_RESIGN_REQUESTED: 'true',
+    WHT_MANUAL_RESIGN_REQUEST_ID: 'b4e10675-0e56-4f8f-9c0b-93058500a001',
+    WHT_MANUAL_RESIGN_SOURCE_COMMIT: SOURCE_COMMIT,
+    WHT_MANUAL_RESIGN_REASON: 'delivery-verification-failed',
+    WHT_CONFIRM_EARLIER_REQUEST_MAY_HAVE_COMPLETED: 'true',
+  };
+  const authorization = manualResignAuthorizationFromEnvironment(env, SOURCE_COMMIT);
+  assert.equal(authorization.requestIdSha256, createSha256(Buffer.from(env.WHT_MANUAL_RESIGN_REQUEST_ID)));
+  assert.equal(authorization.sourceCommit, SOURCE_COMMIT);
+  assert.equal(authorization.reason, 'delivery-verification-failed');
+  assert.equal(authorization.actor, env.GITHUB_ACTOR);
+  assert.equal(authorization.runId, env.GITHUB_RUN_ID);
+  assert.equal(authorization.runAttempt, 1);
+  assert.deepEqual(MANUAL_RESIGN_REASON_CODES, [
+    'delivery-verification-failed',
+    'prior-signature-unavailable',
+    'previous-outcome-ambiguous',
+    'post-delivery-integrity-check-failed',
+  ]);
+  for (const reason of MANUAL_RESIGN_REASON_CODES) {
+    assert.equal(manualResignAuthorizationFromEnvironment({ ...env, WHT_MANUAL_RESIGN_REASON: reason }, SOURCE_COMMIT).reason, reason);
+  }
+
+  const rejected = [
+    { ...env, GITHUB_EVENT_NAME: 'push' },
+    { ...env, GITHUB_RUN_ATTEMPT: '2' },
+    { ...env, WHT_MANUAL_RESIGN_SOURCE_COMMIT: '0'.repeat(40) },
+    { ...env, WHT_CONFIRM_EARLIER_REQUEST_MAY_HAVE_COMPLETED: 'false' },
+    { ...env, WHT_MANUAL_RESIGN_REQUEST_ID: 'not-a-unique-uuid' },
+    { ...env, WHT_MANUAL_RESIGN_REASON: 'Reviewed re-sign after delivery verification failed' },
+    { ...env, WHT_MANUAL_RESIGN_REASON: 'arbitrary-private-reason' },
+    { ...env, WHT_AMBIGUOUS_RECOVERY_REQUESTED: 'true' },
+  ];
+  for (const invalid of rejected) {
+    assert.throws(() => manualResignAuthorizationFromEnvironment(invalid, SOURCE_COMMIT));
+  }
+  assert.equal(manualResignAuthorizationFromEnvironment({ ...env, WHT_MANUAL_RESIGN_REQUESTED: 'false' }, SOURCE_COMMIT), null);
+});
+
+test('manual re-sign uses a fresh request-scoped lease and one provider post for successful, failed, or ambiguous prior states', async (t) => {
+  for (const priorState of ['success', 'failure', 'error', 'pending']) {
+    await t.test(`new authorization can re-sign a prior ${priorState} operation`, async () => {
+      const packageInfo = await makePackage();
+      const runtimeOrigin = 'https://ci-fixture.example.com';
+      const priorKey = operationKey(logicalSourceIdentity(BUILD_MANIFEST), createSha256(Buffer.from(runtimeOrigin)));
+      const requestId = `b4e10675-0e56-4f8f-9c0b-93058500a00${['success', 'failure', 'error', 'pending'].indexOf(priorState) + 1}`;
+      const originalEnv = { ...process.env };
+      const originalFetch = globalThis.fetch;
+      const statuses = [{ id: 1, context: statusContext(priorKey), state: priorState }];
+      let providerCalls = 0;
+      process.env = {
+        ...process.env,
+        GITHUB_TOKEN: 'synthetic-token',
+        GITHUB_API_URL: 'https://api.github.test',
+        GITHUB_REPOSITORY: 'owner/repo',
+        WHT_SIGNING_STATUS_ANCHOR: '1'.repeat(40),
+        GITHUB_EVENT_NAME: 'workflow_dispatch',
+        GITHUB_SHA: SOURCE_COMMIT,
+        GITHUB_ACTOR: 'reviewer-user',
+        GITHUB_RUN_ID: `manual-${priorState}`,
+        GITHUB_RUN_ATTEMPT: '1',
+        RUNNER_TEMP: packageInfo.root,
+        WHT_RUNTIME_ORIGIN: runtimeOrigin,
+        WHT_MANUAL_RESIGN_REQUESTED: 'true',
+        WHT_MANUAL_RESIGN_REQUEST_ID: requestId,
+        WHT_MANUAL_RESIGN_SOURCE_COMMIT: SOURCE_COMMIT,
+        WHT_MANUAL_RESIGN_REASON: 'delivery-verification-failed',
+        WHT_CONFIRM_EARLIER_REQUEST_MAY_HAVE_COMPLETED: 'true',
+      };
+      globalThis.fetch = async (url, options = {}) => {
+        const text = String(url);
+        if (text.startsWith('https://api.github.test')) {
+          if (options.method === 'GET') return responseJson(statusPage('1'.repeat(40), statuses, statuses.length));
+          const body = JSON.parse(options.body);
+          const status = { id: statuses.length + 1, context: body.context, state: body.state, description: body.description };
+          statuses.push(status);
+          return responseJson(status);
+        }
+        providerCalls += 1;
+        return new Response(Buffer.from('AEA1synthetic-signed'), { status: 200, headers: { 'content-type': 'application/octet-stream' } });
+      };
+      try {
+        const authorization = manualResignAuthorizationFromEnvironment(process.env, SOURCE_COMMIT);
+        const authHash = authorization.requestIdSha256;
+        const key = manualResignOperationKey(priorKey, requestId);
+        assert.equal(manualResignStatusContext(authHash), `wht-shortcut-resign/${authHash}`);
+        assert.equal(manualResignSendStatusContext(authHash), `wht-shortcut-resign-send/${authHash}`);
+        await prepareSigning({
+          package: packageInfo.root,
+          sourceCommit: SOURCE_COMMIT,
+          runtimeOrigin,
+          manifestSha: packageInfo.manifestSha,
+          wireSha: packageInfo.wireSha,
+          manualResign: authorization,
+        });
+        assert.equal(
+          statuses.find(status => status.context === manualResignStatusContext(authHash))?.description,
+          'Manual re-sign authorization reserved',
+        );
+        const intent = JSON.parse(privateStore.objects.get(intentObjectKey(key)).toString('utf8'));
+        assert.equal(intent.schemaVersion, 2);
+        assert.equal(intent.logicalOperationKey, priorKey);
+        assert.equal(intent.authorizationIdSha256, authHash);
+        assert.equal(intent.authorizationActor, 'reviewer-user');
+        assert.equal(intent.authorizationReason, process.env.WHT_MANUAL_RESIGN_REASON);
+        assert.equal(statuses.some(status => status.context === manualResignStatusContext(authHash) && status.state === 'pending'), true);
+        assert.equal(statuses.some(status => status.description?.includes(requestId)), false);
+
+        const signedPath = join(packageInfo.root, 'manual-signed.shortcut');
+        const sendArgs = {
+          package: packageInfo.root,
+          sourceCommit: SOURCE_COMMIT,
+          runtimeOrigin,
+          manifestSha: packageInfo.manifestSha,
+          wireSha: packageInfo.wireSha,
+          signedPath,
+          manualResign: authorization,
+        };
+        await sendSigning(sendArgs);
+        assert.equal(providerCalls, 1);
+        assert.equal(
+          statuses.find(status => status.context === manualResignSendStatusContext(authHash))?.description,
+          'Manual re-sign provider POST consumed',
+        );
+        const publicManualDescriptions = statuses
+          .filter(status => status.context === manualResignStatusContext(authHash)
+            || status.context === manualResignSendStatusContext(authHash))
+          .map(status => status.description)
+          .join('\n');
+        for (const privatePackageIdentity of [
+          priorKey,
+          key,
+          logicalSourceIdentity(BUILD_MANIFEST),
+          packageInfo.manifestSha,
+          packageInfo.wireSha,
+          createSha256(Buffer.from(runtimeOrigin)),
+        ]) {
+          assert.equal(publicManualDescriptions.includes(privatePackageIdentity), false);
+        }
+
+        // Even if a process lost its local evidence after the one POST, the
+        // request-scoped send lease still prevents a second provider call.
+        privateStore.objects.delete(providerOutcomeObjectKey(key));
+        privateStore.objects.delete(resultMetadataObjectKey(key));
+        await assert.rejects(() => sendSigning(sendArgs), /manual re-sign provider lease has already been consumed/);
+        assert.equal(providerCalls, 1);
+
+        process.env.GITHUB_RUN_ID = `manual-${priorState}-retry`;
+        const reusedIdAuthorization = manualResignAuthorizationFromEnvironment(process.env, SOURCE_COMMIT);
+        await assert.rejects(() => prepareSigning({
+          package: packageInfo.root,
+          sourceCommit: SOURCE_COMMIT,
+          runtimeOrigin,
+          manifestSha: packageInfo.manifestSha,
+          wireSha: packageInfo.wireSha,
+          manualResign: reusedIdAuthorization,
+        }), /manual re-sign request ID has already been used/);
+      } finally {
+        process.env = originalEnv;
+        globalThis.fetch = originalFetch;
+      }
+    });
+  }
+});
+
+test('manual re-sign requires prior package evidence and can narrowly authorize the unchanged migrated ambiguity record', async (t) => {
+  for (const scenario of ['no prior evidence', 'exact migrated wire', 'same ambiguous logical package', 'legacy ambiguity record only']) {
+    await t.test(scenario, async () => {
+      const packageInfo = await makePackage();
+      const origin = 'https://ci-fixture.example.com';
+      const sourceIdentity = logicalSourceIdentity(BUILD_MANIFEST);
+      const key = operationKey(sourceIdentity, createSha256(Buffer.from(origin)));
+      const originalEnv = { ...process.env };
+      const originalFetch = globalThis.fetch;
+      const statuses = ['no prior evidence', 'legacy ambiguity record only'].includes(scenario)
+        ? []
+        : [{ id: 1, context: statusContext(key), state: 'success' }];
+      process.env = {
+        ...process.env,
+        GITHUB_TOKEN: 'synthetic-token',
+        GITHUB_API_URL: 'https://api.github.test',
+        GITHUB_REPOSITORY: 'owner/repo',
+        WHT_SIGNING_STATUS_ANCHOR: '1'.repeat(40),
+        GITHUB_EVENT_NAME: 'workflow_dispatch',
+        GITHUB_SHA: SOURCE_COMMIT,
+        GITHUB_ACTOR: 'reviewer-user',
+        GITHUB_RUN_ID: `blocked-${scenario.replaceAll(' ', '-')}`,
+        GITHUB_RUN_ATTEMPT: '1',
+        WHT_MANUAL_RESIGN_REQUESTED: 'true',
+        WHT_MANUAL_RESIGN_REQUEST_ID: 'b4e10675-0e56-4f8f-9c0b-93058500a099',
+        WHT_MANUAL_RESIGN_SOURCE_COMMIT: SOURCE_COMMIT,
+        WHT_MANUAL_RESIGN_REASON: 'delivery-verification-failed',
+        WHT_CONFIRM_EARLIER_REQUEST_MAY_HAVE_COMPLETED: 'true',
+        RUNNER_TEMP: packageInfo.root,
+      };
+      let providerCalls = 0;
+      globalThis.fetch = async (url, options = {}) => {
+        if (String(url).startsWith('https://api.github.test')) {
+          if (options.method === 'GET') return responseJson(statusPage('1'.repeat(40), statuses, statuses.length));
+          const body = JSON.parse(options.body);
+          statuses.push({ id: statuses.length + 1, context: body.context, state: body.state, description: body.description });
+          return responseJson(statuses.at(-1));
+        }
+        providerCalls += 1;
+        return new Response(Buffer.from('AEA1legacy-resigned'), { status: 200, headers: { 'content-type': 'application/octet-stream' } });
+      };
+      try {
+        let migratedBytes;
+        if (scenario !== 'no prior evidence') {
+          migratedBytes = Buffer.from(JSON.stringify({
+            schemaVersion: 1,
+            status: 'ambiguous',
+            logicalSourceIdentity: sourceIdentity,
+            wireSha256: scenario === 'exact migrated wire' ? packageInfo.wireSha : 'f'.repeat(64),
+          }) + '\n');
+          privateStore.objects.set(MIGRATED_AMBIGUITY_KEY, migratedBytes);
+          process.env.WHT_AMBIGUITY_RECORD_SHA256 = createSha256(migratedBytes);
+        }
+        const authorization = manualResignAuthorizationFromEnvironment(process.env, SOURCE_COMMIT);
+        const args = {
+          package: packageInfo.root,
+          sourceCommit: SOURCE_COMMIT,
+          runtimeOrigin: origin,
+          manifestSha: packageInfo.manifestSha,
+          wireSha: packageInfo.wireSha,
+          manualResign: authorization,
+        };
+        if (scenario === 'no prior evidence') {
+          await assert.rejects(() => prepareSigning(args), /manual re-sign requires prior logical-package evidence/);
+          assert.equal(statuses.some(status => status.context === manualResignStatusContext(authorization.requestIdSha256)), false);
+        } else {
+          await prepareSigning(args);
+          const resignKey = manualResignOperationKey(key, process.env.WHT_MANUAL_RESIGN_REQUEST_ID);
+          assert.ok(privateStore.objects.has(intentObjectKey(resignKey)));
+          assert.ok(statuses.some(status => status.context === manualResignStatusContext(authorization.requestIdSha256)));
+          assert.deepEqual(privateStore.objects.get(MIGRATED_AMBIGUITY_KEY), migratedBytes);
+          if (scenario === 'legacy ambiguity record only') {
+            await sendSigning({
+              package: packageInfo.root,
+              sourceCommit: SOURCE_COMMIT,
+              runtimeOrigin: origin,
+              manifestSha: packageInfo.manifestSha,
+              wireSha: packageInfo.wireSha,
+              signedPath: join(packageInfo.root, 'legacy-resigned.shortcut'),
+              manualResign: authorization,
+            });
+            assert.equal(providerCalls, 1);
+            assert.deepEqual(privateStore.objects.get(MIGRATED_AMBIGUITY_KEY), migratedBytes);
+          }
+        }
+      } finally {
+        process.env = originalEnv;
+        globalThis.fetch = originalFetch;
+      }
+    });
+  }
+});
+
+test('manual re-sign result identity is checked in private R2 before upload and completion', async () => {
+  const packageInfo = await makePackage();
+  const runtimeOrigin = 'https://ci-fixture.example.com';
+  const priorKey = operationKey(logicalSourceIdentity(BUILD_MANIFEST), createSha256(Buffer.from(runtimeOrigin)));
+  const requestId = 'b4e10675-0e56-4f8f-9c0b-93058500a020';
+  const originalEnv = { ...process.env };
+  const originalFetch = globalThis.fetch;
+  const statuses = [{ id: 1, context: statusContext(priorKey), state: 'success' }];
+  process.env = {
+    ...process.env,
+    GITHUB_TOKEN: 'synthetic-token',
+    GITHUB_API_URL: 'https://api.github.test',
+    GITHUB_REPOSITORY: 'owner/repo',
+    WHT_SIGNING_STATUS_ANCHOR: '1'.repeat(40),
+    GITHUB_EVENT_NAME: 'workflow_dispatch',
+    GITHUB_SHA: SOURCE_COMMIT,
+    GITHUB_ACTOR: 'reviewer-user',
+    GITHUB_RUN_ID: 'manual-result-run',
+    GITHUB_RUN_ATTEMPT: '1',
+    RUNNER_TEMP: packageInfo.root,
+    WHT_RUNTIME_ORIGIN: runtimeOrigin,
+    WHT_MANUAL_RESIGN_REQUESTED: 'true',
+    WHT_MANUAL_RESIGN_REQUEST_ID: requestId,
+    WHT_MANUAL_RESIGN_SOURCE_COMMIT: SOURCE_COMMIT,
+    WHT_MANUAL_RESIGN_REASON: 'delivery-verification-failed',
+    WHT_CONFIRM_EARLIER_REQUEST_MAY_HAVE_COMPLETED: 'true',
+  };
+  globalThis.fetch = async (url, options = {}) => {
+    const text = String(url);
+    if (text.startsWith('https://api.github.test')) {
+      if (options.method === 'GET') return responseJson(statusPage('1'.repeat(40), statuses, statuses.length));
+      const body = JSON.parse(options.body);
+      const status = { id: statuses.length + 1, context: body.context, state: body.state, description: body.description };
+      const previous = statuses.findIndex(item => item.context === status.context);
+      if (previous === -1) statuses.push(status);
+      else statuses[previous] = status;
+      return responseJson(status);
+    }
+    return new Response(Buffer.from('AEA1manual-result'), { status: 200, headers: { 'content-type': 'application/octet-stream' } });
+  };
+  try {
+    const authorization = manualResignAuthorizationFromEnvironment(process.env, SOURCE_COMMIT);
+    const resignKey = manualResignOperationKey(priorKey, requestId);
+    const args = {
+      package: packageInfo.root,
+      sourceCommit: SOURCE_COMMIT,
+      runtimeOrigin,
+      manifestSha: packageInfo.manifestSha,
+      wireSha: packageInfo.wireSha,
+      signedPath: join(packageInfo.root, 'manual-result.shortcut'),
+      manualResign: authorization,
+    };
+    await prepareSigning(args);
+    await sendSigning(args);
+    const resultObjectKey = resultMetadataObjectKey(resignKey);
+    const resultBytes = Buffer.from(privateStore.objects.get(resultObjectKey));
+    const result = JSON.parse(resultBytes.toString('utf8'));
+    assert.equal(result.schemaVersion, 2);
+    assert.equal(result.operationKey, resignKey);
+    assert.equal(result.logicalOperationKey, priorKey);
+    assert.equal(result.authorizationIdSha256, authorization.requestIdSha256);
+    assert.equal(result.authorizationActor, 'reviewer-user');
+    assert.equal(result.runId, 'manual-result-run');
+    assert.equal(result.runAttempt, 1);
+    assert.equal(JSON.stringify(statuses).includes(requestId), false);
+    assert.equal(JSON.stringify(statuses).includes(authorization.reason), false);
+    assert.equal(JSON.stringify(statuses).includes('reviewer-user'), false);
+
+    privateStore.objects.set(resultObjectKey, Buffer.from(JSON.stringify({ ...result, authorizationActor: 'other-user' })));
+    await assert.rejects(() => publishSigning(args), /private signing result does not match its intent/);
+    privateStore.objects.set(resultObjectKey, resultBytes);
+    await publishSigning(args);
+    await completeSigning(args);
+    assert.ok(privateStore.objects.has(result.signedShortcutObjectKey));
+    const latest = JSON.parse(privateStore.objects.get('latest.json').toString('utf8'));
+    assert.deepEqual(latest, { commit: SOURCE_COMMIT, sha256: result.signedShortcutSha256, key: result.signedShortcutObjectKey });
+    assert.equal(statuses.find(status => status.context === manualResignStatusContext(authorization.requestIdSha256))?.state, 'success');
+    assert.equal(statuses.find(status => status.context === manualResignStatusContext(authorization.requestIdSha256))?.description, 'Manual re-sign delivery verified');
+    assert.equal(statuses.find(status => status.context === manualResignSendStatusContext(authorization.requestIdSha256))?.description, 'Manual re-sign provider POST consumed');
+    const manualStatusDescriptions = statuses
+      .filter(status => status.context === manualResignStatusContext(authorization.requestIdSha256)
+        || status.context === manualResignSendStatusContext(authorization.requestIdSha256))
+      .map(status => status.description)
+      .join('\n');
+    for (const privatePackageIdentity of [
+      priorKey,
+      resignKey,
+      logicalSourceIdentity(BUILD_MANIFEST),
+      packageInfo.manifestSha,
+      packageInfo.wireSha,
+      createSha256(Buffer.from(runtimeOrigin)),
+    ]) {
+      assert.equal(manualStatusDescriptions.includes(privatePackageIdentity), false);
+    }
+  } finally {
+    process.env = originalEnv;
+    globalThis.fetch = originalFetch;
+  }
 });
 
 test('signed response validation requires an AEA1 container', () => {
