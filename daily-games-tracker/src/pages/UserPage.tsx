@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiRequestError, apiRequest } from "../lib/api";
 import type { AuthenticatedRenderProps } from "./DeviceLogin";
+import PlayerHelp from "./PlayerHelp";
 
 export interface UserStatsGame {
   key: "krillion" | "maptap";
@@ -223,6 +224,8 @@ export default function UserPage({
           </section>
         </>
       )}
+
+      <PlayerHelp />
 
       <button
         type="button"

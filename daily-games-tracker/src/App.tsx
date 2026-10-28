@@ -3,6 +3,7 @@ import AdminPage from "./pages/AdminPage";
 import RegistrationPage from "./pages/RegistrationPage";
 import DeviceLogin from "./pages/DeviceLogin";
 import UserPage from "./pages/UserPage";
+import PlayerHelp from "./pages/PlayerHelp";
 import { AllTimeLeaderboardPage, DailyLeaderboardPage } from "./pages/LeaderboardPages";
 
 type Page = "home" | "daily" | "all-time" | "admin" | "register" | "user";
@@ -213,18 +214,19 @@ function PlayHelpPage({ games }: { games: Game[] }) {
         type="button"
         className="primary-action"
         disabled
-        aria-label="Shortcut download after registration"
+        aria-label="Supported Shortcut link unavailable"
       >
-        Shortcut download after registration <Icon name="lock" size={20} />
+        Supported Shortcut link unavailable <Icon name="lock" size={20} />
       </button>
       <p className="muted-note">
-        Registration is invitation-only. Your administrator will send a device invitation, and your
-        private scorecard will offer the Shortcut download after setup.
+        Registration is invitation-only. Ask your administrator for an Add Device invitation. After
+        you register, your one-time device code appears on the registration result page.
       </p>
       <div className="info-strip">
         <Icon name="shield" size={18} />
         <span>No screenshots, OCR, PINs, passwords, or manual score entry are used.</span>
       </div>
+      <PlayerHelp />
     </>
   );
 }

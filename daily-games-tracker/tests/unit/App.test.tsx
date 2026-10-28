@@ -11,6 +11,7 @@ import DeviceLogin, {
   type Player,
 } from "../../src/pages/DeviceLogin";
 import UserPage, { type UserStatsResponse } from "../../src/pages/UserPage";
+import RegistrationPage from "../../src/pages/RegistrationPage";
 import { ApiRequestError } from "../../src/lib/api";
 
 const appSource = readFileSync(new URL("../../src/App.tsx", import.meta.url), "utf8");
@@ -325,8 +326,9 @@ function installBehaviorDom(): {
 
 const behaviorRoots: Array<{ unmount: () => void }> = [];
 
-async function renderBehavior(element: ReactNode) {
+async function renderBehavior(element: ReactNode, pathname?: string) {
   const dom = installBehaviorDom();
+  if (pathname) dom.window.location.pathname = pathname;
   const { createRoot } = await import("react-dom/client");
   const root = createRoot(dom.container as unknown as Element);
   behaviorRoots.push(root);
@@ -1138,7 +1140,7 @@ describe("Phase 10 user route shell", () => {
     expect(userPageSource).toContain("Download Shortcut");
     expect(registrationPageSource).toContain("href={result.shortcut_install_url}");
     expect(registrationPageSource).not.toContain("www.icloud.com/shortcuts");
-    expect(appSource).toContain("Shortcut download after registration");
+    expect(appSource).toContain("Supported Shortcut link unavailable");
     expect(userPageSource).toContain("Log out");
   });
 
@@ -1151,5 +1153,96 @@ describe("Phase 10 user route shell", () => {
     expect(userPageSource).toContain("setStats(null)");
     expect(deviceLoginSource).toContain("setPlayer(null)");
     expect(appSource).toContain("window.history.replaceState");
+  });
+});
+
+describe("Task 9 player setup help", () => {
+  it("shows accessible setup guidance at home, registration, and signed-in User entry points", () => {
+    const registration = sourceIfPresent("../../src/pages/RegistrationPage.tsx");
+    const help = sourceIfPresent("../../src/pages/PlayerHelp.tsx");
+    const normalizedHelp = help.replace(/\s+/g, " ");
+
+    expect(appSource).toContain("<PlayerHelp />");
+    expect(appSource).toContain('aria-label="Supported Shortcut link unavailable"');
+    expect(registration).toContain("<PlayerHelp");
+    expect(userPageSource).toContain("<PlayerHelp");
+    for (const guidance of [
+      "Shortcuts",
+      "Import Question",
+      "Safari",
+      "Share your score",
+      "already saved",
+      "correction or deletion",
+      "interrupted",
+    ]) {
+      expect(normalizedHelp.toLowerCase()).toContain(guidance.toLowerCase());
+    }
+    expect(help).toContain('aria-labelledby="player-help-heading"');
+  });
+
+  it("shows truthful home instructions for the invitation and one-time registration code", () => {
+    const normalizedHome = appSource.replace(/\s+/g, " ");
+    expect(normalizedHome).toContain("Ask your administrator for an Add Device invitation.");
+    expect(normalizedHome).toContain(
+      "After you register, your one-time device code appears on the registration result page.",
+    );
+  });
+
+  async function registerAndCopy(writeText: ReturnType<typeof vi.fn>) {
+    vi.stubGlobal("navigator", { userAgent: "Chrome", clipboard: { writeText } });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const path = String(input);
+        if (path === "/api/register/synthetic-invite")
+          return Response.json({ player: { display_name: "Alex" } });
+        if (path === "/api/register/synthetic-invite/redeem" && init?.method === "POST")
+          return Response.json({
+            player: { display_name: "Alex" },
+            device_code: "synthetic-private-code",
+            shortcut_install_url: null,
+          });
+        throw new Error("Unexpected registration request: " + path);
+      }),
+    );
+    const rendered = await renderBehavior(
+      createElement(RegistrationPage),
+      "/register/synthetic-invite",
+    );
+    await flushBehavior();
+    const form = rendered.container.querySelector("form");
+    expect(form).toBeDefined();
+    await act(async () => {
+      form!.dispatchEvent(new BehaviorEvent("submit", { bubbles: true, cancelable: true }));
+    });
+    await flushBehavior();
+    await act(async () => buttonWithText(rendered.container, "Copy device code").click());
+    await flushBehavior();
+    return rendered.container;
+  }
+
+  it("shows accessible clipboard failure feedback and keeps the private code visible", async () => {
+    const container = await registerAndCopy(
+      vi.fn().mockRejectedValue(new Error("clipboard blocked")),
+    );
+    const code = container.querySelector('[aria-label="Private device code"]') as
+      (BehaviorElement & { value?: string }) | null;
+    const registration = sourceIfPresent("../../src/pages/RegistrationPage.tsx");
+
+    expect(code?.value).toBe("synthetic-private-code");
+    expect(registration).toMatch(/aria-label="Private device code"[\s\S]*?readOnly/);
+    expect(container.querySelector('[role="status"]')?.textContent).toContain(
+      "Copy failed. Select the code above and copy it manually.",
+    );
+  });
+
+  it("announces successful device-code copying", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    const container = await registerAndCopy(writeText);
+
+    expect(writeText).toHaveBeenCalledWith("synthetic-private-code");
+    expect(container.querySelector('[role="status"]')?.textContent).toContain(
+      "Private device code copied.",
+    );
   });
 });

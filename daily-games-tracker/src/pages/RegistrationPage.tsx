@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { apiRequest, copyText } from "../lib/api";
+import PlayerHelp from "./PlayerHelp";
 
 interface Registered {
   player: { display_name: string };
@@ -14,7 +15,7 @@ export default function RegistrationPage() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<Registered | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [copyFeedback, setCopyFeedback] = useState("");
   useEffect(() => {
     let active = true;
     void apiRequest<{ player: { display_name: string } }>(
@@ -95,10 +96,16 @@ export default function RegistrationPage() {
         <section className="management-panel">
           <h2>Welcome, {result.player.display_name}</h2>
           <ol className="setup-steps">
-            <li>Copy your private device code below.</li>
+            <li>Keep this result page open until setup is complete.</li>
             <li>
-              Install <strong>Upload to WHT</strong>, then paste the code into its setup question.
+              Copy the one-time private code below. If copy does not work, select the code and copy
+              it manually.
             </li>
+            <li>
+              Install the clean supported <strong>Upload to WHT</strong> template, then enter the
+              code in its Import Question.
+            </li>
+            <li>Return to WHT in Safari when the Shortcut setup is complete.</li>
           </ol>
           <input
             className="private-code"
@@ -112,11 +119,22 @@ export default function RegistrationPage() {
           <button
             type="button"
             onClick={() => {
-              void copyText(result.device_code).then(setCopied);
+              void copyText(result.device_code).then((copied) =>
+                setCopyFeedback(
+                  copied
+                    ? "Private device code copied. Enter it in the Shortcut Import Question."
+                    : "Copy failed. Select the code above and copy it manually.",
+                ),
+              );
             }}
           >
-            {copied ? "Copied" : "Copy device code"}
+            Copy device code
           </button>
+          {copyFeedback && (
+            <p className="notice" role="status" aria-live="polite">
+              {copyFeedback}
+            </p>
+          )}
           {result.shortcut_install_url ? (
             <a
               className="primary-action"
@@ -128,7 +146,8 @@ export default function RegistrationPage() {
             </a>
           ) : (
             <p className="notice">
-              The Shortcut download is currently unavailable. Keep this code until it is ready.
+              The supported Shortcut install link is unavailable. Ask the administrator before
+              completing setup. Keep this page open; the code cannot be recovered if you close it.
             </p>
           )}
           <p className="muted-note">
@@ -141,6 +160,7 @@ export default function RegistrationPage() {
           </p>
         </section>
       )}
+      <PlayerHelp />
     </>
   );
 }
