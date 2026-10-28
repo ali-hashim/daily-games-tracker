@@ -53,10 +53,10 @@ For a correction, deletion request, or support, contact the administrator. The a
 
 Before inviting anyone:
 
-- Confirm the supported clean production Shortcut template and install link have been reviewed and verified for the intended production release.
-- Confirm the configured production link has the supported iCloud Shortcut shape. Never use the inert test URL, a preview link, or a configured Shortcut containing a private device code.
+- Confirm the clean **Upload to WHT** template for the intended release has been reviewed and verified, and its current manifest and artifact are available in the configured R2 bucket. The download route checks the manifest, artifact size, and SHA-256 digest before serving the file.
+- Confirm registration, User, and update-required responses use the relative `/api/shortcut/download` path only when the bucket is configured. Downloads require a signed-in player session; do not direct players to a raw bucket object or a configured Shortcut containing a private device code.
 - Find the player's existing identity or create it once. Check for an existing identity before creating one.
-- Issue a one-use, 24-hour **Add Device** invitation for that identity only after the supported install link is ready.
+- Issue a one-use, 24-hour **Add Device** invitation for that identity only after the verified template is available through the authenticated download route.
 - Send the invitation privately using an approved channel. Do not put real invitation links, device codes, player details, or account details in public documentation, reports, or logs.
 - Tell the player to keep the registration result open until the code is entered in the clean template's Import Question. The player should not send the private code back to you.
 - If the invite expires or is used, issue a fresh invitation for the same player identity. For a known lost or leaked device credential, revoke it before replacement setup.
