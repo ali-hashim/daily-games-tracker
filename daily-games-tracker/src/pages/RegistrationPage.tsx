@@ -95,61 +95,83 @@ export default function RegistrationPage() {
       {result && (
         <section className="management-panel">
           <h2>Welcome, {result.player.display_name}</h2>
-          <ol className="setup-steps">
-            <li>Keep this result page open until setup is complete.</li>
+          <ol className="setup-steps registration-completion-steps">
             <li>
-              Copy the one-time private code below. If copy does not work, select the code and copy
-              it manually.
+              <span className="registration-step-instruction">
+                Keep this result page open. Copy the one-time private code below; if copy fails,
+                select the code and copy it manually.
+              </span>
+              <input
+                className="private-code"
+                aria-label="Private device code"
+                value={result.device_code}
+                readOnly
+                autoComplete="off"
+                autoCapitalize="off"
+                spellCheck={false}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  void copyText(result.device_code).then((copied) =>
+                    setCopyFeedback(
+                      copied
+                        ? "Private device code copied. Enter it in the Shortcut Import Question."
+                        : "Copy failed. Select the code above and copy it manually.",
+                    ),
+                  );
+                }}
+              >
+                Copy device code
+              </button>
+              {copyFeedback && (
+                <p className="notice" role="status" aria-live="polite">
+                  {copyFeedback}
+                </p>
+              )}
             </li>
             <li>
-              Install the clean supported <strong>Upload to WHT</strong> template, then enter the
-              code in its Import Question.
+              <span className="registration-step-instruction">
+                Install Upload to WHT using the download link below.
+              </span>
+              {result.shortcut_install_url ? (
+                <a
+                  className="primary-action"
+                  href={result.shortcut_install_url}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Install Upload to WHT
+                </a>
+              ) : (
+                <p className="notice">
+                  The supported Shortcut install link is unavailable. Ask the administrator before
+                  completing setup. Keep this page open; the code cannot be recovered if you close
+                  it.
+                </p>
+              )}
             </li>
-            <li>Return to WHT in Safari when the Shortcut setup is complete.</li>
+            <li>
+              <span className="registration-step-instruction">
+                In Safari, tap the Downloads button and open the downloaded Shortcut.
+              </span>
+            </li>
+            <li>
+              <span className="registration-step-instruction">
+                In the Shortcut’s Import Question, paste the one-time code and finish adding Upload
+                to WHT.
+              </span>
+            </li>
+            <li>
+              <span className="registration-step-instruction">
+                Return to Safari to share completed games. Choose Upload to WHT; if it is missing,
+                go to Share &gt; Edit Actions &gt; Favorites and add it.
+              </span>
+            </li>
+            <li>
+              <span className="registration-step-instruction">Play a game.</span>
+            </li>
           </ol>
-          <input
-            className="private-code"
-            aria-label="Private device code"
-            value={result.device_code}
-            readOnly
-            autoComplete="off"
-            autoCapitalize="off"
-            spellCheck={false}
-          />
-          <button
-            type="button"
-            onClick={() => {
-              void copyText(result.device_code).then((copied) =>
-                setCopyFeedback(
-                  copied
-                    ? "Private device code copied. Enter it in the Shortcut Import Question."
-                    : "Copy failed. Select the code above and copy it manually.",
-                ),
-              );
-            }}
-          >
-            Copy device code
-          </button>
-          {copyFeedback && (
-            <p className="notice" role="status" aria-live="polite">
-              {copyFeedback}
-            </p>
-          )}
-          {result.shortcut_install_url ? (
-            <a
-              className="primary-action"
-              href={result.shortcut_install_url}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Install Upload to WHT
-            </a>
-          ) : (
-            <p className="notice">
-              The supported Shortcut install link is unavailable. Ask the administrator before
-              completing setup. Keep this page open; the code cannot be recovered if you close it.
-            </p>
-          )}
           <p className="muted-note">
             Anyone who can inspect your configured Shortcut can read this code. Never share your
             configured copy. For a lost or leaked device, ask the administrator to revoke it.

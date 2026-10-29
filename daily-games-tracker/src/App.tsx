@@ -194,38 +194,23 @@ function PlayHelpPage({ games }: { games: Game[] }) {
       </div>
       <div className="section-heading setup-heading">
         <span>02</span>
-        <h2>Upload the finished result</h2>
+        <h2>Share a completed game</h2>
       </div>
-      <ol className="setup-steps">
+      <ol className="setup-steps share-steps">
         <li>
-          <strong>Krillion:</strong> use Safari's Share button on the completed results page.
+          <strong>Krillion:</strong> finish the game in Safari, then tap Share on its completed
+          results page.
         </li>
         <li>
-          <strong>MapTap:</strong> use MapTap's in-game Share your score button.
+          <strong>MapTap:</strong> in the game, tap Share your score.
         </li>
         <li>
-          Choose <strong>Upload to WHT</strong>, review the native confirmation, then submit.
+          Choose <strong>Upload to WHT</strong>, then submit your score.
         </li>
       </ol>
-      <a className="primary-action" href="/user">
-        Login with Device <Icon name="arrow" size={20} />
-      </a>
-      <button
-        type="button"
-        className="primary-action"
-        disabled
-        aria-label="Supported Shortcut link unavailable"
-      >
-        Supported Shortcut link unavailable <Icon name="lock" size={20} />
-      </button>
-      <p className="muted-note">
-        Registration is invitation-only. Ask your administrator for an Add Device invitation. After
-        you register, your one-time device code appears on the registration result page.
+      <p className="muted-note missing-share-action-help">
+        If Upload to WHT is missing, open Edit Actions and add it to Favorites.
       </p>
-      <div className="info-strip">
-        <Icon name="shield" size={18} />
-        <span>No screenshots, OCR, PINs, passwords, or manual score entry are used.</span>
-      </div>
       <PlayerHelp />
     </>
   );

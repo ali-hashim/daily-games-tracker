@@ -408,6 +408,42 @@ h1 {
 .setup-steps strong {
   color: #eef8ea;
 }
+.player-help {
+  margin-top: 28px;
+}
+.player-help > h2 {
+  margin: 0 0 8px;
+}
+.player-help-topic + .player-help-topic {
+  border-top: 1px solid #2b4037;
+}
+.player-help-topic summary {
+  padding: 14px 0;
+  color: #eef8ea;
+  cursor: pointer;
+  font-weight: 700;
+}
+.player-help-topic__content {
+  padding-bottom: 16px;
+  color: #a9bcae;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.player-help-topic__content p {
+  margin: 0 0 12px;
+}
+.player-help-topic__content .setup-steps {
+  margin-bottom: 14px;
+}
+.player-help-image {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  margin: 14px 0;
+  border: 1px solid #2b4037;
+  border-radius: 12px;
+}
 .info-strip {
   display: flex;
   gap: 10px;
