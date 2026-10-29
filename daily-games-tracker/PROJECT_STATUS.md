@@ -14,7 +14,7 @@ The signed Shortcut remains version 1, signed from source `29c4acea` in the prot
 
 ## Task disposition
 
-The user closed Tasks 2–4 with their recorded limitations preserved. Tasks 5 and 8 are complete and accepted. Task 7 signing is complete. Task 9 production setup and deployment are complete, with the following human checks still open:
+Task 1 established the canonical repository. The user closed Tasks 2–4 with their recorded limitations preserved. Tasks 5 and 8 are complete and accepted. Task 6 setup/help implementation is deployed; Task 7 signing is complete. Task 9 production setup and deployment are complete, with the following human checks still open:
 
 - Sign in through Cloudflare Access as the authorized administrator; confirm the admin page loads and the player list is empty.
 - Use an Access-admitted non-admin identity to confirm the admin page/API is blocked or returns `403` without player data.
@@ -27,3 +27,5 @@ Task 10 remains open: the full fresh-user production journey and real-device/ses
 The user canceled the second D1 backup, backup schedule, and alert setup and accepts that no separate production database copy is maintained. The user also removed Cloudflare plan/CPU checks and monitoring/alert setup from the production release gates. These are not active launch or post-release requirements. Preserve the separate limitations recorded in the closed-task reports; do not reopen accepted Task 5/8 checks or infer that Task 10 is complete.
 
 Keep hosted origins, deployment IDs, Pages/account/D1 identifiers, Access audiences, administrator identities, player data, install links, and private operational evidence in private configuration or ignored records. Public source commit and CI provenance may be recorded without deployment details.
+
+For a new computer, start with the [portable handoff](../DEVELOPMENT_HANDOFF.md). The [work audit](reports/development-work-audit.md) catalogs older local changes and their preserved or superseded disposition. Cloudflare/GitHub hold the live resources and signing state; historical local evidence is not a development dependency.

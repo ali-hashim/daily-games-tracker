@@ -4,6 +4,8 @@ WHT explores an iPhone-first daily game tracker for Krillion and MapTap. A React
 
 This is the maintained public repository for `ali-hashim/daily-games-tracker`. The one-time migration from the private WHT workspace preserves synthetic test data and reviewed application source while omitting hosted deployment identities. The project is licensed under MIT.
 
+For a fresh-computer clone, local setup, current task continuation, and safe recovery of existing Cloudflare configuration, start with the [portable development handoff](DEVELOPMENT_HANDOFF.md).
+
 ## Explore the source
 
 - `daily-games-tracker/src/`: interface and registration/device-login flows.
@@ -31,9 +33,9 @@ npm run build
 npm run test:smoke
 ```
 
-For a local Pages/Functions/D1 session, run `npm run db:local:migrate`, `npm run build` and `npm run dev:pages`; open `http://localhost:8788`. The all-zero database identifier is an inert local placeholder. Remote D1 resource IDs, Access audiences, administrator identities and install values remain private external configuration.
+For a local Pages/Functions/D1 session, run `npm run db:local:migrate`, `npm run build` and `npm run dev:pages`; open `http://localhost:8788`. The all-zero database identifier is an inert local placeholder. Local Pages variables come from `.dev.vars` copied from `.env.example`; these are local placeholders only. No Cloudflare sign-in or remote resource is needed for local development.
 
-Remote operations are explicit and require an authenticated Wrangler session plus the applicable Cloudflare Access and database checks. From `daily-games-tracker/`, the available commands are `npm run db:preview:migrate`, `npm run deploy:preview`, `npm run db:production:migrate` and `npm run deploy:production`. CI does not invoke these commands. See [CLOUDFLARE_SETUP.md](daily-games-tracker/CLOUDFLARE_SETUP.md) for the operator sequence.
+Remote operations require the existing Cloudflare account, current platform configuration readback, command-specific CLI checks, and separate authorization for the operation. The npm scripts contain placeholder project/database values and are not deploy-ready commands. Follow [CLOUDFLARE_SETUP.md](daily-games-tracker/CLOUDFLARE_SETUP.md) and the exact [production runbook](daily-games-tracker/PRODUCTION_RUNBOOK.md); do not create replacement Cloudflare resources when setting up another computer. CI does not invoke remote migration or deployment commands.
 
 Tests cover parsing, ranking, capture limits/privacy, authorization, registration, device login, sessions and duplicate-safe submissions. Fixed fixture dates are test clocks. All capture/result fixtures are generated examples and do not represent player activity. Local simulated coverage does not establish Safari layout, iPhone behavior, cloud performance or production readiness.
 
@@ -49,4 +51,4 @@ The unsigned workflow uses pinned compiler, Go and Action versions and read-only
 
 Historical source-validation counts are recorded with their revision and are not a current production gate. Current production state and remaining human checks are tracked in [PROJECT_STATUS.md](daily-games-tracker/PROJECT_STATUS.md). Local synthetic checks do not establish complete iPhone acceptance or the Task 10 production journey.
 
-Read [DEVELOPMENT_WORKFLOW.md](DEVELOPMENT_WORKFLOW.md) for normal changes. Read [skills/sanitized-push/SKILL.md](skills/sanitized-push/SKILL.md) for the one-time migration and any future public push review; do not create a second export checkout or repeat the migration after cutover.
+Read [DEVELOPMENT_HANDOFF.md](DEVELOPMENT_HANDOFF.md) for portable setup and current continuation state, then [DEVELOPMENT_WORKFLOW.md](DEVELOPMENT_WORKFLOW.md) for normal changes. Read [skills/sanitized-push/SKILL.md](skills/sanitized-push/SKILL.md) before a public push that affects publication safety; do not create a second export checkout or repeat the one-time migration.

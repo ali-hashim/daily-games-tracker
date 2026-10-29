@@ -1,6 +1,6 @@
 # Canonical repository workflow
 
-This checkout is the maintained source for `ali-hashim/daily-games-tracker`. The private WHT workspace and its migration evidence are historical handoff material. The initial reviewed publication is a one-time migration; after it is accepted, work from short-lived branches in this checkout and use ordinary commits, pull requests and CI. Do not create a second export checkout or recopy the private workspace for routine changes.
+This checkout is the maintained source for `ali-hashim/daily-games-tracker`. The private WHT workspace and its migration evidence are historical handoff material. The initial reviewed publication is a one-time migration; after it is accepted, work from short-lived branches in this checkout and use ordinary commits, pull requests and CI. Do not create a second export checkout or recopy the private workspace for routine changes. For fresh-computer setup and current task continuation, start with [DEVELOPMENT_HANDOFF.md](DEVELOPMENT_HANDOFF.md).
 
 Before the one-time migration, or any later public push or pull request that publishes this repository, read and follow [skills/sanitized-push/SKILL.md](skills/sanitized-push/SKILL.md). Ordinary local edits and branch work do not require an export workflow.
 
@@ -10,7 +10,7 @@ Tracked Markdown, reports, manifests, examples, source and pull-request text mus
 
 # Wrangler and production preflight
 
-Before any remote Wrangler operation, read [the production runbook preflight](daily-games-tracker/PRODUCTION_RUNBOOK.md#wrangler-access-and-target-preflight). Git runs at the repository root; npm and Wrangler run from `daily-games-tracker/`. The committed Wrangler JSONC contains placeholders. Use the verified private configuration procedure, ensure the working directory contains `functions/`, and restore the tracked placeholder configuration afterward. In the pinned CLI, Pages deploy does not accept `--config` or `--env`; inspect command-specific help. A static-only upload from the wrong directory previously broke production API routes.
+Before any remote Wrangler operation, read [the production runbook preflight](daily-games-tracker/PRODUCTION_RUNBOOK.md#wrangler-access-and-target-preflight). Git runs at the repository root; npm and Wrangler run from `daily-games-tracker/`. The committed Wrangler JSONC contains placeholders. Recover the existing Pages configuration read-only from the selected Cloudflare account as described in the runbook; do not create replacement resources. Ensure the actual working directory contains `functions/` and restore the tracked placeholder configuration after any authorized Pages deployment. In the pinned CLI, Pages deploy does not accept `--config` or `--env`; D1 commands have different options, so inspect command-specific help. A static-only upload from the wrong directory previously broke production API routes.
 
 # Implementation and review roles
 
