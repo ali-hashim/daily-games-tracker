@@ -1233,11 +1233,9 @@ describe("Task 9 player setup help", () => {
     const container = await registerAndCopy(
       vi.fn().mockRejectedValue(new Error("clipboard blocked")),
     );
-    const steps = container
-      .querySelector("ol.registration-completion-steps")
-      ?.querySelectorAll("li");
-    const codeStep = steps?.[0];
-    const installStep = steps?.[1];
+    const steps = container.querySelectorAll("li.registration-step-card");
+    const codeStep = steps[0];
+    const downloadStep = steps[1];
     const code = codeStep?.querySelector('[aria-label="Private device code"]') as
       (BehaviorElement & { value?: string }) | null;
     const registration = sourceIfPresent("../../src/pages/RegistrationPage.tsx");
@@ -1248,11 +1246,11 @@ describe("Task 9 player setup help", () => {
     expect(codeStep?.querySelector('[role="status"]')?.textContent).toContain(
       "Copy failed. Select the code above and copy it manually.",
     );
-    expect(installStep?.querySelector("a.primary-action")).toBeNull();
-    expect(installStep?.querySelector(".notice")?.textContent).toContain(
-      "The supported Shortcut install link is unavailable.",
+    expect(downloadStep?.querySelector("a.primary-action")).toBeNull();
+    expect(downloadStep?.querySelector(".notice")?.textContent).toContain(
+      "The supported Shortcut download link is unavailable.",
     );
-    expect(installStep?.querySelector(".notice")?.textContent).toContain(
+    expect(downloadStep?.querySelector(".notice")?.textContent).toContain(
       "the code cannot be recovered if you close it.",
     );
   });
@@ -1304,18 +1302,31 @@ describe("Task 9 approved UI addendum", () => {
     });
     await flushBehavior();
 
-    const steps = rendered.container.querySelector("ol.registration-completion-steps");
-    const orderedSteps = steps?.querySelectorAll("li") ?? [];
+    const intro = rendered.container.querySelector(".registration-completion-intro");
+    expect(intro?.textContent).toContain("Follow these six steps in order");
+    expect(intro?.textContent).toContain("Keep this page open");
+
+    const orderedSteps = rendered.container.querySelectorAll("li.registration-step-card");
+    expect(orderedSteps).toHaveLength(6);
     expect(
-      orderedSteps.map((step) => step.querySelector(".registration-step-instruction")?.textContent),
+      orderedSteps.map((step) => [
+        step.querySelector(".registration-step-number")?.textContent,
+        step.querySelector("h3")?.textContent,
+      ]),
     ).toEqual([
-      "Keep this result page open. Copy the one-time private code below; if copy fails, select the code and copy it manually.",
-      "Install Upload to WHT using the download link below.",
-      "In Safari, open Downloads beside the address bar, then open the downloaded Shortcut.",
-      "In the Shortcut’s Import Question, paste the one-time code and finish adding Upload to WHT.",
-      "Return to Safari, open the Share sheet, scroll to Edit Actions, and add Upload to WHT to Favorites.",
-      "Play a game.",
+      ["Step 1", "Copy your device code"],
+      ["Step 2", "Download Upload to WHT"],
+      ["Step 3", "Open your download"],
+      ["Step 4", "Install and set up"],
+      ["Step 5", "Add Upload to WHT to Favorites"],
+      ["Step 6", "Play"],
     ]);
+    expect(orderedSteps[0]?.textContent).toContain("copy it manually");
+    expect(orderedSteps[0]?.textContent.toLowerCase()).not.toContain("paste");
+    expect(orderedSteps[2]?.textContent).toContain("Downloads beside the address bar");
+    expect(orderedSteps[3]?.textContent).toContain("Import Question");
+    expect(orderedSteps[4]?.textContent).toContain("Edit Actions");
+    expect(orderedSteps[4]?.textContent).toContain("Favorites");
     expect(registrationRequests).toEqual(["/api/register/synthetic-invite/redeem:POST"]);
 
     const codeStep = orderedSteps[0];
@@ -1325,11 +1336,39 @@ describe("Task 9 approved UI addendum", () => {
     expect(registrationPageSource).toMatch(/aria-label="Private device code"[\s\S]*?readOnly/);
     const copyButton = codeStep?.querySelector("button");
     expect(copyButton?.textContent).toBe("Copy device code");
+    expect(
+      orderedSteps
+        .slice(1)
+        .every(
+          (step) =>
+            step.querySelector('[aria-label="Private device code"]') === null &&
+            step.querySelector("button") === null,
+        ),
+    ).toBe(true);
 
     const downloadStep = orderedSteps[1];
     const download = downloadStep?.querySelector("a.primary-action");
-    expect(download?.textContent).toContain("Install Upload to WHT");
+    expect(download?.textContent).toBe("Download Upload to WHT");
     expect(download?.getAttribute("href")).toBe("/api/shortcut/download");
+    expect(orderedSteps[0]?.querySelector("a.primary-action")).toBeNull();
+    expect(
+      orderedSteps
+        .slice(2)
+        .every(
+          (step) =>
+            step.querySelector("a.primary-action") === null ||
+            step.querySelector("a.primary-action")?.getAttribute("href") === "/",
+        ),
+    ).toBe(true);
+    const playStep = orderedSteps[5];
+    expect(playStep?.querySelector("a.primary-action")?.textContent).toBe("Play");
+    expect(playStep?.querySelector("a.primary-action")?.getAttribute("href")).toBe("/");
+    expect(
+      orderedSteps[4]?.querySelectorAll("img").map((image) => image.getAttribute("src")),
+    ).toEqual([
+      "/images/player-help/safari-share-button.jpg",
+      "/images/player-help/edit-actions-button.jpg",
+    ]);
 
     await act(async () => copyButton?.click());
     await flushBehavior();
@@ -1339,6 +1378,14 @@ describe("Task 9 approved UI addendum", () => {
     );
     expect(rendered.container.textContent).toContain("signed in on this browser");
     expect(rendered.container.textContent).toContain("Never share your configured copy.");
+    expect(stylesSource).toMatch(/\.registration-step-flow\s*\{[^}]*list-style:\s*none/s);
+    expect(stylesSource).toMatch(
+      /\.registration-step-card\s*\{[^}]*border:\s*1px solid[^}]*border-radius:/s,
+    );
+    expect(stylesSource).toMatch(
+      /\.registration-step-card \.private-code\s*\{[^}]*width:\s*100%[^}]*min-height:\s*48px[^}]*border:/s,
+    );
+    expect(stylesSource).toMatch(/\.app-shell\s*\{[^}]*safe-area-inset-bottom/s);
   });
 
   it("shows only the two complete accessible player-help topics", async () => {
@@ -1387,10 +1434,14 @@ describe("Task 9 approved UI addendum", () => {
     expect(images.map((image) => image.getAttribute("src"))).toEqual([
       "/images/player-help/krillion-share.jpg",
       "/images/player-help/maptap-share.jpg",
+      "/images/player-help/safari-share-button.jpg",
+      "/images/player-help/edit-actions-button.jpg",
     ]);
     expect(images.map((image) => image.getAttribute("alt"))).toEqual([
       "Safari Share button on a completed Krillion result page",
       "MapTap Share your score button highlighted below the finished game",
+      "Safari bottom toolbar with the Share button highlighted",
+      "Edit Actions button in Safari's share sheet",
     ]);
     expect(images.every((image) => image.className.includes("player-help-image"))).toBe(true);
     expect(stylesSource).toMatch(/\.player-help-image\s*\{[^}]*max-width:\s*100%/s);

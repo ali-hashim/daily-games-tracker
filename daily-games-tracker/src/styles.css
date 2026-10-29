@@ -408,6 +408,134 @@ h1 {
 .setup-steps strong {
   color: #eef8ea;
 }
+.registration-completion {
+  margin: 24px 0;
+}
+.registration-completion > h2 {
+  margin: 0 0 8px;
+}
+.registration-completion-intro {
+  margin: 0 0 16px;
+  color: #b8c9bd;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.registration-step-flow {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.registration-step-card {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid #365044;
+  border-radius: 16px;
+  background: #12241e;
+}
+.registration-step-heading {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.registration-step-number {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  padding: 4px 9px;
+  border: 1px solid #54755f;
+  border-radius: 999px;
+  background: #1a382b;
+  color: #d5f5bc;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+.registration-step-card h3 {
+  margin: 0;
+  color: #eef8ea;
+  font-size: 17px;
+  line-height: 1.3;
+}
+.registration-step-card > p {
+  margin: 0;
+  color: #b8c9bd;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.registration-step-card > p + p {
+  margin-top: 10px;
+}
+.registration-step-card .private-code {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 12px;
+  border: 1px solid #668273;
+  border-radius: 10px;
+  background: #081311;
+  color: #f6fff3;
+  font-family: monospace;
+  font-size: 13px;
+  margin-top: 12px;
+}
+.registration-step-card button {
+  width: 100%;
+  min-height: 48px;
+  margin: 12px 0 0;
+  padding: 10px 14px;
+  border: 1px solid #668273;
+  border-radius: 10px;
+  background: #19372b;
+  color: #f6fff3;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.registration-step-card button:focus-visible {
+  outline: 2px solid #cbf99c;
+  outline-offset: 3px;
+}
+.registration-step-card .notice {
+  margin-top: 10px;
+}
+.registration-step-card .primary-action {
+  min-height: 50px;
+  margin-top: 12px;
+  text-decoration: none;
+}
+.player-help-figure {
+  margin: 14px 0 0;
+}
+.player-help-figure .player-help-image {
+  margin: 0;
+}
+.player-help-image-caption {
+  margin-top: 7px;
+  color: #a9bcae;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.registration-security-note {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border: 1px solid #2b4037;
+  border-radius: 14px;
+  background: #0f1e19;
+  color: #91a79a;
+  font-size: 12px;
+  line-height: 1.55;
+}
+.registration-security-note p {
+  margin: 0;
+}
+.registration-security-note p + p {
+  margin-top: 10px;
+}
+.registration-security-note strong {
+  color: #c1d0c7;
+}
 .player-help {
   margin-top: 28px;
 }

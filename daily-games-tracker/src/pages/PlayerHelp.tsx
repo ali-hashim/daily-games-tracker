@@ -41,7 +41,28 @@ export default function PlayerHelp() {
           />
           <p>Choose Upload to WHT and submit your score.</p>
           <p>After submission, your daily leaderboard text is copied for you.</p>
-          <p>If Upload to WHT is missing, open Edit Actions and add it to Favorites.</p>
+          <p>
+            If Upload to WHT is missing, open the Share sheet&apos;s Edit Actions and add it to
+            Favorites.
+          </p>
+          <figure className="player-help-figure">
+            <img
+              className="player-help-image"
+              src="/images/player-help/safari-share-button.jpg"
+              alt="Safari bottom toolbar with the Share button highlighted"
+            />
+            <figcaption className="player-help-image-caption">Tap Share in Safari.</figcaption>
+          </figure>
+          <figure className="player-help-figure">
+            <img
+              className="player-help-image"
+              src="/images/player-help/edit-actions-button.jpg"
+              alt="Edit Actions button in Safari's share sheet"
+            />
+            <figcaption className="player-help-image-caption">
+              Tap Edit Actions, then add Upload to WHT to Favorites.
+            </figcaption>
+          </figure>
         </div>
       </details>
     </section>
