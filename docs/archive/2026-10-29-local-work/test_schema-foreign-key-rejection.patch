@@ -1,0 +1,32 @@
+diff --git a/daily-games-tracker/scripts/test_schema.mjs b/daily-games-tracker/scripts/test_schema.mjs
+index db97409..3c52c28 100644
+--- a/daily-games-tracker/scripts/test_schema.mjs
++++ b/daily-games-tracker/scripts/test_schema.mjs
+@@ -12 +12 @@ const state = await mkdtemp(path.join(os.tmpdir(), "daily-games-schema-"));
+-function runWrangler(args, { expectFailure = false } = {}) {
++function runWrangler(args, { expectFailure = false, expectError } = {}) {
+@@ -20,0 +21,7 @@ function runWrangler(args, { expectFailure = false } = {}) {
++    if (expectError) {
++      assert.match(
++        `${result.stdout}\n${result.stderr}`,
++        expectError,
++        `Expected command to fail with ${expectError}: ${args.join(" ")}`,
++      );
++    }
+@@ -123 +130,15 @@ try {
+-  console.log("PASS: current D1 schema (v3), seeds, foreign keys, and uniqueness constraints");
++  runWrangler(
++    [
++      "d1",
++      "execute",
++      "DB",
++      ...localArgs,
++      "--command",
++      "INSERT INTO submissions(id, player_id, game_id, game_day_id, final_score, parser_version, source_kind) VALUES('s3', 'missing-player', 'krillion', 'krillion:2026-10-20', 0, 'krillion.v1', 'admin');",
++    ],
++    { expectFailure: true, expectError: /FOREIGN KEY constraint failed/i },
++  );
++
++  console.log(
++    "PASS: current D1 schema (v3), seeds, foreign-key rejection, and uniqueness constraints",
++  );

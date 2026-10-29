@@ -22,3 +22,47 @@ Keep production origins, project/account/database identifiers, Access audiences,
 ## Recovery note
 
 A static-only production upload was repaired by deploying reviewed application source from the actual app directory with Functions included. Subsequent help-heading and share-metadata changes are part of the current `ae36c52` release. The recovery made no database writes. For another incident, stop and verify the working directory, packaged Functions, private target configuration, and health/auth responses before making a second deployment; retain raw diagnostics only in ignored private storage.
+
+## Recover configuration on a new computer
+
+Follow [Cloudflare configuration recovery](CLOUDFLARE_SETUP.md) to sign in, identify the existing project, and download its configuration. Store the verified export at the ignored application-relative path `tmp/private-platform/wrangler.toml`. The export and dashboard provide existing resource bindings and readable variables. Existing secret values stay in their platform secret stores; the new computer does not need to export GitHub signing secrets to use the existing protected workflow. Recover or rotate a missing credential from its authorized source only when a task requires it. Do not recreate signing state or rerun the completed migration.
+
+## Local database and Functions
+
+From the application directory, use Node 22 and `npm ci`, then `npm run build`. On Windows, use the same short writable persistence directory for migration and the local server:
+
+```powershell
+$localState = Join-Path $env:TEMP 'wht-development-state'
+node node_modules/wrangler/bin/wrangler.js d1 migrations apply DB --local --persist-to $localState
+node node_modules/wrangler/bin/wrangler.js pages dev dist --persist-to $localState
+```
+
+The clean-clone verification applied all three migrations and returned schema-3 JSON from `/api/health`. Its original deeply nested default SQLite path failed with an opaque internal error; changing only the persistence directory resolved it. Keep local state separate from production/preview data. Local tests do not prove native acceptance or authorize a remote write.
+
+## Authorized Pages promotion
+
+A new-computer setup does not deploy anything. For a separately authorized release, identify the reviewed commit, build it, privately verify the account/project and both environments against the configuration export, and set `$project` and `$branch` to that verified target. Preview uses its intended preview branch; production uses the existing production branch. Do not derive the target from example configuration or publish its value.
+
+Run the following from the actual application directory containing `functions/`. This temporarily removes JSONC discovery, installs the verified private TOML, and restores the original tracked file even if deployment fails:
+
+```powershell
+$privateConfig = (Resolve-Path tmp/private-platform/wrangler.toml).Path
+$placeholder = Join-Path (Get-Location).Path 'wrangler.jsonc'
+$saved = "$placeholder.portable-placeholder"
+if (-not $project -or -not $branch) { throw 'Set and privately verify the authorized target first.' }
+if (-not (Test-Path functions) -or -not (Test-Path dist)) { throw 'Use the built application directory.' }
+if ((Test-Path $saved) -or (Test-Path wrangler.toml)) { throw 'Preserve existing temporary/private configuration first.' }
+$originalHash = (Get-FileHash -LiteralPath $placeholder -Algorithm SHA256).Hash
+try {
+    Move-Item -LiteralPath $placeholder -Destination $saved
+    Copy-Item -LiteralPath $privateConfig -Destination wrangler.toml
+    node node_modules/wrangler/bin/wrangler.js pages deploy dist --project-name $project --branch $branch --commit-hash (git rev-parse HEAD)
+    if ($LASTEXITCODE -ne 0) { throw 'Pages deployment failed; inspect private diagnostics.' }
+} finally {
+    if (Test-Path wrangler.toml) { Remove-Item -LiteralPath wrangler.toml }
+    if (Test-Path $saved) { Move-Item -LiteralPath $saved -Destination $placeholder }
+    if ((Get-FileHash -LiteralPath $placeholder -Algorithm SHA256).Hash -ne $originalHash) { throw 'Tracked configuration restoration mismatch.' }
+}
+```
+
+Before running this procedure, exclude `wrangler.toml` and `wrangler.jsonc.portable-placeholder` using the setup guide. Afterward, re-download the project configuration privately, compare effective bindings/variables with the preflight export, and move the readback out of config discovery. Verify JSON health with schema 3, anonymous protected API denial, the released assets, and actual navigation on the intended host. A successful static upload alone is insufficient. Keep preview and its database intact. Do not repeat signing, accepted Task 7/8 checks, or phone acceptance as part of documentation or machine setup.

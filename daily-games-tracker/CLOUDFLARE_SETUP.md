@@ -1,93 +1,52 @@
-# Cloudflare Provisioning Checklist
+# Cloudflare configuration recovery
 
-**Phase 1 historical record:** The earlier Pages and D1 provisioning evidence is retained privately. Hosted origins and deployment identities are intentionally omitted here; current work continues in `PHASE_2_ACCESS_SETUP.md`.
+Cloudflare Pages, preview and production D1, Access, and the private R2 signing bucket are already provisioned. A new computer must reconnect to those existing resources; do not create replacement projects, databases, buckets, secrets, or signing state. The current deployment and outstanding owner checks are in [project status](PROJECT_STATUS.md). See the [production runbook](PRODUCTION_RUNBOOK.md) before any remote operation.
 
-The local application is ready without Cloudflare credentials. Complete this checklist before the first preview deployment. Do not paste API tokens or database credentials into tracked files.
+## Recover the existing Pages configuration
 
-## 1. Authenticate and create resources
+From the repository root, enter the application directory. Use the locked CLI, not a global or auto-installed Wrangler:
 
-```bash
-npx wrangler login
-npx wrangler pages project create <private-pages-project> --production-branch main
-npx wrangler d1 create <private-preview-d1-name>
-npx wrangler d1 create <private-production-d1-name>
+    cd daily-games-tracker
+    npm ci
+    npm exec --offline -- wrangler --version
+    npm exec --offline -- wrangler login
+    npm exec --offline -- wrangler whoami
+    npm exec --offline -- wrangler pages project list
+
+Run login only if this computer has no valid session. Authenticate to the owner-approved Cloudflare account; never copy .wrangler or an OAuth profile from another device. Identify the existing Pages project privately from the account dashboard and the read-only project list. Do not record its name or identifiers in public files.
+
+Before downloading configuration, ensure there is no existing wrangler.toml to overwrite. Add these paths to the local Git exclude file before creating files:
+
+    $exclude = (git rev-parse --git-path info/exclude).Trim()
+    Add-Content -LiteralPath $exclude -Value @('/daily-games-tracker/wrangler.toml','/daily-games-tracker/wrangler.jsonc.portable-placeholder')
+
+From the application directory, read the existing project configuration:
+
+    npm exec --offline -- wrangler pages download config <existing-private-project-name>
+    git check-ignore -q wrangler.toml
+
+This command downloads current project configuration into an app-root wrangler.toml; do not pass --force. Treat that file as private: it includes resource bindings and identifiers and may include plain-text variables. The export does not reveal Cloudflare secret values. Confirm preview and production bindings against the existing Cloudflare dashboard without printing secret values. If it is already present, stop and preserve it rather than overwriting it.
+
+After reviewing the export, move it out of automatic config discovery into ignored local storage. From the application directory:
+
+```powershell
+New-Item -ItemType Directory -Force tmp/private-platform | Out-Null
+if (Test-Path tmp/private-platform/wrangler.toml) { throw 'Preserve the existing private configuration first.' }
+git check-ignore -q tmp/private-platform/wrangler.toml
+if ($LASTEXITCODE -ne 0) { throw 'Private configuration path must be ignored.' }
+Move-Item -LiteralPath wrangler.toml -Destination tmp/private-platform/wrangler.toml
 ```
 
-Record the two D1 `database_id` values only in private platform configuration. They are operational resource identifiers and must not be copied into tracked documentation.
+Keep the export out of commits, reports, logs, and screenshots. Ordinary local development uses the tracked placeholder JSONC, not this export.
 
-## 2. Replace safe placeholders
+GitHub Actions secret values cannot be exported from GitHub. If a credential must be recovered or rotated, use its authorized source (Cloudflare or the owner’s password manager) and update only the relevant existing setting. Do not copy credentials between computers, change unrelated settings, rerun the completed R2 state migration, or create new signing state. Preserve the existing SHORTCUT_BUCKET binding and signed object/state.
 
-In a private Wrangler configuration used for remote work:
+## Local development
 
-- replace the local D1 placeholders with private preview and production D1 IDs in the selected environment configuration;
-- keep the tracked all-zero placeholders unchanged.
+Local development needs no Cloudflare login or remote resources. Copy .env.example to .dev.vars only when local Functions need variables; it contains inert local placeholders. See the [portable development handoff](../DEVELOPMENT_HANDOFF.md) for Node 22 setup and local Pages/D1 commands. On Windows, if a deep clone causes an opaque SQLite/path error, pass the same short private --persist-to directory to local D1 migration and wrangler pages dev; details are in the runbook.
 
-The tracked `wrangler.jsonc` contains inert placeholders and is for local development only. Pages treats a Wrangler file as the source of truth for project configuration, so dashboard settings do not override its binding values. Before running remote commands, create private environment-specific copies beside the tracked file, with the actual Pages project name and D1 and R2 resource names. Put the copy names in the local `.git/info/exclude` file and verify each with `git check-ignore -q <private-config-path>` before adding private values. Select the matching private preview or production configuration with Wrangler's `--config` option for every remote command.
+## Remote operation boundaries
 
-Cloudflare Pages supports separate `env.preview` and `env.production` overrides. Keep the `DB` and `SHORTCUT_BUCKET` binding names the same in every environment, and use the selected environment's private D1 and R2 resources.
+The checked-in wrangler.jsonc and npm scripts use placeholders and are not deploy targets. Pages deploy in Wrangler 4.151.3 does not support --config or --env; it discovers the existing project TOML from the actual working directory. The runbook gives the swap-and-restore procedure and requires separate authorization before deployment. D1 has different flags; inspect its installed command help and privately verify the selected database before any separately authorized remote write. No resource creation or migration is part of ordinary setup.
 
-## 3. Configure private Shortcut delivery
-
-Complete this owner checklist before enabling signing. Keep resource values and credentials private;
-the tracked `wrangler.jsonc` uses the inert bucket placeholder `example-shortcut-bucket`.
-
-1. Create a private R2 bucket for signed Shortcuts and signing state.
-2. Create an S3 API token scoped to that bucket with only the required object read/write access.
-3. Add these four secrets to the GitHub `wht-shortcut-signing` environment:
-   `WHT_R2_ACCOUNT_ID`, `WHT_R2_BUCKET_NAME`, `WHT_R2_ACCESS_KEY_ID`, and
-   `WHT_R2_SECRET_ACCESS_KEY`.
-4. Bind the bucket as `SHORTCUT_BUCKET` in Cloudflare Pages preview and production. Use the same
-   binding name in the private Wrangler configuration copies for both environments.
-5. Save the credentials in a password manager. Do not put values in tracked Wrangler files, docs,
-   test fixtures, pull-request text, or workflow output.
-
-The tracked Wrangler configuration uses only `example-shortcut-bucket`; substitute the real resource
-name only in ignored private Wrangler copies.
-
-### One-time legacy state migration
-
-The new signing guard requires the existing ambiguity record to be migrated before signing. After
-the workflow changes reach protected `main`, dispatch
-`.github/workflows/shortcut-r2-migrate.yml` with `confirm_migration=true`. The default is false.
-That workflow uses the pinned legacy decoder, writes the exact verified plaintext record to private
-R2, and verifies the stored bytes without signing or changing the lease. After it succeeds, download
-the record to private local storage, compute its SHA-256 there, and set
-`WHT_AMBIGUITY_RECORD_SHA256` in the `wht-shortcut-signing` environment. Verify the protected
-signing guard accepts the stored record, then remove the legacy
-`WHT_AMBIGUOUS_SIGNING_RECORD` and `WHT_SIGNING_OUTPUT_KEY` secrets. Keep the plaintext, envelope,
-digest, and credentials out of logs and tracked files. Missing or mismatched state must keep signing
-blocked. This documentation is a checklist; it does not execute the migration or configure secrets.
-
-## 4. Migrate and deploy preview
-
-```bash
-npm run build
-npx wrangler --config <private-preview-config> d1 migrations apply DB --remote --env preview
-npx wrangler --config <private-preview-config> pages deploy dist --branch <preview-branch>
-```
-
-Verify the generated preview origin privately; do not record its hostname or deployment ID in tracked files:
-
-- `/` loads Winstitute of Higher Thinking;
-- `/api/health` returns `status: ok`, `schemaVersion: 1`, and a `request_id`;
-- `/api/games` returns Krillion and MapTap;
-- API responses include `Cache-Control: no-store` and `X-Request-ID`;
-- an unknown `/api/*` route returns the JSON `NOT_FOUND` envelope;
-- `/sw.js` is available and API/admin/registration requests never appear in its cache.
-
-## 5. Production safety gate
-
-Do not deploy production yet. Phase 2 must first configure Cloudflare Access for `/admin*` and `/api/admin/*`, establish the initial administrator identity, and verify invitation/device revocation behavior.
-
-When that gate passes:
-
-```bash
-npx wrangler --config <private-production-config> d1 migrations apply DB --remote --env production
-npx wrangler --config <private-production-config> pages deploy dist --branch <production-branch>
-```
-
-References:
-
-- [Cloudflare Pages Wrangler configuration](https://developers.cloudflare.com/pages/functions/wrangler-configuration/)
-- [Cloudflare Pages D1 bindings](https://developers.cloudflare.com/pages/functions/bindings/)
-- [Cloudflare R2 buckets](https://developers.cloudflare.com/r2/buckets/)
+References: [Pages Wrangler configuration](https://developers.cloudflare.com/pages/functions/wrangler-configuration/) and [Pages bindings](https://developers.cloudflare.com/pages/functions/bindings/).
