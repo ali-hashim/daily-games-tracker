@@ -6,6 +6,7 @@ import { isAdminPath, requireAdmin } from "./_lib/access";
 import { importRequest } from "./_lib/import";
 import { checkRequestRateLimit } from "./_lib/rate-limit";
 import { isNetworkOnlyPath } from "../shared/cache-policy";
+import { applySharePreview } from "./_lib/share-preview";
 
 export const onRequest: PagesFunction<AppEnv, string, AppData> = async (context) => {
   const requestId = createRequestId();
@@ -44,7 +45,8 @@ export const onRequest: PagesFunction<AppEnv, string, AppData> = async (context)
     const response = importMode
       ? await importRequest(context.request, context.env, requestId, importMode)
       : await context.next();
-    return applyResponsePolicy(response, requestId, url.pathname);
+    const pageResponse = isApi ? response : applySharePreview(response, context.request);
+    return applyResponsePolicy(pageResponse, requestId, url.pathname);
   } catch (error) {
     if (!(error instanceof ApiError) || error.statusCode >= 500) {
       logRequestFailure({ requestId, request: context.request, error });
