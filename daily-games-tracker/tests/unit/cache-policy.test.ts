@@ -38,7 +38,7 @@ describe("network-only routes", () => {
     expect(headers).toContain("/user\n  Cache-Control: no-store");
     expect(headers).toContain("/user/*\n  Cache-Control: no-store");
     expect(headers).toContain("/login\n  Cache-Control: no-store");
-    expect(serviceWorker).toContain("CACHE_PREFIX}v3");
+    expect(serviceWorker).toContain("CACHE_PREFIX}v4");
   });
 
   it.each([
