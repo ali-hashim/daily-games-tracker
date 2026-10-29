@@ -1399,7 +1399,7 @@ describe("Task 9 approved UI addendum", () => {
     expect(topics.map((topic) => topic.querySelector("summary")?.textContent)).toEqual([
       "Set up Upload to WHT",
       "Share a completed game",
-      "Fix a scripting security-settings error",
+      "Fix “Could not run JavaScript”",
     ]);
 
     for (const topic of topics) {

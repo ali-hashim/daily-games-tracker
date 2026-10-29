@@ -56,7 +56,7 @@ export default function PlayerHelp() {
       </details>
 
       <details className="player-help-topic">
-        <summary>Fix a scripting security-settings error</summary>
+        <summary>Fix “Could not run JavaScript”</summary>
         <div className="player-help-topic__content">
           <p>
             In a completed Krillion game in Safari, the “Run JavaScript on Web Page” action reads
