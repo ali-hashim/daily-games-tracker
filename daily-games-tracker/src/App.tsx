@@ -209,7 +209,7 @@ function PlayHelpPage({ games }: { games: Game[] }) {
         </li>
       </ol>
       <p className="muted-note missing-share-action-help">
-        If Upload to WHT is missing, open Edit Actions and add it to Favorites.
+        If Upload to WHT is missing from the share sheet: See the setup and sharing help below.
       </p>
       <PlayerHelp />
     </>

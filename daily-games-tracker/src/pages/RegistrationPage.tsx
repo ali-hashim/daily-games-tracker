@@ -153,7 +153,7 @@ export default function RegistrationPage() {
             </li>
             <li>
               <span className="registration-step-instruction">
-                In Safari, tap the Downloads button and open the downloaded Shortcut.
+                In Safari, open Downloads beside the address bar, then open the downloaded Shortcut.
               </span>
             </li>
             <li>
@@ -164,8 +164,8 @@ export default function RegistrationPage() {
             </li>
             <li>
               <span className="registration-step-instruction">
-                Return to Safari to share completed games. Choose Upload to WHT; if it is missing,
-                go to Share &gt; Edit Actions &gt; Favorites and add it.
+                Return to Safari, open the Share sheet, scroll to Edit Actions, and add Upload to
+                WHT to Favorites.
               </span>
             </li>
             <li>

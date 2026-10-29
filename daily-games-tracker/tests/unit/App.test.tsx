@@ -1191,7 +1191,9 @@ describe("Task 9 player setup help", () => {
     const fallback = playPage.indexOf('className="muted-note missing-share-action-help"');
     expect(gamePaths).toBeGreaterThanOrEqual(0);
     expect(fallback).toBeGreaterThan(gamePaths);
-    expect(playPage).toContain("Edit Actions and add it to Favorites.");
+    expect(playPage).toContain(
+      "If Upload to WHT is missing from the share sheet: See the setup and sharing help below.",
+    );
   });
 
   async function registerAndCopy(writeText: ReturnType<typeof vi.fn>) {
@@ -1309,9 +1311,9 @@ describe("Task 9 approved UI addendum", () => {
     ).toEqual([
       "Keep this result page open. Copy the one-time private code below; if copy fails, select the code and copy it manually.",
       "Install Upload to WHT using the download link below.",
-      "In Safari, tap the Downloads button and open the downloaded Shortcut.",
+      "In Safari, open Downloads beside the address bar, then open the downloaded Shortcut.",
       "In the Shortcut’s Import Question, paste the one-time code and finish adding Upload to WHT.",
-      "Return to Safari to share completed games. Choose Upload to WHT; if it is missing, go to Share > Edit Actions > Favorites and add it.",
+      "Return to Safari, open the Share sheet, scroll to Edit Actions, and add Upload to WHT to Favorites.",
       "Play a game.",
     ]);
     expect(registrationRequests).toEqual(["/api/register/synthetic-invite/redeem:POST"]);
@@ -1422,8 +1424,9 @@ describe("Task 9 approved UI addendum", () => {
       "Choose Upload to WHT, then submit your score.",
     ]);
     const fallback = rendered.container.querySelector(".missing-share-action-help");
-    expect(fallback?.textContent).toContain("Edit Actions");
-    expect(fallback?.textContent).toContain("Favorites");
+    expect(fallback?.textContent).toBe(
+      "If Upload to WHT is missing from the share sheet: See the setup and sharing help below.",
+    );
     expect(rendered.container.textContent.indexOf("MapTap: in the game")).toBeLessThan(
       rendered.container.textContent.indexOf(fallback?.textContent ?? "missing fallback"),
     );
