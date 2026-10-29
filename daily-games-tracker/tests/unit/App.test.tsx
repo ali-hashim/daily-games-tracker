@@ -1164,8 +1164,12 @@ describe("Task 9 player setup help", () => {
     const registration = sourceIfPresent("../../src/pages/RegistrationPage.tsx");
     const help = sourceIfPresent("../../src/pages/PlayerHelp.tsx");
     const normalizedHelp = help.replace(/\s+/g, " ");
+    const playPage = appSource.slice(
+      appSource.indexOf("function PlayHelpPage"),
+      appSource.indexOf("function BottomNav"),
+    );
 
-    expect(appSource).toContain("<PlayerHelp />");
+    expect(playPage).toContain("<PlayerHelp />");
     expect(appSource).not.toContain('aria-label="Supported Shortcut link unavailable"');
     expect(registration).toContain("<PlayerHelp");
     expect(userPageSource).toContain("<PlayerHelp");
@@ -1388,14 +1392,15 @@ describe("Task 9 approved UI addendum", () => {
     expect(stylesSource).toMatch(/\.app-shell\s*\{[^}]*safe-area-inset-bottom/s);
   });
 
-  it("shows only the two complete accessible player-help topics", async () => {
+  it("shows three complete accessible player-help topics with exact scripting-permission guidance", async () => {
     const rendered = await renderBehavior(createElement(PlayerHelp));
     const topics = rendered.container.querySelectorAll("details");
 
-    expect(topics).toHaveLength(2);
+    expect(topics).toHaveLength(3);
     expect(topics.map((topic) => topic.querySelector("summary")?.textContent)).toEqual([
       "Set up Upload to WHT",
       "Share a completed game",
+      "Fix a scripting security-settings error",
     ]);
 
     for (const topic of topics) {
@@ -1405,7 +1410,7 @@ describe("Task 9 approved UI addendum", () => {
       expect(directElements.map((child) => child.tagName)).toEqual(["SUMMARY", "DIV"]);
       const content = topic.querySelector(".player-help-topic__content");
       expect(content).not.toBeNull();
-      for (const selector of ["p", "ol", "ul", "img"]) {
+      for (const selector of ["p", "ol", "ul", "img", "figure", "figcaption"]) {
         const topicElements = topic.querySelectorAll(selector);
         const contentElements = content?.querySelectorAll(selector) ?? [];
         expect(topicElements.every((element) => contentElements.includes(element))).toBe(true);
@@ -1446,6 +1451,58 @@ describe("Task 9 approved UI addendum", () => {
     expect(images.every((image) => image.className.includes("player-help-image"))).toBe(true);
     expect(stylesSource).toMatch(/\.player-help-image\s*\{[^}]*max-width:\s*100%/s);
     expect(stylesSource).toMatch(/\.player-help-image\s*\{[^}]*height:\s*auto/s);
+
+    const scripting = topics[2];
+    const scriptingText = scripting?.textContent?.replace(/\s+/g, " ") ?? "";
+    expect(scriptingText).toContain("Could not run “Run JavaScript on Web Page”");
+    expect(scriptingText).toContain(
+      "This shortcut cannot be run because this action is a scripting action and your Shortcuts security settings don’t allow you to run scripting actions.",
+    );
+    expect(scriptingText).toContain("reads the shared Krillion result");
+
+    const procedure = scripting?.querySelector("ol")?.querySelectorAll("li") ?? [];
+    expect(
+      procedure.map((step) =>
+        step.textContent
+          ?.replace(/\s+/g, " ")
+          .replace("Search Settings for Shortcuts and tap its result.", "")
+          .replace("Turn on Allow Running Scripts.", "")
+          .trim(),
+      ),
+    ).toEqual([
+      "On your iPhone, open Settings, search for “Shortcuts,” and tap the Shortcuts result.",
+      "Open Shortcuts settings, then Advanced.",
+      "Turn on “Allow Running Scripts.”",
+      "Return to the completed Krillion game in Safari and retry Share → Upload to WHT.",
+    ]);
+
+    const scriptingImages = scripting?.querySelectorAll("img") ?? [];
+    expect(scriptingImages.map((image) => image.getAttribute("src"))).toEqual([
+      "/images/player-help/scripting-security-error.jpg",
+      "/images/player-help/shortcuts-settings-search.jpg",
+      "/images/player-help/allow-running-scripts.jpg",
+    ]);
+    expect(scriptingImages.map((image) => image.getAttribute("alt"))).toEqual([
+      "Krillion in Safari showing the Run JavaScript on Web Page security error",
+      "iPhone Settings search results with Shortcuts selected",
+      "Shortcuts Advanced settings with Allow Running Scripts turned on",
+    ]);
+    expect(
+      (scripting?.querySelectorAll("figcaption") ?? []).map((caption) =>
+        caption.textContent?.replace(/\s+/g, " ").trim(),
+      ),
+    ).toEqual([
+      "The scripting-security-settings error appears while sharing a completed Krillion result.",
+      "Search Settings for Shortcuts and tap its result.",
+      "Turn on Allow Running Scripts.",
+    ]);
+    for (const image of scriptingImages) {
+      expect(image.className).toContain("player-help-image");
+    }
+    expect(scriptingText).not.toMatch(
+      /Allow Sharing Large Amounts of Data|Allow Deleting Without Confirmation|Allow Deleting Large Amounts of Data/i,
+    );
+    expect(scriptingText).not.toMatch(/\b(?:rebuild|sign(?:ing)?|change the Shortcut)\b/i);
   });
 
   it("keeps Play focused on the two Upload to WHT share paths", async () => {
@@ -1481,7 +1538,7 @@ describe("Task 9 approved UI addendum", () => {
     expect(rendered.container.textContent.indexOf("MapTap: in the game")).toBeLessThan(
       rendered.container.textContent.indexOf(fallback?.textContent ?? "missing fallback"),
     );
-    expect(rendered.container.querySelectorAll("details")).toHaveLength(2);
+    expect(rendered.container.querySelectorAll("details")).toHaveLength(3);
 
     const homeText = rendered.container.textContent;
     expect(homeText).not.toContain("Login with Device");
