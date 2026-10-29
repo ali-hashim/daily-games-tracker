@@ -1175,7 +1175,6 @@ describe("Task 9 player setup help", () => {
     expect(userPageSource).toContain("<PlayerHelp");
     for (const guidance of [
       "Shortcuts",
-      "Import Question",
       "Safari",
       "Share your score",
       "Edit Actions",
@@ -1419,10 +1418,31 @@ describe("Task 9 approved UI addendum", () => {
 
     const setupText = topics[0]?.textContent ?? "";
     expect(setupText).toContain(
-      "If you have not received an invitation, contact the administrator.",
+      "If Upload to WHT is missing, open the Share sheet’s Edit Actions and add it to Favorites.",
     );
-    expect(setupText).not.toContain("existing player");
-    expect(setupText).not.toContain("replacement device");
+    expect(setupText).toContain(
+      "If you do not have the Upload to WHT Shortcut, contact the administrator.",
+    );
+    expect(setupText).not.toContain("Register this device");
+    expect(setupText).not.toContain("Import Question");
+
+    const setupImages = topics[0]?.querySelectorAll("img") ?? [];
+    expect(setupImages.map((image) => image.getAttribute("src"))).toEqual([
+      "/images/player-help/safari-share-button.jpg",
+      "/images/player-help/edit-actions-button.jpg",
+    ]);
+    expect(setupImages.map((image) => image.getAttribute("alt"))).toEqual([
+      "Safari bottom toolbar with the Share button highlighted",
+      "Edit Actions button in Safari's share sheet",
+    ]);
+    expect(
+      (topics[0]?.querySelectorAll("figcaption") ?? []).map((caption) =>
+        caption.textContent?.replace(/\s+/g, " ").trim(),
+      ),
+    ).toEqual([
+      "Tap Share in Safari.",
+      "Tap Edit Actions, then add Upload to WHT to Favorites.",
+    ]);
 
     const sharing = topics[1];
     const sharingText = sharing?.textContent ?? "";
@@ -1430,8 +1450,8 @@ describe("Task 9 approved UI addendum", () => {
     expect(sharingText).toContain(
       "After submission, your daily leaderboard text is copied for you.",
     );
-    expect(sharingText).toContain("Edit Actions");
-    expect(sharingText).toContain("Favorites");
+    expect(sharingText).not.toContain("Edit Actions");
+    expect(sharingText).not.toContain("Favorites");
     expect(sharingText).not.toContain("Cancel");
     expect(sharingText).not.toContain("overwrite");
 
@@ -1439,14 +1459,10 @@ describe("Task 9 approved UI addendum", () => {
     expect(images.map((image) => image.getAttribute("src"))).toEqual([
       "/images/player-help/krillion-share.jpg",
       "/images/player-help/maptap-share.jpg",
-      "/images/player-help/safari-share-button.jpg",
-      "/images/player-help/edit-actions-button.jpg",
     ]);
     expect(images.map((image) => image.getAttribute("alt"))).toEqual([
       "Safari Share button on a completed Krillion result page",
       "MapTap Share your score button highlighted below the finished game",
-      "Safari bottom toolbar with the Share button highlighted",
-      "Edit Actions button in Safari's share sheet",
     ]);
     expect(images.every((image) => image.className.includes("player-help-image"))).toBe(true);
     expect(stylesSource).toMatch(/\.player-help-image\s*\{[^}]*max-width:\s*100%/s);
