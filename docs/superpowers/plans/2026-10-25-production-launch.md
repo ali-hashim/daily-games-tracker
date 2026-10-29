@@ -247,6 +247,22 @@ Run the relevant Python/Node Shortcut contract and Phase 9 script suites, includ
 
 **Exit:** Controlled production is secure and correct before broad invitations. Any failure stops onboarding and invokes Task 12 recovery.
 
+### Task 9 UI addendum — deployed; iPhone acceptance pending
+
+**Reviewed UI baseline:** `008d3dc6374eb3eb37446aa49431e4bc5cbfb6e8`. **UI release source:** `f9993f387f29025d4f256f4a288adaeca653a6f1`.
+
+- [x] **TDD — UI assertions first:** Added rendered-UI checks for the six-step registration flow, exactly two accessible help topics, the two Play sharing paths, and the absent User redownload card. The updated assertions failed before implementation and passed after the changes.
+- [x] **Registration:** Shows six ordered steps for copying the code, downloading the Shortcut, opening it from Safari Downloads beside the address bar, entering the code, returning to Safari and opening Share → Edit Actions to add Upload to WHT to Favorites, and playing. Copy/download controls are placed with their steps; invitation, code, and session behavior is preserved.
+- [x] **Play:** Shows the Krillion results-page Share path and MapTap in-game Share your score path, followed by choosing Upload to WHT. Missing-action guidance says exactly “See the setup and sharing help below.” Obsolete login, unavailable-download, invitation-only, OCR, and PIN guidance is absent.
+- [x] **Shared help:** Keeps exactly “Set up Upload to WHT” and “Share a completed game.” Each accessible topic owns its body copy, lists, and image in one content box. Setup directs not-yet-invited users to the administrator; sharing explains submission and clipboard behavior. Both supplied cropped screenshots have descriptive alt text and responsive sizing; Favorites guidance follows the game-specific instructions.
+- [x] **User:** Removes the redownload card from rendered output while retaining its implementation in a code comment for a future explicitly approved feature. Stats, login/logout, and the backend route remain unchanged.
+- [x] **Verification:** `npm test -- tests/unit/App.test.tsx tests/integration/onboarding.test.ts` passed (43/43); `npm run build`, targeted Prettier, and `git diff --check` passed.
+- [x] **Promotion:** Preview was verified before production. Both environments show the updated UI and connected D1 health (schema v3). The same 147-file staged package was used for both deployments; its manifest SHA-256 is `09F8E7227ABB29DA6CE29C24AF4A86AD96102789F7F8169F2CABB540DC570750`. The user explicitly authorized production deployment. No settings or bindings were changed, and no migrations, seeds, or database writes were performed.
+- [x] **Scope:** Task 7/8 suites, signing rehearsals, Shortcut CI, Task 10, and pilot activity were not run as directed.
+- [ ] **iPhone Safari acceptance:** Manual phone-width acceptance of the six-step flow, current Safari Downloads/Share-sheet wording, and both images has not been performed. Keep this human acceptance item open; do not claim native or user acceptance.
+
+**Exit:** The UI release is deployed. This addendum remains open only for the manual iPhone Safari acceptance above and does not close Task 9 or Task 10.
+
 ## Task 10 — Prove a fresh user's complete production journey
 
 **Owner:** Two authorized phone testers/operator. **Evidence:** Redacted acceptance matrix tied to exact deployment/install link.
