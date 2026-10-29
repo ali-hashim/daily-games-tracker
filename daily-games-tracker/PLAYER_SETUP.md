@@ -7,12 +7,11 @@ WHT uses invitation-only device registration. Ask the administrator for an Add D
 You need an Apple iPhone with the Shortcuts app and Safari. Open your invitation in Safari on that iPhone. Invitations can be used once and expire after 24 hours.
 
 1. Review the player name and register this device. The registration result signs in this Safari browser.
-2. Keep the result page open. Copy the one-time private device code. If the copy button fails, select the code on the page and copy it manually.
-3. Install the clean supported Upload to WHT template shown on the result page.
-4. Enter the private code in the Shortcut's **Import Question** and finish setting up the Shortcut.
-5. Return to WHT in Safari. Do not share the configured Shortcut: someone who can inspect it can read its private device code.
+2. Follow the six visible cards on the result page: copy the one-time private code; download **Upload to WHT**; open Safari Downloads beside the address bar; add the Shortcut and enter the code in its **Import Question**; use Safari Share → **Edit Actions** → **Favorites**; then open **Play**.
+3. If the copy button fails, select the code on the page and copy it manually. Keep the result page open until setup is complete.
+4. Do not share the configured Shortcut: someone who can inspect it can read its private device code.
 
-A supported install link may be unavailable until the administrator has prepared and verified the clean template. If the registration page does not show an install link, contact the administrator before continuing. Do not use a test or preview link as the production install target.
+The signed-in User page's redownload control is hidden pending future device codes. Its authenticated backend route remains available. A replacement device needs a new invitation; downloading the template does not recover a private code.
 
 The private code is shown once and cannot be recovered by WHT. Redownloading the Shortcut does not restore the code. If the registration page closes before setup is complete, ask the administrator for a new invitation.
 
@@ -24,6 +23,10 @@ The private code is shown once and cannot be recovered by WHT. Redownloading the
 - When the upload completes, the Shortcut can copy the score-only leaderboard text and open the matching WHT Daily page.
 
 A result is unique per player, game, and day. A saved result cannot be overwritten; a repeat is reported as already saved.
+
+## Shared setup and troubleshooting help
+
+On the Play page, **Set up Upload to WHT** explains the Favorites steps above and directs players who need an invitation or cannot find the expected action to the administrator. **Share a completed game** shows the Krillion Safari Share and MapTap in-game **Share your score** paths, then explains submission and clipboard feedback. **Fix “Could not run JavaScript”** walks through searching iPhone Settings for Shortcuts, opening **Advanced**, enabling **Allow Running Scripts**, and retrying the full “Could not run Run JavaScript on Web Page” error.
 
 ## Sign in and view Daily details
 
@@ -54,7 +57,7 @@ For a correction, deletion request, or support, contact the administrator. The a
 Before inviting anyone:
 
 - Confirm the clean **Upload to WHT** template for the intended release has been reviewed and verified, and its current manifest and artifact are available in the configured R2 bucket. The download route checks the manifest, artifact size, and SHA-256 digest before serving the file.
-- Confirm registration, User, and update-required responses use the relative `/api/shortcut/download` path only when the bucket is configured. Downloads require a signed-in player session; do not direct players to a raw bucket object or a configured Shortcut containing a private device code.
+- Confirm the registration download and backend User/update-required entry points use the relative `/api/shortcut/download` path only when the bucket is configured. The visible User-page redownload control is currently hidden. Downloads require a signed-in player session; do not direct players to a raw bucket object or a configured Shortcut containing a private device code.
 - Find the player's existing identity or create it once. Check for an existing identity before creating one.
 - Issue a one-use, 24-hour **Add Device** invitation for that identity only after the verified template is available through the authenticated download route.
 - Send the invitation privately using an approved channel. Do not put real invitation links, device codes, player details, or account details in public documentation, reports, or logs.

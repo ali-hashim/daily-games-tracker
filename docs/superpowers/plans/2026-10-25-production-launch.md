@@ -1,8 +1,8 @@
 # WHT production launch execution plan — repository transition first
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development or superpowers:executing-plans to execute task by task. Follow the existing user-selected hierarchy: orchestrator coordinates; implementation/repairs use GPT-5.6 Luna xhigh; independent read-only review uses GPT-6.1 Sol medium. Workers do not spawn children. Checkboxes below track execution, not work already performed.
+> **For agentic workers:** Follow the current user-selected hierarchy: implementation and repairs use GPT-6 Luna xhigh; independent read-only review uses GPT-6.1 Sol medium. Do not spawn children unless the user explicitly requests delegation. Checkboxes below preserve the earlier plan and are not current status.
 
-**Status:** Proposed execution plan, written October 25, 2026; updated to require a one-time repository transition followed by normal Git development. No publication, production mutation, signup delivery or cleanup is performed by writing this plan.
+**Status:** Historical execution plan, first written October 25, 2026. The October 25 planning snapshot below is superseded by the current release record. Keep older checklists as history; the current status section is authoritative. This also supersedes older assumptions about production being undeployed, PR #17 as a release prerequisite, the signing guard/zero-commit sentinel, backups or formal retention, CPU/plan checks, and monitoring or alert setup. Use [project status](../../../daily-games-tracker/PROJECT_STATUS.md) for active work.
 
 **Goal:** Take the user-approved Phase 10 preview through a one-time transition to a single authoritative GitHub-backed application repository, then a traceable production release, complete new-player setup, successful real use and verified development cleanup. Preserve preview and its database for future work.
 
@@ -11,6 +11,22 @@
 **Tech stack:** React/TypeScript/Vite, Pages Functions, D1, Wrangler, pinned Cherri GitHub Actions, HubSign, Apple Shortcuts, Safari.
 
 **Spec and evidence:** [Final product specification](../../../Daily_Games_Tracker_Final_Implementation_Plan.md), [current status](../../../daily-games-tracker/PROJECT_STATUS.md), [Phase 10](../../../daily-games-tracker/PHASE_10_USER_PAGE_PLAN.md), [launch gates](../../../daily-games-tracker/PHASE_9_LAUNCH_GATES.md), and [publication policy](../../../skills/sanitized-push/SKILL.md).
+
+## Current production release
+
+Updated October 29, 2026.
+
+Production is running the application and UI from source `ae36c52800b41f2bbb411c1d5e83e09c37be1f31`. Production D1 is initialized at schema 3 with minimum/latest Shortcut version `1/1`. A static-only deployment from the wrong directory briefly served HTML from the health route and a “Local UI preview” page. It was repaired by deploying the reviewed application with its Functions from the app directory; the live health route returned schema-3 JSON and anonymous authentication returned JSON `401`. The later `c393df8` heading correction and `ae36c52` share-metadata change are part of the current release. No database writes were made in the repair deployments.
+
+The production registration page has six visible steps. Shared PlayerHelp has three topics covering setup/Favorites, game-sharing/submission, and **Fix “Could not run JavaScript”** for the full “Could not run Run JavaScript on Web Page” error; seven responsive images are live. The User-page redownload control stays hidden pending future device codes while the backend download route remains. Share metadata uses the WHT green-check icon; the HTML rewriter uses the request origin and does not include invitation tokens. Live metadata and image hash were verified.
+
+Task 7 signed the version-1 Shortcut candidate from source `29c4acea` through protected CI and confirmed the private R2 result. Website-only commits after that did not alter or re-sign it. Honor the user's final instruction: do not rerun Task 7/8 suites, phone acceptance, signing rehearsals, or the waived phone-side hash comparison.
+
+Task 9 deployment is complete and awaits these human checks: authorized administrator sign-in and empty player-list access; an Access-admitted non-admin denial/403 check; and an authenticated player download check for the `Upload to WHT.shortcut` attachment. If no controlled player identity exists, a clearly labeled temporary test player/invitation and controlled-device registration are needed for the player-session check; revoke test credentials afterward where supported. The private Task 9 record contains the detailed procedure. Do not include codes, cookies, JWTs, invitation links, or private deployment evidence in this plan.
+
+Task 10 remains open: the complete fresh-user production journey and real-device/session/update behavior have not been completed. Tasks 11–15 remain separate follow-up work: pilots, stabilization, archive review, cleanup, and final handoff. Manual iPhone Safari acceptance of the latest UI also remains open.
+
+The user removed Cloudflare plan/CPU checks, monitoring and alert setup, the PR #17 merge prerequisite, and formal retention requirements from the production plan. These are not launch or post-release requirements. The second D1 backup, backup schedule, and alerts were canceled; the owner accepts that no separate production database copy is maintained.
 
 ## 1. Start condition, authority and completion
 
@@ -74,13 +90,13 @@ The orchestrator owns release sequencing. Assign one worker each disjoint scope 
 | Artifact                                                       | Responsibility                                                                                                                  |
 | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | This plan                                                      | Complete post-Phase-10 sequence and completion gates                                                                            |
-| daily-games-tracker/PRODUCTION_RUNBOOK.md                      | Final exact deployment, recovery and future promotion commands                                                                 |
+| daily-games-tracker/PRODUCTION_RUNBOOK.md                      | Final exact deployment, recovery and future promotion commands                                                                  |
 | daily-games-tracker/PLAYER_SETUP.md                            | User-facing invitation/install/play/login/troubleshooting instructions; expose accessible equivalent help in the actual website |
 | daily-games-tracker/DEVELOPMENT_WORKFLOW.md                    | Permanent preview workflow, environment distinction and production promotion process                                            |
 | Canonical daily-games-tracker/wrangler.jsonc and example files | One maintained safe configuration; secrets/runtime values supplied through platform settings or ignored local files             |
 | .github/workflows/application-checks.yml (new if absent)       | Application tests/typechecks/build/schema checks; no implicit production deployment                                             |
 | Existing pinned Cherri workflow/source/toolchain/inspectors    | Production and preview Shortcut build identities                                                                                |
-| tmp/production-launch/<release-id>/ (private, ignored)         | Exact source/config/target identities and command/check outcomes needed to verify executed production steps                      |
+| tmp/production-launch/<release-id>/ (private, ignored)         | Exact source/config/target identities and command/check outcomes needed to verify executed production steps                     |
 
 Names above are intended deliverables, not files claimed to exist. Keep private records out of commits. Record the exact source/config/target identities and actual check outcomes needed to verify each production action. Do not put token/code values or player captures in logs.
 
@@ -265,6 +281,16 @@ Run the relevant Python/Node Shortcut contract and Phase 9 script suites, includ
 
 **Exit:** The visible-flow correction is deployed. This addendum remains open only for the manual iPhone Safari acceptance above; it does not close Task 9 or Task 10.
 
+### Task 9 scripting-permission help addition — requested 2026-10-29
+
+- [x] Add a third shared expandable topic to PlayerHelp for the exact “Could not run Run JavaScript on Web Page” error, with the ordered Settings search, Advanced, Allow Running Scripts, and retry steps. Preserve all six registration cards.
+- [x] Replace the setup topic body with the missing-action Favorites walkthrough and the missing-Shortcut administrator note; move its Safari Share/Edit Actions screenshots there. Keep the actual Krillion/MapTap sharing paths, game-share images, and submit/copy explanation in the completed-game topic.
+- [x] Copy the three supplied full-context screenshots into maintained help assets; keep each image and its caption inside this topic, use descriptive alt text, and preserve responsive proportions.
+- [x] Add focused UI assertions for three topics, the error/procedure, image containment and shared Play/setup/User placement. Fresh verification passed: `npm test -- tests/unit/App.test.tsx` (33/33), `npm run typecheck:tests`, and `npm run build`. Independent review was clean; the 390×844 production view loaded all seven help images without horizontal overflow.
+- [x] **Historical static-asset check:** The earlier Preview/Production upload of reviewed revision `af237adbc6126cc78b3a2b3f75ca379a2fdf4862` matched the page, hashed bundles, service worker, and seven help images to the staged manifest; `sw.js` was served with `no-cache`, and a warmed client rendered the three topics. That upload ran from the wrong directory without application Functions, so it did not verify the API or constitute a healthy full release; production health served HTML and the UI identified itself as a local preview. The same reviewed source was then redeployed from the app directory with Functions, restoring JSON health/auth responses. The later `c393df8` heading fix and current `ae36c52` share-metadata release are recorded above. No D1 writes, invitation redemptions, or Shortcut changes were made in these repairs.
+
+**Exit:** The third topic is live on the stable site and verified. This addition does not close Task 9 or Task 10, and does not claim manual iPhone Safari acceptance.
+
 ## Task 10 — Prove a fresh user's complete production journey
 
 **Owner:** Two authorized phone testers/operator. **Evidence:** Redacted acceptance matrix tied to exact deployment/install link.
@@ -327,20 +353,20 @@ Run the relevant Python/Node Shortcut contract and Phase 9 script suites, includ
 
 **Owner:** Authorized cleanup operator. **Input:** Task 3 inventory, updated with final dependencies and approved exact removal set.
 
-| Resource class                                                                     | Required disposition                                                                                     |
-| ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Production site/DB/domain/Access/backups                                           | Keep                                                                                                     |
-| Existing privately configured preview origin and D1 binding                         | Keep as permanent dev/test                                                                               |
-| Shared Pages project, account/DNS/Access policies used by either                   | Keep; inspect shared dependencies before any change                                                      |
-| Canonical GitHub-backed checkout, CI workflows, toolchain locks                   | Keep                                                                                                     |
-| Old unique deployment URLs                                                         | Retain rollback/evidence targets first; remove only confirmed unneeded history within supported controls |
-| Disposable remote recovery DBs, receiver/proof Workers, tunnels/test sites         | Delete only identified instances after backup/evidence/dependency checks                                 |
-| Docker/Podman resources or local dev servers                                       | Stop/remove only task-owned unused instances; never global prune                                         |
-| tmp exports/CI downloads/diagnostics/probe artifacts/local .wrangler DBs           | Remove only confirmed disposable files using exact paths                                                   |
-| node_modules/dist/caches                                                           | Regenerable; clean only if useful, retaining lockfiles and reproducibility                               |
-| Superseded Markdown                                                                | Archive/consolidate using Task 13, not blanket deletion                                                  |
-| Old device credentials/invites/deploy hooks/test API tokens                        | Revoke only identified obsolete ones; preserve active production/preview access                          |
-| Worktrees/branches/chats                                                           | Preserve unmerged/unpublished changes; use managed worktree archive tooling where applicable             |
+| Resource class                                                             | Required disposition                                                                                     |
+| -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Production site/DB/domain/Access/backups                                   | Keep                                                                                                     |
+| Existing privately configured preview origin and D1 binding                | Keep as permanent dev/test                                                                               |
+| Shared Pages project, account/DNS/Access policies used by either           | Keep; inspect shared dependencies before any change                                                      |
+| Canonical GitHub-backed checkout, CI workflows, toolchain locks            | Keep                                                                                                     |
+| Old unique deployment URLs                                                 | Retain rollback/evidence targets first; remove only confirmed unneeded history within supported controls |
+| Disposable remote recovery DBs, receiver/proof Workers, tunnels/test sites | Delete only identified instances after backup/evidence/dependency checks                                 |
+| Docker/Podman resources or local dev servers                               | Stop/remove only task-owned unused instances; never global prune                                         |
+| tmp exports/CI downloads/diagnostics/probe artifacts/local .wrangler DBs   | Remove only confirmed disposable files using exact paths                                                 |
+| node_modules/dist/caches                                                   | Regenerable; clean only if useful, retaining lockfiles and reproducibility                               |
+| Superseded Markdown                                                        | Archive/consolidate using Task 13, not blanket deletion                                                  |
+| Old device credentials/invites/deploy hooks/test API tokens                | Revoke only identified obsolete ones; preserve active production/preview access                          |
+| Worktrees/branches/chats                                                   | Preserve unmerged/unpublished changes; use managed worktree archive tooling where applicable             |
 
 - [ ] Re-inventory before removal; creation-time inventory may now be stale. Each row must name exact resource ID/path, purpose, backup/hash if needed, dependencies, action and verification.
 - [ ] Resolve local absolute paths and verify they stay inside the intended cleanup directory before recursive delete/move. On Windows use one shell end-to-end with literal paths; do not compose cross-shell wildcard deletion.
