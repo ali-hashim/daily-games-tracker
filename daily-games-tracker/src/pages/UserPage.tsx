@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiRequestError, apiRequest } from "../lib/api";
 import type { AuthenticatedRenderProps } from "./DeviceLogin";
+import PlayerHelp from "./PlayerHelp";
 
 export interface UserStatsGame {
   key: "krillion" | "maptap";
@@ -204,6 +205,10 @@ export default function UserPage({
             </div>
           )}
 
+          {/*
+            Retain this redownload card for an explicitly approved future device-code creation
+            feature. Re-downloading a Shortcut does not recover or create a private device code.
+
           <section className="user-shortcut-card" aria-label="Shortcut installation">
             <div>
               <h2>Keep Upload to WHT handy</h2>
@@ -221,8 +226,11 @@ export default function UserPage({
               </p>
             )}
           </section>
+          */}
         </>
       )}
+
+      <PlayerHelp />
 
       <button
         type="button"

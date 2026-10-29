@@ -1,11 +1,11 @@
 # Winstitute of Higher Thinking — Aligned Execution Plan
 
 **Authority:** `../Daily_Games_Tracker_Final_Implementation_Plan.md` \
-**Updated:** October 25, 2026
+**Historical roadmap baseline:** October 25, 2026. This file retains the earlier phase sequence; it is not the current production checklist. See the [current project status](PROJECT_STATUS.md) and [production release record](../docs/superpowers/plans/2026-10-25-production-launch.md#current-production-release).
 
-**Current status — October 25, 2026:** Core features through Phase 8 and Phase 9 hardening are implemented in the reviewed source; hosted preview identity is retained in private evidence. Production remains undeployed. Phase 5B closed under bounded acceptance; Phase 5A formal closeout and Phase 9 launch gates remain open. **Phase 10 User page/tab is implemented and independently reviewed in the source; physical-device/native evidence remains open.** See [PROJECT_STATUS.md](PROJECT_STATUS.md) and [Phase 10 evidence](reports/phase10-user-page-verification.md).
+> **Historical status:** The following roadmap notes and phase records were written before the October 29 production release. Statements below about production being undeployed or earlier launch gates being open are snapshots from that time. Current production and remaining human work are summarized at the links above.
 
-**Sequence:** Phases 0–9 retain numbering, Phase 5 is 5A/5B, and Phase 10 is the final additional User phase. Reviewed HubSign sends and user-directed retries of previously ambiguous outcomes have standing authorization when exact package/source/digest/state checks pass; protected Actions-only signing remains pending operational activation. New/modified Shortcuts compile and inspect through pinned CI, never locally.
+**Sequence:** Phases 0–9 retain numbering, Phase 5 is 5A/5B, and Phase 10 is the final additional User phase. Task 7 completed protected CI signing for the version-1 candidate. Later website commits did not change or re-sign it. The user has directed that Task 7/8 tests, native acceptance, signing rehearsals, and the waived phone-side hash comparison not be repeated. New or modified Shortcut artifacts still use pinned CI, never a local compiler.
 
 ## 1. Alignment rules
 

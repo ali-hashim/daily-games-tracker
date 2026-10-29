@@ -1,8 +1,8 @@
 # WHT production launch execution plan — repository transition first
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development or superpowers:executing-plans to execute task by task. Follow the existing user-selected hierarchy: orchestrator coordinates; implementation/repairs use GPT-5.6 Luna xhigh; independent read-only review uses GPT-6.1 Sol medium. Workers do not spawn children. Checkboxes below track execution, not work already performed.
+> **For agentic workers:** Follow the current user-selected hierarchy: implementation and repairs use GPT-6 Luna xhigh; independent read-only review uses GPT-6.1 Sol medium. Do not spawn children unless the user explicitly requests delegation. Checkboxes below preserve the earlier plan and are not current status.
 
-**Status:** Proposed execution plan, written October 25, 2026; updated to require a one-time repository transition followed by normal Git development. No publication, production mutation, signup delivery or cleanup is performed by writing this plan.
+**Status:** Historical execution plan, first written October 25, 2026. The October 25 planning snapshot below is superseded by the current release record. Keep older checklists as history; the current status section is authoritative. This also supersedes older assumptions about production being undeployed, PR #17 as a release prerequisite, the signing guard/zero-commit sentinel, backups or formal retention, CPU/plan checks, and monitoring or alert setup. Use [project status](../../../daily-games-tracker/PROJECT_STATUS.md) for active work.
 
 **Goal:** Take the user-approved Phase 10 preview through a one-time transition to a single authoritative GitHub-backed application repository, then a traceable production release, complete new-player setup, successful real use and verified development cleanup. Preserve preview and its database for future work.
 
@@ -12,6 +12,22 @@
 
 **Spec and evidence:** [Final product specification](../../../Daily_Games_Tracker_Final_Implementation_Plan.md), [current status](../../../daily-games-tracker/PROJECT_STATUS.md), [Phase 10](../../../daily-games-tracker/PHASE_10_USER_PAGE_PLAN.md), [launch gates](../../../daily-games-tracker/PHASE_9_LAUNCH_GATES.md), and [publication policy](../../../skills/sanitized-push/SKILL.md).
 
+## Current production release
+
+Updated October 29, 2026.
+
+Production is running the application and UI from source `ae36c52800b41f2bbb411c1d5e83e09c37be1f31`. Production D1 is initialized at schema 3 with minimum/latest Shortcut version `1/1`. A static-only deployment from the wrong directory briefly served HTML from the health route and a “Local UI preview” page. It was repaired by deploying the reviewed application with its Functions from the app directory; the live health route returned schema-3 JSON and anonymous authentication returned JSON `401`. The later `c393df8` heading correction and `ae36c52` share-metadata change are part of the current release. No database writes were made in the repair deployments.
+
+The production registration page has six visible steps. Shared PlayerHelp has three topics covering setup/Favorites, game-sharing/submission, and **Fix “Could not run JavaScript”** for the full “Could not run Run JavaScript on Web Page” error; seven responsive images are live. The User-page redownload control stays hidden pending future device codes while the backend download route remains. Share metadata uses the WHT green-check icon; the HTML rewriter uses the request origin and does not include invitation tokens. Live metadata and image hash were verified.
+
+Task 7 signed the version-1 Shortcut candidate from source `29c4acea` through protected CI and confirmed the private R2 result. Website-only commits after that did not alter or re-sign it. Honor the user's final instruction: do not rerun Task 7/8 suites, phone acceptance, signing rehearsals, or the waived phone-side hash comparison.
+
+Task 9 deployment is complete and awaits these human checks: authorized administrator sign-in and empty player-list access; an Access-admitted non-admin denial/403 check; and an authenticated player download check for the `Upload to WHT.shortcut` attachment. If no controlled player identity exists, a clearly labeled temporary test player/invitation and controlled-device registration are needed for the player-session check; revoke test credentials afterward where supported. The private Task 9 record contains the detailed procedure. Do not include codes, cookies, JWTs, invitation links, or private deployment evidence in this plan.
+
+Task 10 remains open: the complete fresh-user production journey and real-device/session/update behavior have not been completed. Tasks 11–15 remain separate follow-up work: pilots, stabilization, archive review, cleanup, and final handoff. Manual iPhone Safari acceptance of the latest UI also remains open.
+
+The user removed Cloudflare plan/CPU checks, monitoring and alert setup, the PR #17 merge prerequisite, and formal retention requirements from the production plan. These are not launch or post-release requirements. The second D1 backup, backup schedule, and alerts were canceled; the owner accepts that no separate production database copy is maintained.
+
 ## 1. Start condition, authority and completion
 
 **Historical starting authorization:** The user authorized starting **Task 1 — the repository transition — as a separate task**. It may inventory, preserve, migrate, review, commit and push the reviewed migration scope; it does not require or imply Phase 10 preview approval. Preserve active Phase 10 edits and serialize the final source handoff before switching working paths or marking the old workspace archival. Do not cut over underneath active writers. At that point Tasks 2–15 were gated on Phase 10 implementation, independent review, deployment and explicit user approval in preview; the user has since explicitly closed Task 2 as recorded below, without resolving the remaining release prerequisites. Record that exact approval, private preview evidence, source tree and migrations in Task 2; neither today's dirty workspace nor historical preview evidence is automatically the accepted production release.
@@ -20,7 +36,7 @@ Approval of a plan is not an assertion that its tasks have run. Apply existing e
 
 Standing HubSign approval already covers the exact reviewed credential-free payload that the protected GitHub Actions workflow may send, including user-directed retries of a previously ambiguous outcome when exact package/source/digest/state checks pass. Do not request repeat approval. Automated workflow activation is a different action; the installed publication skill specifically requires the disabled signing guard and zero-commit sentinel to remain unless explicitly authorized otherwise. A successful send does not prove operational automated signing.
 
-Completion means: the released application and Shortcut are traceable to GitHub; production is configured, recoverable and monitored; invitation setup works with the right production Shortcut; the two-person and seven-player pilots pass; intended users are using production successfully; cleanup and retained preview are verified; remaining limitations have explicit dispositions.
+Completion means: the released application and Shortcut are traceable to GitHub; production is configured and recoverable; invitation setup works with the right production Shortcut; the two-person and seven-player pilots pass; intended users are using production successfully; cleanup and retained preview are verified; remaining limitations have explicit dispositions.
 
 ## 2. Global constraints
 
@@ -67,24 +83,22 @@ Each item has an owning task and acceptance check:
 | Pilots and full rollout                     | 11–12 | Production acceptance passes                                          |
 | Cleanup and steady-state handoff            | 13–15 | Stabilized production and verified retained evidence                  |
 
-The orchestrator owns the release record and sequencing. Assign one worker each disjoint scope if useful (application/setup vs release infrastructure/docs); serialize lockfiles, root configuration, the one-time source migration, install/version policy and deployment steps. Use substantive independent review, Luna repairs and targeted Sol re-review until clean, without a cycle cap. Human operator handles phone installation, account-owner decisions and private player communications unless explicit delivery authorization exists.
+The orchestrator owns release sequencing. Assign one worker each disjoint scope if useful (application/setup vs release infrastructure/docs); serialize lockfiles, root configuration, the one-time source migration, install/version policy and deployment steps. Use substantive independent review, Luna repairs and targeted Sol re-review until clean, without a cycle cap. Human operator handles phone installation, account-owner decisions and private player communications unless explicit delivery authorization exists.
 
 ## 5. Files and records to produce
 
 | Artifact                                                       | Responsibility                                                                                                                  |
 | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | This plan                                                      | Complete post-Phase-10 sequence and completion gates                                                                            |
-| daily-games-tracker/PRODUCTION_RUNBOOK.md                      | Final exact deployment, recovery, monitoring and future promotion commands                                                      |
+| daily-games-tracker/PRODUCTION_RUNBOOK.md                      | Final exact deployment, recovery and future promotion commands                                                                  |
 | daily-games-tracker/PLAYER_SETUP.md                            | User-facing invitation/install/play/login/troubleshooting instructions; expose accessible equivalent help in the actual website |
 | daily-games-tracker/DEVELOPMENT_WORKFLOW.md                    | Permanent preview workflow, environment distinction and production promotion process                                            |
 | Canonical daily-games-tracker/wrangler.jsonc and example files | One maintained safe configuration; secrets/runtime values supplied through platform settings or ignored local files             |
 | .github/workflows/application-checks.yml (new if absent)       | Application tests/typechecks/build/schema checks; no implicit production deployment                                             |
 | Existing pinned Cherri workflow/source/toolchain/inspectors    | Production and preview Shortcut build identities                                                                                |
-| tmp/production-launch/<release-id>/ (private, ignored)         | Release decisions, inventories, approved-tree hashes, full private evidence, account IDs, actual commands and outputs           |
-| Durable private archive, location recorded at execution        | Verified backups/evidence retained before deleting temporary files                                                              |
-| Public sanitized release manifest/tag/release notes            | Public commit, workflow/build/artifact identities and non-sensitive verification only                                           |
+| tmp/production-launch/<release-id>/ (private, ignored)         | Exact source/config/target identities and command/check outcomes needed to verify executed production steps                     |
 
-Names above are intended deliverables, not files claimed to exist. Keep private records out of commits and copy durable evidence out of tmp before cleanup. Record file SHA-256, tool versions, source commit/tree, UTC timestamps and operator for each release step. Do not put token/code values or player captures in logs.
+Names above are intended deliverables, not files claimed to exist. Keep private records out of commits. Record the exact source/config/target identities and actual check outcomes needed to verify each production action. Do not put token/code values or player captures in logs.
 
 ## Task 1 — Make the one-time transition to the canonical GitHub repository
 
@@ -121,7 +135,7 @@ Names above are intended deliverables, not files claimed to exist. Keep private 
 - [x] Read the final Phase 10 report and inspect actual routes/stats/login behavior; update baseline assumptions if its implementation changed migrations or wire contracts. See [Task 2 baseline record](../../../daily-games-tracker/reports/production-task2-baseline.md); the later login has been reconciled in candidate `99e0b3aa` and deployed to a unique preview; acceptance and the settings-hash investigation remain open.
 - [x] Capture canonical repository status, branch, committed source identity and any later approved changes without resetting/stashing/deleting unrelated work. Verify the Task 1 legacy snapshot remains recoverable; preserve any additional evidence generated after cutover. See the Task 2 baseline record for the bounded verification and limitations.
 - [ ] Record the accepted canonical source commit/tree. Diagnose any blocked index/commit operation legitimately; do not treat an old baseline or an uncommitted workspace as the production release.
-- [x] Carry forward each open Phase 5A/9 gate into the release record with its owner, test or explicit approved disposition; preserve waivers. Include current official game-terms review and public display-name/score consent before real rollout. See the Task 2 baseline record; the gates themselves remain open.
+- [x] Carry forward each open Phase 5A/9 gate into the existing Task 2 baseline record with its owner, test or explicit approved disposition; preserve waivers. Include current official game-terms review and public display-name/score consent before real rollout. The gates themselves remain open.
 - [ ] Choose the smallest reviewed release scope; no experimental route or admin diagnostic is automatically production scope. The Task 2 baseline record proposes a boundary, but the exact candidate and Shortcut remain subject to reconciliation and approval.
 
 **Exit disposition:** The user closed Task 2 with the candidate and remaining prerequisites recorded. The unchecked items retain their stated evidence gaps; closure does not assert separate preview/device acceptance or a production-ready baseline.
@@ -137,8 +151,7 @@ Names above are intended deliverables, not files claimed to exist. Keep private 
 - [ ] Confirm the privately configured preview origin, preview D1 binding, separate credentials/install template and necessary Access configuration. Preserve the shared Pages project, account/DNS resources and tooling it needs without copying their identifiers into public files.
 - [ ] Record production origin: use the existing Pages production hostname unless the user selects a custom domain. Verify actual ownership/DNS/TLS and canonical redirects for the chosen hostname; do not buy a domain without authorization.
 - [ ] Record production data policy: proposed default is fresh production players/devices/sessions with configuration seeds only. If the user wants historical results, replace the default with an explicit audited migration/mapping/reconciliation plan. Never wholesale-copy preview credentials, test players or synthetic results.
-- [ ] Record account plan/budget, desired first-player roster, intended display names, terms decision, launch window, backup destination/retention, support contact and authorization scope.
-- [ ] Inspect current account limits and configuration rather than treating dated documentation as account evidence. Resolve recorded 13/14 ms repeat CPU and unmeasured new-save CPU through measurement plus optimization, an approved plan change or an explicit production risk disposition. Small player count does not change a per-request CPU limit.
+- [ ] Record the desired first-player roster, intended display names, terms decision, launch window, backup destination/retention, support contact and authorization scope.
 - [ ] Verify the private R2 delivery mechanism and authenticated same-origin download route, stable version policy and permitted public source scope.
 
 **Exit:** All task parameters have concrete values before execution. Any unselected decision blocks only its dependent action, not independent preparation.
@@ -167,9 +180,9 @@ Names above are intended deliverables, not files claimed to exist. Keep private 
 - [ ] Prepare configuration seeds/version requirements without test users/results. Verify schema, constraints, game weights/ranks, puzzle/date rules and Shortcut minimum/latest policy.
 - [ ] Before any production migration/import, inspect its existing state. Export and hash it if populated; record a Time Travel bookmark and rollback compatibility. Never overwrite unknown production contents.
 - [ ] Rehearse SQL export/import and D1 Time Travel on a disposable remote database, not the retained preview database. Check counts/constraints/representative rows after restoration. Record exact resource IDs and returned undo bookmark; schedule downtime because restore can interrupt requests.
-- [ ] Define website, DB and Shortcut recovery separately: code rollback does not reverse schema/data or installed Shortcuts. Retain compatible previous artifacts and define migration forward-fix vs restore criteria.
-- [ ] Plan the first production deployment fallback explicitly: Pages preview deployments are not production rollback targets. With no earlier production release, retain a tested redeployable candidate and a controlled unavailable/maintenance response with an identified implementation.
-- [ ] Complete admin/account recovery instructions and verify access to the backup location independently of the live service. Record a practical backup schedule and retention matching the selected plan.
+- [ ] Define website, DB and Shortcut recovery separately: code rollback does not reverse schema/data or installed Shortcuts. Define migration forward-fix vs restore criteria.
+- [ ] Plan the first production deployment fallback explicitly: Pages preview deployments are not production rollback targets. With no earlier production release, verify a tested redeployable candidate and identify the controlled unavailable/maintenance response and its implementation.
+- [ ] Complete admin/account recovery instructions and verify access to the backup location independently of the live service. Record a practical backup schedule and retention.
 
 **Exit:** Production configuration is reviewable, data initialization is deterministic, and remote recovery is demonstrated without damaging preview.
 
@@ -246,9 +259,37 @@ Run the relevant Python/Node Shortcut contract and Phase 9 script suites, includ
 - [ ] Verify headers/no-store/request IDs, 404/405, oversized payload, origin/CSRF rejection, unauthenticated stats/Daily and public score-only All-Time.
 - [ ] Prove preview still uses its privately configured preview D1 binding and intended origin/link; production uses its separate private binding. Use harmless authorized synthetic markers or private configuration/database identity evidence, never cross-environment real writes.
 - [ ] Verify preview-issued device/session/invitation state cannot authenticate to production; do not copy secrets to make it work.
-- [ ] Enable monitoring with an operator-visible destination, failure/CPU/query/usage baselines and a test alert. Do not log credentials or captures. Complete the final terms/account-plan gate.
+- [ ] Complete the terms-compatibility disposition.
 
 **Exit:** Controlled production is secure and correct before broad invitations. Any failure stops onboarding and invokes Task 12 recovery.
+
+### Task 9 UI addendum — deployed; iPhone acceptance pending
+
+**Reviewed UI baseline:** `008d3dc6374eb3eb37446aa49431e4bc5cbfb6e8`. **Original UI release source:** `f9993f387f29025d4f256f4a288adaeca653a6f1`. **Screenshot/cache correction source:** `11a428ab75ca071bd37b04ac509afac6c577c513`.
+
+- [x] **TDD — UI assertions first:** Added rendered-UI checks for the six-step registration flow, exactly two accessible help topics, the two Play sharing paths, and the absent User redownload card. The updated assertions failed before implementation and passed after the changes.
+- [x] **Registration:** The completion page visibly guides users through six separate, spaced cards labeled Step 1 through Step 6, each with an action heading. Step 1 owns the read-only code, copy control, and feedback/manual-copy fallback; Step 2 owns the download link labeled “Download Upload to WHT”; Step 3 identifies Safari Downloads beside the address bar; Step 4 explains adding the Shortcut and entering the copied code at its Import Question; Step 5 owns Safari Share → Edit Actions → Favorites instructions and their images; Step 6 links to Play. Invitation, one-time code, and session behavior is preserved. An `<ol>` or six DOM instructions without this visible grouping does not satisfy the UI acceptance.
+- [x] **Play:** Shows the Krillion results-page Share path and MapTap in-game Share your score path, followed by choosing Upload to WHT. Missing-action guidance says exactly “See the setup and sharing help below.” Obsolete login, unavailable-download, invitation-only, OCR, and PIN guidance is absent.
+- [x] **Shared help:** Keeps exactly “Set up Upload to WHT” and “Share a completed game.” Each accessible topic owns its body copy, lists, and images in one content box. Setup directs not-yet-invited users to the administrator; sharing explains submission and clipboard behavior. The Krillion and MapTap screenshots remain byte-identical to the supplied originals, retaining their original framing, context, and red highlights; responsive sizing preserves each full aspect ratio. Favorites guidance includes the Safari Share and Edit Actions images, each rendered at its natural aspect ratio. The service-worker cache version is v4 so existing clients discard v3's cached crops. Favorites guidance follows the game-specific instructions.
+- [x] **User:** Removes the redownload card from rendered output while retaining its implementation in a code comment for a future explicitly approved feature. Stats, login/logout, and the backend route remain unchanged.
+- [x] **Verification:** The original UI implementation passed `npm test -- tests/unit/App.test.tsx tests/integration/onboarding.test.ts` (43/43) before this correction. For this correction, both image files were verified byte-identical to the supplied originals at 1179×421 and 1179×816, the cache-version change received independent static review, and `npm run build` plus `git diff --check` passed. Preview and production browser checks confirmed both full images render proportionally and D1 health reports schema v3. No test suites were rerun for this correction.
+- [x] **Promotion:** Preview was verified before production. Both environments show the corrected screenshots and connected D1 health (schema v3). The same 147-file staged package was used for both deployments; its manifest SHA-256 is `6E0EAD2C0D95F1595451C4CC17EF0C138FBDD4E8A48439D7C414A80614C9606D`. The user explicitly authorized production deployment. No settings or bindings were changed, and no migrations, seeds, or database writes were performed.
+- [x] **Scope:** Task 7/8 suites, signing rehearsals, Shortcut CI, Task 10, and pilot activity were not run as directed.
+- [x] **Visible-flow correction verification:** Focused rendered assertions check the explicit step numbers/headings, code and copy ownership in Step 1, the download control in Step 2, the Play route, and the two Favorites images. `npm test -- tests/unit/App.test.tsx` passed (33/33), `npm test -- tests/unit` passed (286/286), and `npm run build` passed. A 390×844 local browser preview with synthetic code showed six distinct cards, a full-width bordered code field, loaded Favorites images at their original aspect ratios, and Step 6 plus recovery information scrollable above the fixed dock. No real invitation or database writes were made. The onboarding integration suite was attempted but Miniflare failed before test cases with a sandbox loopback `EACCES`; no integration-suite pass is claimed.
+- [x] **Visible-flow correction promotion:** Promoted the exact reviewed revision `8e2aa62` through preview to stable production. Preview and production root, hashed JavaScript/CSS, both Favorites images, and service worker matched the private staged manifest byte-for-byte; the stable service-worker response had the expected `no-cache` header. A previously warmed stable client refreshed normally to the new hashed assets and rendered the updated help and images; the existing health view reported D1 schema v3. No database writes, migrations, real invite redemptions, or Shortcut changes were made.
+- [ ] **iPhone Safari acceptance:** Manual phone-width acceptance of the six-step flow, current Safari Downloads/Share-sheet wording, and both images has not been performed. Keep this human acceptance item open; do not claim native or user acceptance.
+
+**Exit:** The visible-flow correction is deployed. This addendum remains open only for the manual iPhone Safari acceptance above; it does not close Task 9 or Task 10.
+
+### Task 9 scripting-permission help addition — requested 2026-10-29
+
+- [x] Add a third shared expandable topic to PlayerHelp for the exact “Could not run Run JavaScript on Web Page” error, with the ordered Settings search, Advanced, Allow Running Scripts, and retry steps. Preserve all six registration cards.
+- [x] Replace the setup topic body with the missing-action Favorites walkthrough and the missing-Shortcut administrator note; move its Safari Share/Edit Actions screenshots there. Keep the actual Krillion/MapTap sharing paths, game-share images, and submit/copy explanation in the completed-game topic.
+- [x] Copy the three supplied full-context screenshots into maintained help assets; keep each image and its caption inside this topic, use descriptive alt text, and preserve responsive proportions.
+- [x] Add focused UI assertions for three topics, the error/procedure, image containment and shared Play/setup/User placement. Fresh verification passed: `npm test -- tests/unit/App.test.tsx` (33/33), `npm run typecheck:tests`, and `npm run build`. Independent review was clean; the 390×844 production view loaded all seven help images without horizontal overflow.
+- [x] **Historical static-asset check:** The earlier Preview/Production upload of reviewed revision `af237adbc6126cc78b3a2b3f75ca379a2fdf4862` matched the page, hashed bundles, service worker, and seven help images to the staged manifest; `sw.js` was served with `no-cache`, and a warmed client rendered the three topics. That upload ran from the wrong directory without application Functions, so it did not verify the API or constitute a healthy full release; production health served HTML and the UI identified itself as a local preview. The same reviewed source was then redeployed from the app directory with Functions, restoring JSON health/auth responses. The later `c393df8` heading fix and current `ae36c52` share-metadata release are recorded above. No D1 writes, invitation redemptions, or Shortcut changes were made in these repairs.
+
+**Exit:** The third topic is live on the stable site and verified. This addition does not close Task 9 or Task 10, and does not claim manual iPhone Safari acceptance.
 
 ## Task 10 — Prove a fresh user's complete production journey
 
@@ -280,19 +321,18 @@ Run the relevant Python/Node Shortcut contract and Phase 9 script suites, includ
 
 **Exit:** Intended users are actively using production, with a completed seven-player acceptance record and an understood support path.
 
-## Task 12 — Stabilize, monitor and exercise rollback readiness
+## Task 12 — Stabilize and exercise rollback readiness
 
 **Owner:** Operator. **Planning default:** Observe at least two complete Pacific game days, including a day boundary, before destructive development cleanup; user may choose a different recorded window.
 
-- [ ] Watch imports/new saves/repeats, login failures, application errors, CPU-limit errors, D1 rows/latency/storage, free/paid usage and actual support reports. Define alert recipients and thresholds from measured baseline.
+- [ ] Use the observation window to record whether intended players can complete imports/new saves/repeats and any actual support issues.
 - [ ] Verify scheduled exports/backup retention and access to the first retained backup; test restore evidence on a disposable remote target remains valid.
-- [ ] Record website rollback target or first-release redeploy fallback, schema compatibility, signed Shortcut fallback and how to pause invitations/writes safely if integrity is uncertain.
+- [ ] Record the tested first-release redeploy fallback, schema compatibility, signed Shortcut fallback and how to pause invitations/writes safely if integrity is uncertain.
 - [ ] For an incident, stop expansion, preserve evidence/backup, choose code redeploy/forward migration/restore based on compatibility, then verify auth/import/boards before reopening. A DB restore may lose intervening legitimate writes; communicate/reconcile that explicitly.
 - [ ] Rollback does not delete production players or replace production with preview. Never restore a database blindly solely because a UI deploy failed.
-- [ ] Retain the successful production deployment and signed template as protected release artifacts. Produce sanitized GitHub release notes/tag tied to the tested final commit and artifacts, excluding private installation/invitation links unless their publication is explicitly approved.
 - [ ] Account for any final patch with a new commit/build/deployment identity and targeted acceptance.
 
-**Exit:** Production has met the recorded observation window without unresolved material defects and recovery evidence is retained.
+**Exit:** The recorded observation window is complete, production has no unresolved material defects, and recovery procedures are understood.
 
 ## Task 13 — Consolidate documentation and archive development evidence
 
@@ -313,26 +353,26 @@ Run the relevant Python/Node Shortcut contract and Phase 9 script suites, includ
 
 **Owner:** Authorized cleanup operator. **Input:** Task 3 inventory, updated with final dependencies and approved exact removal set.
 
-| Resource class                                                                     | Required disposition                                                                                     |
-| ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Production site/DB/domain/Access/monitoring/backups                                | Keep                                                                                                     |
-| Existing privately configured preview origin and D1 binding                         | Keep as permanent dev/test                                                                               |
-| Shared Pages project, account/DNS/Access policies used by either                   | Keep; inspect shared dependencies before any change                                                      |
-| Canonical GitHub-backed checkout, CI workflows, toolchain locks, release artifacts | Keep                                                                                                     |
-| Old unique deployment URLs                                                         | Retain rollback/evidence targets first; remove only confirmed unneeded history within supported controls |
-| Disposable remote recovery DBs, receiver/proof Workers, tunnels/test sites         | Delete only identified instances after backup/evidence/dependency checks                                 |
-| Docker/Podman resources or local dev servers                                       | Stop/remove only task-owned unused instances; never global prune                                         |
-| tmp exports/CI downloads/diagnostics/probe artifacts/local .wrangler DBs           | Archive required evidence, then remove exact disposable paths                                            |
-| node_modules/dist/caches                                                           | Regenerable; clean only if useful, retaining lockfiles and reproducibility                               |
-| Superseded Markdown                                                                | Archive/consolidate using Task 13, not blanket deletion                                                  |
-| Old device credentials/invites/deploy hooks/test API tokens                        | Revoke only identified obsolete ones; preserve active production/preview access                          |
-| Worktrees/branches/chats                                                           | Preserve unmerged/unpublished changes; use managed worktree archive tooling where applicable             |
+| Resource class                                                             | Required disposition                                                                                     |
+| -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Production site/DB/domain/Access/backups                                   | Keep                                                                                                     |
+| Existing privately configured preview origin and D1 binding                | Keep as permanent dev/test                                                                               |
+| Shared Pages project, account/DNS/Access policies used by either           | Keep; inspect shared dependencies before any change                                                      |
+| Canonical GitHub-backed checkout, CI workflows, toolchain locks            | Keep                                                                                                     |
+| Old unique deployment URLs                                                 | Retain rollback/evidence targets first; remove only confirmed unneeded history within supported controls |
+| Disposable remote recovery DBs, receiver/proof Workers, tunnels/test sites | Delete only identified instances after backup/evidence/dependency checks                                 |
+| Docker/Podman resources or local dev servers                               | Stop/remove only task-owned unused instances; never global prune                                         |
+| tmp exports/CI downloads/diagnostics/probe artifacts/local .wrangler DBs   | Remove only confirmed disposable files using exact paths                                                 |
+| node_modules/dist/caches                                                   | Regenerable; clean only if useful, retaining lockfiles and reproducibility                               |
+| Superseded Markdown                                                        | Archive/consolidate using Task 13, not blanket deletion                                                  |
+| Old device credentials/invites/deploy hooks/test API tokens                | Revoke only identified obsolete ones; preserve active production/preview access                          |
+| Worktrees/branches/chats                                                   | Preserve unmerged/unpublished changes; use managed worktree archive tooling where applicable             |
 
 - [ ] Re-inventory before removal; creation-time inventory may now be stale. Each row must name exact resource ID/path, purpose, backup/hash if needed, dependencies, action and verification.
 - [ ] Resolve local absolute paths and verify they stay inside the intended cleanup directory before recursive delete/move. On Windows use one shell end-to-end with literal paths; do not compose cross-shell wildcard deletion.
-- [ ] Export/hash any unique source, database or signed artifact to durable private storage and verify it can be read before deletion. Keep at least the approved release and rollback evidence.
+- [ ] Before deleting a disposable remote database, confirm its exact ID and verify it is neither the production database nor the retained preview database.
 - [ ] Remove in small dependent batches: stop task-owned services/tunnels, then detached resources, then temporary files. Do not run global container/system prune or delete unrelated services/accounts/repositories.
-- [ ] Verify production health/auth/import capability, live install link, backup access and alerts after each cloud batch. Verify preview health, /user/auth/admin boundaries, intended DB and a disposable future-change test still work.
+- [ ] Verify production health/auth/import capability, live install link and backup target after each cloud batch. Verify preview health, /user/auth/admin boundaries, intended DB and a disposable future-change test still work.
 - [ ] Record actual deletions/retentions/failures and before/after IDs; no ambiguous "cleaned everything" claim. If an unknown dependency remains, retain it with a reason.
 - [ ] Protect credentials used by current devices: do not rotate/revoke all codes as general tidying. Remove old shortcuts from personal devices only with operator participation after the supported replacement works.
 
@@ -342,11 +382,11 @@ Run the relevant Python/Node Shortcut contract and Phase 9 script suites, includ
 
 **Owner:** Orchestrator/operator.
 
-- [ ] Record GitHub final commit/tag, application deployment, schema/migration set, config identity, CI runs, signed artifact/hash, supported version/install link, rollback target, backup location, monitoring owner and help path.
+- [ ] Record exact production source commit/tree, config identity, target deployment identity, applied migration set, source-check results and production verification outcomes.
 - [ ] Reconcile every task and launch gate with concrete evidence; no pending blocker can be hidden by a passing format/ledger check.
 - [ ] Confirm intended users are onboarded and have successfully used both games; document any nonparticipants/support follow-ups without pretending all players tested.
 - [ ] Confirm Task 14 cleanup is complete with retained preview/DB listed explicitly. Remove or archive obsolete export-only scripts/checkouts after verifying no CI/build dependency needs them; keep the one-time migration record privately.
-- [ ] Establish future workflow in the single canonical repository: create branch → edit/test → commit/push → CI/review → preview deploy against preview DB → user acceptance → merge/release the verified commit → production migrations/promotion → monitoring. Account for a merge commit with final checks if its tree differs. No separate sanitization/export stage; production is not the test environment.
+- [ ] Establish future workflow in the single canonical repository: create branch → edit/test → commit/push → CI/review → preview deploy against preview DB → user acceptance → merge/release the verified commit → production migrations/promotion. Account for a merge commit with final checks if its tree differs. No separate sanitization/export stage; production is not the test environment.
 - [ ] Retain separate development Shortcut credentials/template; production users keep the supported production Shortcut. Test update/version policy in preview first.
 - [ ] Update active status and runbook, publish only sanitized final notes, and mark launch complete only after all required gates and user-approved dispositions are recorded.
 
@@ -360,9 +400,9 @@ node scripts/phase9-rehearse-recovery.mjs
 node --test scripts/tests/phase9-launch-gates.test.mjs scripts/tests/phase9-recovery.test.mjs scripts/tests/phase5a-verifier.test.mjs scripts/tests/phase5a-signing-workflow.test.mjs
 ```
 
-The current ledger deliberately preserves old 5A identity and pending/waived states. Extend/add a separate production acceptance record for the actual new release instead of forcing new claims into the old reference. If migrating the ledger/verifier to a new artifact identity, change and test them together through review. Historical green checks are not fresh final-release verification.
+The current ledger deliberately preserves old 5A identity and pending/waived states; keep that historical ledger unchanged. Record the current production source/config/target, applied migrations and verification outcomes as ordinary execution evidence. Historical green checks are not fresh final-release verification.
 
-Private record minimum fields: task/check, exact source/config/artifact/deployment/database identity, timestamp, operator, expected result, observed result, pass/pending/blocked/waived or approved disposition, evidence location and follow-up owner. Public records contain only sanitized equivalents.
+Production execution evidence records the exact source, effective configuration, target, deployed version, applied migrations and verification outcomes needed to confirm the action. Keep private values out of public records.
 
 ## 7. Final launch completion checklist
 
@@ -373,11 +413,11 @@ Private record minimum fields: task/check, exact source/config/artifact/deployme
 - [ ] Invitation-only signup/help/replacement-device journey works end to end.
 - [ ] Real production phone/browser/OS matrix and two-person/seven-player pilots evidenced within approved limitations.
 - [ ] Phase 5A formal gates and existing waivers accurately dispositioned; remaining Phase 9/10 blockers resolved.
-- [ ] Terms/account plan/CPU/new-save performance/monitoring decisions recorded.
+- [ ] Terms compatibility disposition recorded.
 - [ ] Remote backup/restore, administrator recovery and paired release rollback ready.
 - [ ] Intended users are using production successfully; stabilization observation complete.
-- [ ] Development resources/docs cleaned or explicitly retained; durable evidence safe; preview website and DB still usable.
-- [ ] Operator/player/future-development documentation and final release record complete.
+- [ ] Development resources/docs cleaned or explicitly retained; preview website and DB still usable.
+- [ ] Operator/player/future-development documentation complete.
 
 ## 8. Platform references checked during planning
 
@@ -385,5 +425,4 @@ These establish available mechanisms, not the current account configuration; rec
 
 - [Pages production/preview configuration](https://developers.cloudflare.com/pages/functions/wrangler-configuration/): environment binding/variable overrides require explicit attention.
 - [Pages rollback](https://developers.cloudflare.com/pages/configuration/rollbacks/): rollback targets are prior production deployments, not previews.
-- [D1 Time Travel](https://developers.cloudflare.com/d1/reference/time-travel/): Free/Paid retention differs; restore is not a clone and can interrupt in-flight operations.
-- [Workers limits](https://developers.cloudflare.com/workers/platform/limits/): verify actual plan and per-request CPU allowance.
+- [D1 Time Travel](https://developers.cloudflare.com/d1/reference/time-travel/): restore is not a clone and can interrupt in-flight operations.

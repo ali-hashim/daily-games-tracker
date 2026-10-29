@@ -5,7 +5,7 @@ import { isAppShellAsset, isNetworkOnlyPath } from "../shared/cache-policy";
 declare const self: ServiceWorkerGlobalScope;
 
 const CACHE_PREFIX = "wht-app-shell-";
-const CACHE_NAME = `${CACHE_PREFIX}v3`;
+const CACHE_NAME = `${CACHE_PREFIX}v4`;
 const CORE_ASSETS = [
   "/",
   "/manifest.webmanifest",

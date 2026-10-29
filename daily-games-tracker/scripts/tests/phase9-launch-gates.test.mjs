@@ -38,7 +38,6 @@ const phase9ChecklistIds = [
   "launch.seven-player-pilot",
   "launch.clipboard-privacy",
   "launch.backup-restore",
-  "launch.monitoring-free-tier",
 ];
 const phase5aFormalIds = [
   "phase5a.accepted-source-revision",
@@ -123,6 +122,23 @@ function validLedger() {
 
 test("verifier accepts a ledger containing pass, pending, blocked, and waived dispositions", () => {
   assert.deepEqual(verifyLedger(validLedger()), []);
+});
+
+test("verifier accepts a ledger without the removed monitoring and free-tier gate", () => {
+  const ledger = validLedger();
+
+  assert.equal(
+    ledger.gates.some((entry) => entry.id === "launch.monitoring-free-tier"),
+    false,
+  );
+  assert.deepEqual(verifyLedger(ledger), []);
+});
+
+test("verifier does not treat a legacy monitoring and free-tier gate as a non-pass gate", () => {
+  const ledger = validLedger();
+  ledger.gates.push(gate("launch.monitoring-free-tier", "pass"));
+
+  assert.deepEqual(verifyLedger(ledger), []);
 });
 
 test("verifier rejects unsupported dispositions", () => {

@@ -165,7 +165,9 @@ describe("private authenticated Shortcut download", () => {
     expect(response.status).toBe(200);
     expect(new Uint8Array(await response.arrayBuffer())).toEqual(content);
     expect(response.headers.get("Content-Type")).toBe("application/vnd.apple.shortcut");
-    expect(response.headers.get("Content-Disposition")).toBe('attachment; filename="Upload to WHT.shortcut"');
+    expect(response.headers.get("Content-Disposition")).toBe(
+      'attachment; filename="Upload to WHT.shortcut"',
+    );
     expect(response.headers.get("Cache-Control")).toBe("no-store");
     expect(response.headers.get("X-Request-ID")).toMatch(/^req_[a-f0-9]{16}$/);
     expect(bucket.reads).toEqual(["latest.json", downloadKey]);

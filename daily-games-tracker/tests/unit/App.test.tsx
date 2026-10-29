@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import * as React from "react";
 import { act, createElement, type ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getPage } from "../../src/App";
+import App, { getPage } from "../../src/App";
 import { safeDailyReturnPath, safeReturnPath } from "../../src/lib/login-return";
 import DeviceLogin, {
   dailySignInUrl,
@@ -11,6 +11,8 @@ import DeviceLogin, {
   type Player,
 } from "../../src/pages/DeviceLogin";
 import UserPage, { type UserStatsResponse } from "../../src/pages/UserPage";
+import RegistrationPage from "../../src/pages/RegistrationPage";
+import PlayerHelp from "../../src/pages/PlayerHelp";
 import { ApiRequestError } from "../../src/lib/api";
 
 const appSource = readFileSync(new URL("../../src/App.tsx", import.meta.url), "utf8");
@@ -29,6 +31,7 @@ function sourceIfPresent(path: string): string {
 const userPageSource = sourceIfPresent("../../src/pages/UserPage.tsx");
 const registrationPageSource = sourceIfPresent("../../src/pages/RegistrationPage.tsx");
 const loginReturnSource = sourceIfPresent("../../src/lib/login-return.ts");
+const stylesSource = sourceIfPresent("../../src/styles.css");
 
 class BehaviorEvent {
   readonly type: string;
@@ -325,8 +328,9 @@ function installBehaviorDom(): {
 
 const behaviorRoots: Array<{ unmount: () => void }> = [];
 
-async function renderBehavior(element: ReactNode) {
+async function renderBehavior(element: ReactNode, pathname?: string) {
   const dom = installBehaviorDom();
+  if (pathname) dom.window.location.pathname = pathname;
   const { createRoot } = await import("react-dom/client");
   const root = createRoot(dom.container as unknown as Element);
   behaviorRoots.push(root);
@@ -1136,9 +1140,10 @@ describe("Phase 10 user route shell", () => {
     expect(userPageSource).toContain("install_url: string | null");
     expect(userPageSource).toContain("href={currentStats.install_url}");
     expect(userPageSource).toContain("Download Shortcut");
+    expect(userPageSource).toMatch(/explicitly approved future device-code\s+creation\s+feature/);
     expect(registrationPageSource).toContain("href={result.shortcut_install_url}");
     expect(registrationPageSource).not.toContain("www.icloud.com/shortcuts");
-    expect(appSource).toContain("Shortcut download after registration");
+    expect(appSource).not.toContain("Supported Shortcut link unavailable");
     expect(userPageSource).toContain("Log out");
   });
 
@@ -1151,5 +1156,460 @@ describe("Phase 10 user route shell", () => {
     expect(userPageSource).toContain("setStats(null)");
     expect(deviceLoginSource).toContain("setPlayer(null)");
     expect(appSource).toContain("window.history.replaceState");
+  });
+});
+
+describe("Task 9 player setup help", () => {
+  it("shows accessible setup guidance at home, registration, and signed-in User entry points", () => {
+    const registration = sourceIfPresent("../../src/pages/RegistrationPage.tsx");
+    const help = sourceIfPresent("../../src/pages/PlayerHelp.tsx");
+    const normalizedHelp = help.replace(/\s+/g, " ");
+    const playPage = appSource.slice(
+      appSource.indexOf("function PlayHelpPage"),
+      appSource.indexOf("function BottomNav"),
+    );
+
+    expect(playPage).toContain("<PlayerHelp />");
+    expect(appSource).not.toContain('aria-label="Supported Shortcut link unavailable"');
+    expect(registration).toContain("<PlayerHelp");
+    expect(userPageSource).toContain("<PlayerHelp");
+    for (const guidance of [
+      "Shortcuts",
+      "Safari",
+      "Share your score",
+      "Edit Actions",
+      "Favorites",
+    ]) {
+      expect(normalizedHelp.toLowerCase()).toContain(guidance.toLowerCase());
+    }
+    expect(help).toContain('aria-labelledby="player-help-heading"');
+  });
+
+  it("keeps Play's missing-action fallback below both game-specific paths", () => {
+    const playPage = appSource.slice(
+      appSource.indexOf("function PlayHelpPage"),
+      appSource.indexOf("function BottomNav"),
+    );
+    const gamePaths = playPage.indexOf('className="setup-steps share-steps"');
+    const fallback = playPage.indexOf('className="muted-note missing-share-action-help"');
+    expect(gamePaths).toBeGreaterThanOrEqual(0);
+    expect(fallback).toBeGreaterThan(gamePaths);
+    expect(playPage).toContain(
+      "If Upload to WHT is missing from the share sheet: See the setup and sharing help below.",
+    );
+  });
+
+  async function registerAndCopy(writeText: ReturnType<typeof vi.fn>) {
+    vi.stubGlobal("navigator", { userAgent: "Chrome", clipboard: { writeText } });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const path = String(input);
+        if (path === "/api/register/synthetic-invite")
+          return Response.json({ player: { display_name: "Alex" } });
+        if (path === "/api/register/synthetic-invite/redeem" && init?.method === "POST")
+          return Response.json({
+            player: { display_name: "Alex" },
+            device_code: "synthetic-private-code",
+            shortcut_install_url: null,
+          });
+        throw new Error("Unexpected registration request: " + path);
+      }),
+    );
+    const rendered = await renderBehavior(
+      createElement(RegistrationPage),
+      "/register/synthetic-invite",
+    );
+    await flushBehavior();
+    const form = rendered.container.querySelector("form");
+    expect(form).toBeDefined();
+    await act(async () => {
+      form!.dispatchEvent(new BehaviorEvent("submit", { bubbles: true, cancelable: true }));
+    });
+    await flushBehavior();
+    await act(async () => buttonWithText(rendered.container, "Copy device code").click());
+    await flushBehavior();
+    return rendered.container;
+  }
+
+  it("shows accessible clipboard failure feedback and keeps the private code visible", async () => {
+    const container = await registerAndCopy(
+      vi.fn().mockRejectedValue(new Error("clipboard blocked")),
+    );
+    const steps = container.querySelectorAll("li.registration-step-card");
+    const codeStep = steps[0];
+    const downloadStep = steps[1];
+    const code = codeStep?.querySelector('[aria-label="Private device code"]') as
+      (BehaviorElement & { value?: string }) | null;
+    const registration = sourceIfPresent("../../src/pages/RegistrationPage.tsx");
+
+    expect(codeStep?.querySelector("button")?.textContent).toBe("Copy device code");
+    expect(code?.value).toBe("synthetic-private-code");
+    expect(registration).toMatch(/aria-label="Private device code"[\s\S]*?readOnly/);
+    expect(codeStep?.querySelector('[role="status"]')?.textContent).toContain(
+      "Copy failed. Select the code above and copy it manually.",
+    );
+    expect(downloadStep?.querySelector("a.primary-action")).toBeNull();
+    expect(downloadStep?.querySelector(".notice")?.textContent).toContain(
+      "The supported Shortcut download link is unavailable.",
+    );
+    expect(downloadStep?.querySelector(".notice")?.textContent).toContain(
+      "the code cannot be recovered if you close it.",
+    );
+  });
+
+  it("announces successful device-code copying", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    const container = await registerAndCopy(writeText);
+
+    expect(writeText).toHaveBeenCalledWith("synthetic-private-code");
+    expect(container.querySelector('[role="status"]')?.textContent).toContain(
+      "Private device code copied.",
+    );
+  });
+});
+
+describe("Task 9 approved UI addendum", () => {
+  it("renders the six-step registration completion flow without changing one-time-code handling", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    const registrationRequests: string[] = [];
+    vi.stubGlobal("navigator", { userAgent: "Safari", clipboard: { writeText } });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const path = String(input);
+        if (path === "/api/register/synthetic-invite") {
+          return Response.json({ player: { display_name: "Alex" } });
+        }
+        if (path === "/api/register/synthetic-invite/redeem" && init?.method === "POST") {
+          registrationRequests.push(`${path}:${init.method}`);
+          return Response.json({
+            player: { display_name: "Alex" },
+            device_code: "synthetic-private-code",
+            shortcut_install_url: "/api/shortcut/download",
+          });
+        }
+        throw new Error(`Unexpected registration request: ${path}`);
+      }),
+    );
+
+    const rendered = await renderBehavior(
+      createElement(RegistrationPage),
+      "/register/synthetic-invite",
+    );
+    await flushBehavior();
+    const form = rendered.container.querySelector("form");
+    expect(form).toBeDefined();
+    await act(async () => {
+      form!.dispatchEvent(new BehaviorEvent("submit", { bubbles: true, cancelable: true }));
+    });
+    await flushBehavior();
+
+    const intro = rendered.container.querySelector(".registration-completion-intro");
+    expect(intro?.textContent).toContain("Follow these six steps in order");
+    expect(intro?.textContent).toContain("Keep this page open");
+
+    const orderedSteps = rendered.container.querySelectorAll("li.registration-step-card");
+    expect(orderedSteps).toHaveLength(6);
+    expect(
+      orderedSteps.map((step) => [
+        step.querySelector(".registration-step-number")?.textContent,
+        step.querySelector("h3")?.textContent,
+      ]),
+    ).toEqual([
+      ["Step 1", "Copy your device code"],
+      ["Step 2", "Download Upload to WHT"],
+      ["Step 3", "Open your download"],
+      ["Step 4", "Install and set up"],
+      ["Step 5", "Add Upload to WHT to Favorites"],
+      ["Step 6", "Play"],
+    ]);
+    expect(orderedSteps[0]?.textContent).toContain("copy it manually");
+    expect(orderedSteps[0]?.textContent.toLowerCase()).not.toContain("paste");
+    expect(orderedSteps[2]?.textContent).toContain("Downloads beside the address bar");
+    expect(orderedSteps[3]?.textContent).toContain("Import Question");
+    expect(orderedSteps[4]?.textContent).toContain("Edit Actions");
+    expect(orderedSteps[4]?.textContent).toContain("Favorites");
+    expect(registrationRequests).toEqual(["/api/register/synthetic-invite/redeem:POST"]);
+
+    const codeStep = orderedSteps[0];
+    const code = codeStep?.querySelector('[aria-label="Private device code"]') as
+      (BehaviorElement & { value?: string }) | null;
+    expect(code?.value).toBe("synthetic-private-code");
+    expect(registrationPageSource).toMatch(/aria-label="Private device code"[\s\S]*?readOnly/);
+    const copyButton = codeStep?.querySelector("button");
+    expect(copyButton?.textContent).toBe("Copy device code");
+    expect(
+      orderedSteps
+        .slice(1)
+        .every(
+          (step) =>
+            step.querySelector('[aria-label="Private device code"]') === null &&
+            step.querySelector("button") === null,
+        ),
+    ).toBe(true);
+
+    const downloadStep = orderedSteps[1];
+    const download = downloadStep?.querySelector("a.primary-action");
+    expect(download?.textContent).toBe("Download Upload to WHT");
+    expect(download?.getAttribute("href")).toBe("/api/shortcut/download");
+    expect(orderedSteps[0]?.querySelector("a.primary-action")).toBeNull();
+    expect(
+      orderedSteps
+        .slice(2)
+        .every(
+          (step) =>
+            step.querySelector("a.primary-action") === null ||
+            step.querySelector("a.primary-action")?.getAttribute("href") === "/",
+        ),
+    ).toBe(true);
+    const playStep = orderedSteps[5];
+    expect(playStep?.querySelector("a.primary-action")?.textContent).toBe("Play");
+    expect(playStep?.querySelector("a.primary-action")?.getAttribute("href")).toBe("/");
+    expect(
+      orderedSteps[4]?.querySelectorAll("img").map((image) => image.getAttribute("src")),
+    ).toEqual([
+      "/images/player-help/safari-share-button.jpg",
+      "/images/player-help/edit-actions-button.jpg",
+    ]);
+
+    await act(async () => copyButton?.click());
+    await flushBehavior();
+    expect(writeText).toHaveBeenCalledWith("synthetic-private-code");
+    expect(codeStep?.querySelector('[role="status"]')?.textContent).toContain(
+      "Private device code copied.",
+    );
+    expect(rendered.container.textContent).toContain("signed in on this browser");
+    expect(rendered.container.textContent).toContain("Never share your configured copy.");
+    expect(stylesSource).toMatch(/\.registration-step-flow\s*\{[^}]*list-style:\s*none/s);
+    expect(stylesSource).toMatch(
+      /\.registration-step-card\s*\{[^}]*border:\s*1px solid[^}]*border-radius:/s,
+    );
+    expect(stylesSource).toMatch(
+      /\.registration-step-card \.private-code\s*\{[^}]*width:\s*100%[^}]*min-height:\s*48px[^}]*border:/s,
+    );
+    expect(stylesSource).toMatch(/\.app-shell\s*\{[^}]*safe-area-inset-bottom/s);
+  });
+
+  it("shows three complete accessible player-help topics with exact scripting-permission guidance", async () => {
+    const rendered = await renderBehavior(createElement(PlayerHelp));
+    const topics = rendered.container.querySelectorAll("details");
+
+    expect(topics).toHaveLength(3);
+    expect(topics.map((topic) => topic.querySelector("summary")?.textContent)).toEqual([
+      "Set up Upload to WHT",
+      "Share a completed game",
+      "Fix “Could not run JavaScript”",
+    ]);
+
+    for (const topic of topics) {
+      const directElements = topic.childNodes.filter(
+        (child): child is BehaviorElement => child instanceof BehaviorElement,
+      );
+      expect(directElements.map((child) => child.tagName)).toEqual(["SUMMARY", "DIV"]);
+      const content = topic.querySelector(".player-help-topic__content");
+      expect(content).not.toBeNull();
+      for (const selector of ["p", "ol", "ul", "img", "figure", "figcaption"]) {
+        const topicElements = topic.querySelectorAll(selector);
+        const contentElements = content?.querySelectorAll(selector) ?? [];
+        expect(topicElements.every((element) => contentElements.includes(element))).toBe(true);
+      }
+    }
+
+    const setupText = topics[0]?.textContent ?? "";
+    expect(setupText).toContain(
+      "If Upload to WHT is missing, open the Share sheet’s Edit Actions and add it to Favorites.",
+    );
+    expect(setupText).toContain(
+      "If you do not have the Upload to WHT Shortcut, contact the administrator.",
+    );
+    expect(setupText).not.toContain("Register this device");
+    expect(setupText).not.toContain("Import Question");
+
+    const setupImages = topics[0]?.querySelectorAll("img") ?? [];
+    expect(setupImages.map((image) => image.getAttribute("src"))).toEqual([
+      "/images/player-help/safari-share-button.jpg",
+      "/images/player-help/edit-actions-button.jpg",
+    ]);
+    expect(setupImages.map((image) => image.getAttribute("alt"))).toEqual([
+      "Safari bottom toolbar with the Share button highlighted",
+      "Edit Actions button in Safari's share sheet",
+    ]);
+    expect(
+      (topics[0]?.querySelectorAll("figcaption") ?? []).map((caption) =>
+        caption.textContent?.replace(/\s+/g, " ").trim(),
+      ),
+    ).toEqual([
+      "Tap Share in Safari.",
+      "Tap Edit Actions, then add Upload to WHT to Favorites.",
+    ]);
+
+    const sharing = topics[1];
+    const sharingText = sharing?.textContent ?? "";
+    expect(sharingText).toContain("Choose Upload to WHT and submit your score.");
+    expect(sharingText).toContain(
+      "After submission, your daily leaderboard text is copied for you.",
+    );
+    expect(sharingText).not.toContain("Edit Actions");
+    expect(sharingText).not.toContain("Favorites");
+    expect(sharingText).not.toContain("Cancel");
+    expect(sharingText).not.toContain("overwrite");
+
+    const images = sharing?.querySelectorAll("img") ?? [];
+    expect(images.map((image) => image.getAttribute("src"))).toEqual([
+      "/images/player-help/krillion-share.jpg",
+      "/images/player-help/maptap-share.jpg",
+    ]);
+    expect(images.map((image) => image.getAttribute("alt"))).toEqual([
+      "Safari Share button on a completed Krillion result page",
+      "MapTap Share your score button highlighted below the finished game",
+    ]);
+    expect(images.every((image) => image.className.includes("player-help-image"))).toBe(true);
+    expect(stylesSource).toMatch(/\.player-help-image\s*\{[^}]*max-width:\s*100%/s);
+    expect(stylesSource).toMatch(/\.player-help-image\s*\{[^}]*height:\s*auto/s);
+
+    const scripting = topics[2];
+    const scriptingText = scripting?.textContent?.replace(/\s+/g, " ") ?? "";
+    expect(scriptingText).toContain("Could not run “Run JavaScript on Web Page”");
+    expect(scriptingText).toContain(
+      "This shortcut cannot be run because this action is a scripting action and your Shortcuts security settings don’t allow you to run scripting actions.",
+    );
+    expect(scriptingText).toContain("reads the shared Krillion result");
+
+    const procedure = scripting?.querySelector("ol")?.querySelectorAll("li") ?? [];
+    expect(
+      procedure.map((step) =>
+        step.textContent
+          ?.replace(/\s+/g, " ")
+          .replace("Search Settings for Shortcuts and tap its result.", "")
+          .replace("Turn on Allow Running Scripts.", "")
+          .trim(),
+      ),
+    ).toEqual([
+      "On your iPhone, open Settings, search for “Shortcuts,” and tap the Shortcuts result.",
+      "Open Shortcuts settings, then Advanced.",
+      "Turn on “Allow Running Scripts.”",
+      "Return to the completed Krillion game in Safari and retry Share → Upload to WHT.",
+    ]);
+
+    const scriptingImages = scripting?.querySelectorAll("img") ?? [];
+    expect(scriptingImages.map((image) => image.getAttribute("src"))).toEqual([
+      "/images/player-help/scripting-security-error.jpg",
+      "/images/player-help/shortcuts-settings-search.jpg",
+      "/images/player-help/allow-running-scripts.jpg",
+    ]);
+    expect(scriptingImages.map((image) => image.getAttribute("alt"))).toEqual([
+      "Krillion in Safari showing the Run JavaScript on Web Page security error",
+      "iPhone Settings search results with Shortcuts selected",
+      "Shortcuts Advanced settings with Allow Running Scripts turned on",
+    ]);
+    expect(
+      (scripting?.querySelectorAll("figcaption") ?? []).map((caption) =>
+        caption.textContent?.replace(/\s+/g, " ").trim(),
+      ),
+    ).toEqual([
+      "The scripting-security-settings error appears while sharing a completed Krillion result.",
+      "Search Settings for Shortcuts and tap its result.",
+      "Turn on Allow Running Scripts.",
+    ]);
+    for (const image of scriptingImages) {
+      expect(image.className).toContain("player-help-image");
+    }
+    expect(scriptingText).not.toMatch(
+      /Allow Sharing Large Amounts of Data|Allow Deleting Without Confirmation|Allow Deleting Large Amounts of Data/i,
+    );
+    expect(scriptingText).not.toMatch(/\b(?:rebuild|sign(?:ing)?|change the Shortcut)\b/i);
+  });
+
+  it("keeps Play focused on the two Upload to WHT share paths", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        const path = String(input);
+        if (path === "/api/health") return Response.json({ status: "ok" });
+        if (path === "/api/games") {
+          return Response.json({
+            games: [
+              { id: "krillion", title: "Krillion", icon: "🦐", rounds: 7 },
+              { id: "maptap", title: "MapTap", icon: "🌎", rounds: 5 },
+            ],
+          });
+        }
+        throw new Error(`Unexpected app request: ${path}`);
+      }),
+    );
+    const rendered = await renderBehavior(createElement(App), "/");
+    await flushBehavior();
+
+    const paths = rendered.container.querySelector("ol.share-steps")?.querySelectorAll("li");
+    expect(paths?.map((step) => step.textContent)).toEqual([
+      "Krillion: finish the game in Safari, then tap Share on its completed results page.",
+      "MapTap: in the game, tap Share your score.",
+      "Choose Upload to WHT, then submit your score.",
+    ]);
+    const fallback = rendered.container.querySelector(".missing-share-action-help");
+    expect(fallback?.textContent).toBe(
+      "If Upload to WHT is missing from the share sheet: See the setup and sharing help below.",
+    );
+    expect(rendered.container.textContent.indexOf("MapTap: in the game")).toBeLessThan(
+      rendered.container.textContent.indexOf(fallback?.textContent ?? "missing fallback"),
+    );
+    expect(rendered.container.querySelectorAll("details")).toHaveLength(3);
+
+    const homeText = rendered.container.textContent;
+    expect(homeText).not.toContain("Login with Device");
+    expect(homeText).not.toContain("Supported Shortcut link unavailable");
+    expect(homeText).not.toContain("Registration is invitation-only.");
+    expect(homeText).not.toContain("No screenshots, OCR, PINs, passwords");
+    expect(homeText).not.toContain("manual score entry");
+  });
+
+  it("omits the User redownload card while retaining stats and logout", async () => {
+    const logout = vi.fn(async () => {});
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        if (String(input) === "/api/user/stats") {
+          return Response.json(
+            userStats({
+              games: [
+                {
+                  key: "krillion",
+                  display_name: "Krillion",
+                  icon: "🦐",
+                  total: 4321,
+                  games_played: 2,
+                  average: 2160.5,
+                  rank: 3,
+                },
+              ],
+              install_url: "/api/shortcut/download",
+            }),
+          );
+        }
+        throw new Error(`Unexpected User request: ${String(input)}`);
+      }),
+    );
+    const rendered = await renderBehavior(
+      createElement(UserPage, {
+        player: testPlayer,
+        busy: false,
+        logout,
+        sessionExpired: vi.fn(),
+      }),
+      "/user",
+    );
+    await flushBehavior();
+
+    expect(rendered.container.querySelector(".user-shortcut-card")).toBeNull();
+    expect(rendered.container.querySelectorAll('a[href="/api/shortcut/download"]')).toHaveLength(0);
+    expect(rendered.container.textContent).toContain("Krillion");
+    expect(rendered.container.textContent).toContain("4,321");
+    expect(rendered.container.textContent).toContain("2160.50");
+    expect(rendered.container.textContent).toContain("#3");
+    const logoutButton = buttonWithText(rendered.container, "Log out");
+    await act(async () => logoutButton.click());
+    expect(logout).toHaveBeenCalledOnce();
+    expect(userPageSource).toMatch(/explicitly approved future device-code\s+creation\s+feature/);
   });
 });

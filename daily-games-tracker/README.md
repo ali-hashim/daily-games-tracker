@@ -6,6 +6,8 @@ The `/user` page provides the signed-in player view, while `/daily` and `/all-ti
 
 Production identity, device credentials, player data, install links, hosted origins, deployment IDs, project/account IDs, D1 identifiers, Access audiences and operational evidence are supplied outside this repository through private platform settings or ignored local files. The committed `wrangler.jsonc` and `.env.example` contain local placeholders only; they do not publish remote bindings or configured install values.
 
+For the deployed release and the exact remaining human checks, see [current project status](PROJECT_STATUS.md) and the [production runbook](PRODUCTION_RUNBOOK.md).
+
 ## Local verification
 
 Use Node.js 22 from this directory:
@@ -24,6 +26,6 @@ The fixtures use fixed test dates and synthetic values. Tests cover capture vali
 
 ## Shortcut source
 
-Credential-free Cherri source and the pinned toolchain lock are under `shortcut/cherri-migration/`. The pinned GitHub Actions workflow compiles and inspects unsigned probes and the complete client. The separate Actions-only signing workflow runs automatically for relevant reviewed pushes to protected `main` and supports optional protected manual recovery; it records a GitHub pending lease, sends one exact HubSign POST and stores only private R2 signing state and digest-verified signed objects. Its protected configuration remains unprovisioned. No operational CI signing run or signed delivery is claimed here; user-directed retries of previously ambiguous outcomes are authorized when the exact reviewed package, source/digest checks and valid private R2 state pass, without repeat approval. No configured Shortcut or install link is committed.
+Credential-free Cherri source and the pinned toolchain lock are under `shortcut/cherri-migration/`. The pinned GitHub Actions workflow compiles and inspects unsigned probes and the complete client. Task 7 completed the protected Actions-only signing flow for the version-1 candidate from source `29c4acea`; the verified signed result and state are stored in private R2. Website-only commits after that signing run did not change or re-sign the Shortcut. User-directed retries of previously ambiguous outcomes remain authorized when the exact reviewed package, source/digest checks and valid private R2 state pass, without repeat approval. No configured Shortcut or install link is committed.
 
 The full client source receives its runtime destination from private external configuration. Hosted origins, deployment identities, credentials and per-user device codes remain runtime inputs and are never stored in this public repository.

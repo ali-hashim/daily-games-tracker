@@ -1,6 +1,6 @@
 # Phase 10 — User page/tab
 
-**Status:** Implemented, independently reviewed, and preview-deployed October 25, 2026. Final additional numbered phase after Phase 9. Existing Phase 5A/9 gates remain open. [Current progress](PROJECT_STATUS.md). Exact evidence: [Phase 10 verification report](reports/phase10-user-page-verification.md).
+> **Historical implementation record:** Phase 10 was implemented, reviewed, and preview-deployed on October 25, 2026. The production UI was subsequently updated in Task 9. Its current six-step registration flow and three help topics are summarized in [current project status](PROJECT_STATUS.md) and the [production release record](../docs/superpowers/plans/2026-10-25-production-launch.md#current-production-release). The User-page redownload control is hidden pending future device codes; its backend route remains available.
 
 ## User requirements
 
