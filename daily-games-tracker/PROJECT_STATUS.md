@@ -1,6 +1,6 @@
 # Current project status
 
-Updated October 29, 2026. This page is the concise active status. The [production launch record](../docs/superpowers/plans/2026-10-25-production-launch.md#current-production-release) carries the release history; the [Phase 9 ledger](PHASE_9_LAUNCH_GATES.md) preserves the earlier pre-production gate snapshot.
+Updated November 5, 2026. This page is the concise active status. The [production launch record](../docs/superpowers/plans/2026-10-25-production-launch.md#current-production-release) carries the release history; the [Phase 9 ledger](PHASE_9_LAUNCH_GATES.md) preserves the earlier pre-production gate snapshot.
 
 ## Production release
 
@@ -14,13 +14,20 @@ The signed Shortcut remains version 1, signed from source `29c4acea` in the prot
 
 ## Task disposition
 
-Task 1 established the canonical repository. The user closed Tasks 2–4 with their recorded limitations preserved. Tasks 5 and 8 are complete and accepted. Task 6 setup/help implementation is deployed; Task 7 signing is complete. Task 9 production setup and deployment are complete, with the following human checks still open:
+Task 1 established the canonical repository. The user closed Tasks 2–4 with their recorded limitations preserved. Tasks 5 and 8 are complete and accepted. Task 6 setup/help implementation is deployed; Task 7 signing is complete. Task 9 production setup and deployment are complete.
 
-- Sign in through Cloudflare Access as the authorized administrator; confirm the admin page loads and the player list is empty.
-- Use an Access-admitted non-admin identity to confirm the admin page/API is blocked or returns `403` without player data.
-- In an authorized player session, verify the production download route returns the expected `Upload to WHT.shortcut` attachment. If no controlled player identity exists, create a clearly labeled temporary test player/invitation, register a controlled device, and revoke the test credential afterward where supported. Do not paste codes, cookies, JWTs, or invitation links into chat or public records.
+**Owner acceptance, November 5, 2026.** Seven players have used the production website and Shortcut for about a week with no inherent issues. The owner accepts the following as closed based on that week of production use. These are owner acceptances, not separate scripted test passes, and they are not native acceptance evidence:
 
-Task 10 remains open: the full fresh-user production journey and real-device/session/update behavior have not been completed. Tasks 11–15 remain separate follow-up work: the pilots, stabilization, archive review, cleanup, and final handoff. Manual iPhone Safari acceptance of the latest UI also remains open.
+- Task 9 administrator success, authenticated Shortcut download, and manual iPhone Safari acceptance of the latest UI.
+- Task 10 fresh-user journey. All seven players run iOS 26 or later; one moved up from iOS 18.5, where the Shortcut did not accept the Safari webpage input. iOS 26 or later is the tested range and older versions are unsupported.
+- Task 11 pilots: the seven-player production use stands as the pilot.
+- Task 12 observation window: the first week of production use is the window.
+
+Accepted limitations: no separate production database copy (see below); the update-required path has not been exercised because only version 1 exists; invitation expiry or replay, lost setup page, revoked credential, replacement device and interrupted-share failure paths were not deliberately exercised.
+
+Known defects and follow-up: a Krillion submission is not accepted when the "see all" valid-answers section is expanded in the score view. A Stats page with non-cumulative categories (average, streak, average over days played) is planned.
+
+Still open: Access-admitted non-administrator denial check; terms-compatibility decision; confirmation that no controlled test identities or results remain in production data; the rollback and pause-invitations procedure (Task 12); Tasks 13–15 (archive review, cleanup, final handoff).
 
 ## Accepted scope and records
 

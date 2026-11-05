@@ -4,7 +4,7 @@ Use this page for the production Wrangler preflight. The [current project status
 
 ## Current baseline
 
-Production is running source `ae36c52800b41f2bbb411c1d5e83e09c37be1f31`. Its D1 database is initialized at schema 3, with minimum/latest Shortcut version `1/1`. Production health returned schema-3 JSON and anonymous authentication returned JSON `401` after the latest Functions deployment. Task 9 still needs the authorized human authentication checks listed in `PROJECT_STATUS.md`; Task 10 is not complete.
+Production is running source `ae36c52800b41f2bbb411c1d5e83e09c37be1f31`. Its D1 database is initialized at schema 3, with minimum/latest Shortcut version `1/1`. Production health returned schema-3 JSON and anonymous authentication returned JSON `401` after the latest Functions deployment. The owner accepted most Task 9/10 checks on the basis of a week of production use; the remaining open checks are listed in `PROJECT_STATUS.md`.
 
 Keep production origins, project/account/database identifiers, Access audiences, admin identities, credentials, and deployment evidence in private settings or ignored records. The committed Wrangler JSONC is a placeholder, not a production target.
 
