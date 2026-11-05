@@ -27,7 +27,9 @@ Accepted limitations: no separate production database copy (see below); the upda
 
 Known defects and follow-up: a Krillion submission is not accepted when the "see all" valid-answers section is expanded in the score view. A Stats page with non-cumulative categories (average, streak, average over days played) is planned.
 
-Still open: Access-admitted non-administrator denial check; terms-compatibility decision; confirmation that no controlled test identities or results remain in production data; the rollback and pause-invitations procedure (Task 12); Tasks 13–15 (archive review, cleanup, final handoff).
+**Non-administrator denial, November 5, 2026.** The owner tried the Cloudflare Access sign-in on the admin page with two non-administrator emails. Access sent no sign-in code and neither reached the admin page; the administrator email received a code and signed in. This verifies the outer Access boundary. The application's own 403 for an Access-admitted non-administrator was not exercised live because Access does not admit those identities; it is covered by the automated admin and Access tests.
+
+Still open: terms-compatibility decision; confirmation that no controlled test identities or results remain in production data; the rollback and pause-invitations procedure (Task 12); Tasks 13–15 (archive review, cleanup, final handoff).
 
 ## Accepted scope and records
 
