@@ -4,6 +4,8 @@ Updated 2026-10-25. This public record preserves the current acceptance
 dispositions without publishing private device evidence, user data, captures,
 configured Shortcuts, credentials, or installation links.
 
+> **Superseded November 12, 2026:** Rows marked pending for the protected signing workflow or operational signing activation are historical. The workflow (`.github/workflows/shortcut-sign-disabled.yml`, legacy filename) is live, and protected CI signing of the version-1 candidate from source `29c4acea` is recorded complete in [project status](../PROJECT_STATUS.md).
+
 | Acceptance item | Disposition | Meaning of the public record |
 | --- | --- | --- |
 | Maintained source and pinned tooling | pass | Public source, lock, CI contract, inspectors, and synthetic fixtures are available. |

@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { apiRequest, copyText } from "../lib/api";
+import { IOS_REQUIREMENT_SHORT } from "../lib/player-requirements";
 import PlayerHelp from "./PlayerHelp";
 
 interface Registered {
@@ -85,7 +86,7 @@ export default function RegistrationPage() {
           />
           <p>
             Your private code will be shown once. Keep this page open until you have copied it into
-            Upload to WHT.
+            Upload to WHT. {IOS_REQUIREMENT_SHORT}
           </p>
           <button className="primary-action" disabled={busy}>
             {busy ? "Registering…" : "Register this device"}
@@ -99,7 +100,8 @@ export default function RegistrationPage() {
         >
           <h2 id="registration-completion-heading">Welcome, {result.player.display_name}</h2>
           <p className="registration-completion-intro">
-            Follow these six steps in order. Keep this page open until setup is complete.
+            Follow these six steps in order. Keep this page open until setup is complete.{" "}
+            {IOS_REQUIREMENT_SHORT}
           </p>
           <ol className="registration-step-flow" aria-label="Six setup steps">
             <li className="registration-step-card" aria-labelledby="registration-step-1-title">

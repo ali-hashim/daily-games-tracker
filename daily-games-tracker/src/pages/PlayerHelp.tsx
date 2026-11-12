@@ -1,7 +1,10 @@
+import { IOS_REQUIREMENT_DETAIL } from "../lib/player-requirements";
+
 export default function PlayerHelp() {
   return (
     <section className="player-help management-panel" aria-labelledby="player-help-heading">
       <h2 id="player-help-heading">Player setup and help</h2>
+      <p className="muted-note player-help-requirement">{IOS_REQUIREMENT_DETAIL}</p>
 
       <details className="player-help-topic">
         <summary>Set up Upload to WHT</summary>

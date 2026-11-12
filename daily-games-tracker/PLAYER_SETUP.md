@@ -4,7 +4,7 @@ WHT uses invitation-only device registration. Ask the administrator for an Add D
 
 ## Set up your device
 
-You need an Apple iPhone with the Shortcuts app and Safari. Open your invitation in Safari on that iPhone. Invitations can be used once and expire after 24 hours.
+You need an Apple iPhone running **iOS 26 or later**, with the Shortcuts app and Safari. On older versions (for example iOS 18.5) the Upload to WHT Shortcut cannot accept the Safari webpage input; older iOS versions are not supported, so update in Settings → General → Software Update first. Open your invitation in Safari on that iPhone. Invitations can be used once and expire after 24 hours.
 
 1. Review the player name and register this device. The registration result signs in this Safari browser.
 2. Follow the six visible cards on the result page: copy the one-time private code; download **Upload to WHT**; open Safari Downloads beside the address bar; add the Shortcut and enter the code in its **Import Question**; use Safari Share → **Edit Actions** → **Favorites**; then open **Play**.
@@ -72,6 +72,6 @@ Replace each bracketed placeholder privately. Do not paste a real invitation or 
 >
 > Your WHT Add Device invitation is here: [PRIVATE INVITATION LINK]
 >
-> Open it in Safari on your Apple iPhone, register the device, and keep the result page open. Copy the one-time private code, install the clean supported Upload to WHT template shown there, and enter the code in the Shortcut's Import Question. Return to WHT in Safari when setup is complete.
+> Open it in Safari on your Apple iPhone (iOS 26 or later is required), register the device, and keep the result page open. Copy the one-time private code, install the clean supported Upload to WHT template shown there, and enter the code in the Shortcut's Import Question. Return to WHT in Safari when setup is complete.
 >
 > The invitation expires after 24 hours and works once. Do not share the configured Shortcut or its private code. If you lose the setup page or need another device, contact [ADMIN SUPPORT CONTACT].

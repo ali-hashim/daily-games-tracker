@@ -3,6 +3,8 @@
 Updated 2026-10-25. This is the credential-free public handoff for the
 maintained Shortcut source and its pinned build and inspection tooling.
 
+> **Superseded November 12, 2026:** Rows marked pending for the protected signing workflow or operational signing activation are historical. The workflow (`.github/workflows/shortcut-sign-disabled.yml`, legacy filename) is live, and protected CI signing of the version-1 candidate from source `29c4acea` is recorded complete in [project status](../PROJECT_STATUS.md).
+
 ## Maintained scope
 
 - Source: `shortcut/cherri-migration/source/upload-to-wht.cherri`

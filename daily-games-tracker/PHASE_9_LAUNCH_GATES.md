@@ -2,6 +2,8 @@
 
 > **Historical gate snapshot (October 25, 2026):** The dispositions below predate the October 29 production release. Preserve them as evidence of the earlier review; they do not describe current production setup or current open work. See [current project status](PROJECT_STATUS.md) and the [production release record](../docs/superpowers/plans/2026-10-25-production-launch.md#current-production-release).
 
+> **Superseded November 12, 2026:** Rows below that call operational signing, signing activation or the protected workflow `pending`, and the backup/restore gate, are historical. The signing workflow (`.github/workflows/shortcut-sign-disabled.yml`, name kept for compatibility) is live, and protected CI signing of the version-1 candidate from source `29c4acea` is recorded complete in [project status](PROJECT_STATUS.md). The owner canceled the separate production D1 backup, nightly schedule and alerts.
+
 Updated October 25, 2026 (`America/Los_Angeles`). This is the human-readable
 companion to [`reports/phase9-launch-gates.json`](reports/phase9-launch-gates.json).
 The machine verifier is:
