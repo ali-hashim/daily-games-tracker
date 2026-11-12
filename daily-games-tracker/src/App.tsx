@@ -4,7 +4,12 @@ import RegistrationPage from "./pages/RegistrationPage";
 import DeviceLogin from "./pages/DeviceLogin";
 import UserPage from "./pages/UserPage";
 import PlayerHelp from "./pages/PlayerHelp";
-import { AllTimeLeaderboardPage, DailyLeaderboardPage } from "./pages/LeaderboardPages";
+import {
+  DailyLeaderboardPage,
+  MultiDayLeaderboardPage,
+  StatsBoardPage,
+  getDailyView,
+} from "./pages/LeaderboardPages";
 
 type Page = "home" | "daily" | "all-time" | "admin" | "register" | "user";
 type GameId = "krillion" | "maptap";
@@ -297,13 +302,16 @@ export default function App() {
         </header>
         <main>
           {page === "home" && <PlayHelpPage games={games} />}
-          {page === "daily" && (
+          {page === "daily" && getDailyView(window.location.search) === "multi" && (
+            <MultiDayLeaderboardPage />
+          )}
+          {page === "daily" && getDailyView(window.location.search) !== "multi" && (
             <DeviceLogin redirectWhenSignedOut dailyReturnDate={health?.gameDay}>
               {() => <DailyLeaderboardPage currentDay={health?.gameDay} />}
             </DeviceLogin>
           )}
           {page === "user" && <DeviceLogin>{(auth) => <UserPage {...auth} />}</DeviceLogin>}
-          {page === "all-time" && <AllTimeLeaderboardPage />}
+          {page === "all-time" && <StatsBoardPage />}
           {page === "admin" && <AdminPage />}
           {page === "register" && <RegistrationPage />}
         </main>

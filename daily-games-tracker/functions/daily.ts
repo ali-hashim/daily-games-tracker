@@ -6,6 +6,8 @@ import { pacificDay } from "../shared/day";
 export const onRequest: PagesFunction<AppEnv, string, AppData> = async ({ request, next }) => {
   const url = new URL(request.url);
   if (url.pathname !== "/daily") return next();
+  // The Multiple Days view has a stable query URL and is rendered by the SPA.
+  if (url.searchParams.get("view") === "multi") return next();
 
   const date = url.searchParams.has("date") ? parseDailyDate(request.url) : pacificDay();
   return new Response(null, {

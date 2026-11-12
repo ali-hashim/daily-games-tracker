@@ -1102,6 +1102,14 @@ describe("Phase 10 user route shell", () => {
     expect(getPage("/daily/2026-10-25")).toBe("daily");
   });
 
+  it("serves the public Multiple Days view without the Daily sign-in gate", () => {
+    expect(getPage("/daily")).toBe("daily");
+    expect(getPage("/all-time")).toBe("all-time");
+    expect(appSource).toContain("getDailyView(window.location.search)");
+    expect(appSource).toContain("StatsBoardPage");
+    expect(appSource).toContain("MultiDayLeaderboardPage");
+  });
+
   it("keeps the permanent bottom navigation in the required order", () => {
     const nav = appSource.slice(appSource.indexOf("const items = ["));
     expect(nav.indexOf('label: "Play"')).toBeGreaterThanOrEqual(0);
@@ -1439,10 +1447,7 @@ describe("Task 9 approved UI addendum", () => {
       (topics[0]?.querySelectorAll("figcaption") ?? []).map((caption) =>
         caption.textContent?.replace(/\s+/g, " ").trim(),
       ),
-    ).toEqual([
-      "Tap Share in Safari.",
-      "Tap Edit Actions, then add Upload to WHT to Favorites.",
-    ]);
+    ).toEqual(["Tap Share in Safari.", "Tap Edit Actions, then add Upload to WHT to Favorites."]);
 
     const sharing = topics[1];
     const sharingText = sharing?.textContent ?? "";

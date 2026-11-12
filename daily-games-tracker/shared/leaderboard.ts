@@ -83,3 +83,25 @@ export interface AllTimeLeaderboardReadModel {
   as_of_date: string;
   games: AllTimeGameReadModel[];
 }
+
+export interface StatsBoardPlayerReadModel {
+  id: string;
+  display_name: string;
+  rank: number | null;
+  total_points: number;
+  average_per_day: number | null;
+  average_per_game: number | null;
+  current_streak: number;
+  longest_streak: number;
+  days_played: number;
+  games_played: number;
+  first_day: string | null;
+  last_day: string | null;
+  best_day: { date: string; points: number } | null;
+}
+
+export interface StatsBoardReadModel {
+  status: "ok";
+  as_of_date: string;
+  players: StatsBoardPlayerReadModel[];
+}

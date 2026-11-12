@@ -2,7 +2,7 @@
 
 An invitation-only, iPhone-first tracker for Krillion and MapTap. Players submit completed results through one universal Apple Shortcut; Pages Functions validate the capture before saving it to Cloudflare D1.
 
-The `/user` page provides the signed-in player view, while `/daily` and `/all-time` retain their existing privacy and ranking rules. The source tree includes the server, client, migrations, service worker, credential-free Shortcut source, and synthetic fixtures used by the automated checks.
+The `/user` page provides the signed-in player view, while `/daily` shows the Single Day leaderboard and, via `/daily?view=multi`, the public Multiple Day Leaderboard (the former all-time table, API `/api/leaderboards/all-time`), and `/all-time` is the public All-Time Stats board (API `/api/leaderboards/stats`: points, average per day since first submission, average per game played, current and longest streaks, days played, best day; definitions in `shared/stats.ts`). Existing privacy and ranking rules are unchanged. The source tree includes the server, client, migrations, service worker, credential-free Shortcut source, and synthetic fixtures used by the automated checks.
 
 Production identity, device credentials, player data, install links, hosted origins, deployment IDs, project/account IDs, D1 identifiers, Access audiences and operational evidence are supplied outside this repository through private platform settings or ignored local files. The committed `wrangler.jsonc` and `.env.example` contain local placeholders only; they do not publish remote bindings or configured install values.
 

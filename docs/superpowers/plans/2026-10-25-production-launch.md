@@ -254,7 +254,7 @@ Run the relevant Python/Node Shortcut contract and Phase 9 script suites, includ
 - [ ] Deploy using the reviewed production script against the privately configured Pages project and branch. Record deployment identity only in private operational evidence alongside source identity.
 - [ ] Verify TLS/canonical host, root/User/Daily/All-Time, static assets, service-worker updates, legacy login routes, health/actual schema and games configuration.
 - [ ] Verify anonymous and non-admin admin boundaries on the canonical host and any privately configured alternate origins; no bypass through unique deployments or provider aliases.
-- [ ] Verify headers/no-store/request IDs, 404/405, oversized payload, origin/CSRF rejection, unauthenticated stats/Daily and public score-only All-Time.
+- [ ] Verify headers/no-store/request IDs, 404/405, oversized payload, origin/CSRF rejection, unauthenticated stats/Daily and public score-only Multiple Day view (`/daily?view=multi`) and All-Time stats board.
 - [ ] Prove preview still uses its privately configured preview D1 binding and intended origin/link; production uses its separate private binding. Use harmless authorized synthetic markers or private configuration/database identity evidence, never cross-environment real writes.
 - [ ] Verify preview-issued device/session/invitation state cannot authenticate to production; do not copy secrets to make it work.
 - [ ] Complete the terms-compatibility disposition.
@@ -311,7 +311,7 @@ Run the relevant Python/Node Shortcut contract and Phase 9 script suites, includ
 
 - [ ] Run the two-person pilot against the exact supported production pair. Include another person independently following the help, not only the developer repeating a familiar flow.
 - [ ] Fix substantive issues, review, publish/rebuild/re-sign as applicable, redeploy and rerun affected proof before expanding.
-- [ ] Run the required seven-player pilot with production invitations issued close enough to setup to remain valid. Users choose approved display names knowing public All-Time exposes names/scores.
+- [ ] Run the required seven-player pilot with production invitations issued close enough to setup to remain valid. Users choose approved display names knowing the public Multiple Day leaderboard and All-Time stats board expose names/scores.
 - [ ] Deliver private invitations and the welcome/help message through the authorized channel; otherwise prepare them for the human operator to send. Do not collect codes/screenshots containing secrets in chat.
 - [ ] Track invitation delivered/redeemed, clean Shortcut installed/version, initial login, both game flows, scoreboard/privacy and support issues without retaining raw invitation/device tokens.
 - [ ] Resolve all material defects or document user-approved limitations. Waived technical cases remain labeled waived.

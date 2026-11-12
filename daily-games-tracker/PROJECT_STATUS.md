@@ -25,7 +25,7 @@ Task 1 established the canonical repository. The user closed Tasks 2–4 with th
 
 Accepted limitations: no separate production database copy (see below); the update-required path has not been exercised because only version 1 exists; invitation expiry or replay, lost setup page, revoked credential, replacement device and interrupted-share failure paths were not deliberately exercised.
 
-Known defects and follow-up: a Krillion submission is not accepted when the "see all" valid-answers section is expanded in the score view. A Stats page with non-cumulative categories (average, streak, average over days played) is planned.
+Known defects and follow-up: the Krillion expanded-answers/advisory rejection is fixed server-side on the `feature/player-help-leaderboards-krillion-fix` branch (no new Shortcut needed; deploy pending). The Daily page now has a Single Day / Multiple Days switch (`/daily?view=multi`, public), and `/all-time` is a stats board (cumulative points, averages per day and per game played, current and longest streak, days played, best day) backed by `/api/leaderboards/stats`; both are unreleased until this branch is merged and deployed. Setup and help now state that iOS 26 or later is required.
 
 **Non-administrator denial, November 5, 2026.** The owner tried the Cloudflare Access sign-in on the admin page with two non-administrator emails. Access sent no sign-in code and neither reached the admin page; the administrator email received a code and signed in. This verifies the outer Access boundary. The application's own 403 for an Access-admitted non-administrator was not exercised live because Access does not admit those identities; it is covered by the automated admin and Access tests.
 

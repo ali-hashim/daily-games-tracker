@@ -1489,3 +1489,44 @@ h1 {
     transition: none;
   }
 }
+
+.view-switch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  margin: 0 0 18px;
+  padding: 4px;
+  border: 1px solid #486454;
+  border-radius: 999px;
+  background: #20382b;
+}
+.view-switch-option {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: #d2f5ad;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+}
+.view-switch-option.active {
+  background: #d2f5ad;
+  color: #14261b;
+}
+.stats-table th,
+.stats-table td {
+  white-space: nowrap;
+  text-align: right;
+}
+.stats-table th:first-child {
+  text-align: left;
+}
+.stats-help ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+.stats-help li {
+  margin-bottom: 6px;
+}

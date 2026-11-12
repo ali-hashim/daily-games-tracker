@@ -92,6 +92,19 @@ try {
   const home = await fetch(`${origin}/`);
   assert.match(await home.text(), /Winstitute of Higher Thinking/);
 
+  const statsApi = await fetch(`${origin}/api/leaderboards/stats`);
+  assert.equal(statsApi.status, 200);
+  assert.equal(statsApi.headers.get("Cache-Control"), "no-store");
+  assert.equal((await statsApi.json()).status, "ok");
+  const multiApi = await fetch(`${origin}/api/leaderboards/all-time`);
+  assert.equal(multiApi.status, 200);
+  assert.equal(multiApi.headers.get("Cache-Control"), "no-store");
+  for (const path of ["/all-time/", "/daily?view=multi"]) {
+    const shell = await fetch(`${origin}${path}`);
+    assert.equal(shell.status, 200, `${path} must serve the app shell`);
+    assert.match(await shell.text(), /Winstitute of Higher Thinking/);
+  }
+
   const admin = await fetch(`${origin}/api/admin/players`);
   assert.ok([403, 503].includes(admin.status), "Anonymous admin access must fail closed");
   const adminPage = await fetch(`${origin}/admin`);

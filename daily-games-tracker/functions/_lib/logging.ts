@@ -75,6 +75,7 @@ const SAFE_PATHS = new Set([
   "/api/auth/device/complete",
   "/api/leaderboards/daily",
   "/api/leaderboards/all-time",
+  "/api/leaderboards/stats",
   "/api/leaderboards/copy",
   "/api/admin",
   "/api/admin/me",

@@ -51,6 +51,8 @@ describe("network-only routes", () => {
     "/user/",
     "/login",
     "/login/",
+    "/api/leaderboards/stats",
+    "/api/leaderboards/all-time",
   ])("keeps %s out of browser and service-worker caches", (pathname) => {
     expect(isNetworkOnlyPath(pathname)).toBe(true);
   });
@@ -61,6 +63,12 @@ describe("network-only routes", () => {
       expect(isNetworkOnlyPath(pathname)).toBe(false);
     },
   );
+
+  it("serves the multi-day and stats routes through the SPA shell", () => {
+    expect(redirects).toContain("/daily /index.html 200");
+    expect(redirects).toContain("/all-time /index.html 200");
+    expect(redirects).toContain("/all-time/ /index.html 200");
+  });
 
   it("forces no-store and a request ID on network-only responses", () => {
     const response = applyResponsePolicy(new Response("ok"), "req_policy", "/api/games");

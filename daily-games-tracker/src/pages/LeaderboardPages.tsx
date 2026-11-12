@@ -505,6 +505,33 @@ export function DailyGameTable({ game, date }: { game: DailyGame; date: string }
   );
 }
 
+export type DailyView = "single" | "multi";
+
+export function getDailyView(search: string): DailyView {
+  return new URLSearchParams(search).get("view") === "multi" ? "multi" : "single";
+}
+
+export function LeaderboardViewSwitch({ view }: { view: DailyView }) {
+  const options = [
+    { id: "single", label: "Single Day", href: "/daily" },
+    { id: "multi", label: "Multiple Days", href: "/daily?view=multi" },
+  ] as const;
+  return (
+    <nav className="view-switch" aria-label="Leaderboard view">
+      {options.map((option) => (
+        <a
+          key={option.id}
+          href={option.href}
+          className={`view-switch-option${view === option.id ? " active" : ""}`}
+          aria-current={view === option.id ? "page" : undefined}
+        >
+          {option.label}
+        </a>
+      ))}
+    </nav>
+  );
+}
+
 export function DailyLeaderboardPage({ currentDay }: { currentDay?: string }) {
   const route = parseDailyRoute(window.location.pathname, window.location.search);
   const date = route.invalidDate ? null : (route.date ?? currentDay ?? null);
@@ -568,6 +595,7 @@ export function DailyLeaderboardPage({ currentDay }: { currentDay?: string }) {
   const isCurrent = result.date === result.current_day;
   return (
     <>
+      <LeaderboardViewSwitch view="single" />
       <div className="eyebrow">
         <span className="tiny-dot" /> DAILY RANKINGS
       </div>
@@ -814,7 +842,7 @@ export function AllTimeGameTable({ game, visibleDates, allTimeScrollRef }: AllTi
   );
 }
 
-export function AllTimeLeaderboardPage() {
+export function MultiDayLeaderboardPage() {
   const [result, setResult] = useState<AllTimeResponse | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [windowStartIndex, setWindowStartIndex] = useState(0);
@@ -869,17 +897,16 @@ export function AllTimeLeaderboardPage() {
   }, [games.length]);
 
   if (error) return <ErrorNotice error={error} />;
-  if (!result) return <LoadingState label="Loading all-time standings…" />;
+  if (!result) return <LoadingState label="Loading multiple-day standings…" />;
 
   return (
     <>
+      <LeaderboardViewSwitch view="multi" />
       <div className="eyebrow">
         <span className="tiny-dot" /> THE LONG GAME
       </div>
       <h1>
-        All-time
-        <br />
-        <span className="accent-italic">greatness.</span>
+        Multiple Day <span className="accent-italic">Leaderboard</span>
       </h1>
       <p className="page-intro">Every point counts. Every day adds up.</p>
       <div className="date-strip daily-date-nav" aria-label="All-time date-window controls">
@@ -912,6 +939,171 @@ export function AllTimeLeaderboardPage() {
           allTimeScrollRef={index === 0 ? allTimeScrollRef : undefined}
         />
       ))}
+    </>
+  );
+}
+
+/** Former name of the Multiple Day Leaderboard, kept for existing imports. */
+export const AllTimeLeaderboardPage = MultiDayLeaderboardPage;
+
+interface StatsPlayer {
+  id: string;
+  display_name: string;
+  rank: number | null;
+  total_points: number;
+  average_per_day: number | null;
+  average_per_game: number | null;
+  current_streak: number;
+  longest_streak: number;
+  days_played: number;
+  games_played: number;
+  first_day: string | null;
+  best_day: { date: string; points: number } | null;
+}
+
+interface StatsResponse {
+  status: "ok";
+  as_of_date: string;
+  players: StatsPlayer[];
+}
+
+function compactDateLabel(iso: string): string {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "UTC",
+    month: "short",
+    day: "numeric",
+  }).format(new Date(`${iso}T12:00:00Z`));
+}
+
+function formatStat(value: number | null): string {
+  return value === null ? "—" : value.toFixed(1).replace(/\.0$/, "");
+}
+
+export function StatsBoardPage() {
+  const [result, setResult] = useState<StatsResponse | null>(null);
+  const [error, setError] = useState<unknown>(null);
+
+  useEffect(() => {
+    let active = true;
+    void apiRequest<StatsResponse>("/api/leaderboards/stats")
+      .then((response) => {
+        if (active) setResult(response);
+      })
+      .catch((reason) => {
+        if (active) setError(reason);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (error) return <ErrorNotice error={error} />;
+  if (!result) return <LoadingState label="Loading all-time stats…" />;
+
+  return (
+    <>
+      <div className="eyebrow">
+        <span className="tiny-dot" /> THE LONG GAME
+      </div>
+      <h1>
+        All-Time <span className="accent-italic">Stats</span>
+      </h1>
+      <p className="page-intro">Every game counts, across every game you play.</p>
+      <section className="leaderboard-card live-leaderboard" aria-labelledby="stats-board">
+        <div className="leaderboard-card-heading">
+          <div className="flex-1">
+            <h2 id="stats-board" className="game-title">
+              Player stats
+            </h2>
+            <p className="subtle">
+              All games combined · through {compactDateLabel(result.as_of_date)}
+            </p>
+          </div>
+          <span className="pill public">Public</span>
+        </div>
+        <div
+          className="leaderboard-scroll stats-board-scroll"
+          tabIndex={0}
+          aria-label="All-time player stats table"
+        >
+          <table className="leaderboard-table stats-table">
+            <caption className="sr-only">All-time player stats</caption>
+            <thead>
+              <tr>
+                <th className="sticky-column player-column player-heading-column" scope="col">
+                  Player
+                </th>
+                <th scope="col">Points</th>
+                <th scope="col">Avg / day</th>
+                <th scope="col">Avg / game</th>
+                <th scope="col">Streak</th>
+                <th scope="col">Best streak</th>
+                <th scope="col">Days played</th>
+                <th scope="col">Best day</th>
+              </tr>
+            </thead>
+            <tbody>
+              {result.players.length ? (
+                result.players.map((player) => (
+                  <tr key={player.id}>
+                    <th className="sticky-column player-column player-row-heading" scope="row">
+                      <div className="player-heading">
+                        <span className="player-rank">
+                          {player.rank === null ? "—" : `#${player.rank}`}
+                        </span>
+                        <strong>{player.display_name}</strong>
+                      </div>
+                    </th>
+                    <td>{formatScore(player.days_played ? player.total_points : null)}</td>
+                    <td>{formatStat(player.average_per_day)}</td>
+                    <td>{formatStat(player.average_per_game)}</td>
+                    <td>{player.days_played ? player.current_streak : "—"}</td>
+                    <td>{player.days_played ? player.longest_streak : "—"}</td>
+                    <td>{player.days_played || "—"}</td>
+                    <td>
+                      {player.best_day
+                        ? `${formatScore(player.best_day.points)} · ${compactDateLabel(player.best_day.date)}`
+                        : "—"}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td className="cell-muted" colSpan={8}>
+                    No active players or results yet
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        <div className="table-note stats-help">
+          <p>
+            <strong>How these are measured.</strong> A day counts as played when you save at least
+            one game for that challenge date. Points add up every game you submit, ranked by total
+            points.
+          </p>
+          <ul>
+            <li>
+              <strong>Avg / day:</strong> total points divided by the calendar days from your first
+              submission to today. Days before a player's first submission never count against them;
+              days you skipped after starting count as zero.
+            </li>
+            <li>
+              <strong>Avg / game:</strong> total points divided by games submitted. Days you did not
+              play are left out, not counted as zeros.
+            </li>
+            <li>
+              <strong>Streak:</strong> consecutive days played. Today's challenge is still open
+              worldwide, so not having played it yet keeps your streak alive; it resets after a full
+              day is missed. Best streak is your longest run ever.
+            </li>
+            <li>
+              <strong>Best day:</strong> your highest combined score on a single day.
+            </li>
+          </ul>
+        </div>
+      </section>
     </>
   );
 }

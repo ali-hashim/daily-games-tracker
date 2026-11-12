@@ -976,7 +976,7 @@ describe("leaderboard layout contracts", () => {
 
   it("removes the all-time top stats strip while preserving the page selectors", () => {
     const allTimePageSource = pageSource.slice(
-      pageSource.indexOf("export function AllTimeLeaderboardPage"),
+      pageSource.indexOf("export function MultiDayLeaderboardPage"),
     );
     const dailyPageSource = pageSource.slice(
       pageSource.indexOf("export function DailyLeaderboardPage"),
@@ -997,7 +997,7 @@ describe("leaderboard layout contracts", () => {
   it("transposes all-time history so active players are rows and visible dates are columns", () => {
     const allTimeGameTableSource = pageSource.slice(
       pageSource.indexOf("function AllTimeGameTable"),
-      pageSource.indexOf("export function AllTimeLeaderboardPage"),
+      pageSource.indexOf("export function MultiDayLeaderboardPage"),
     );
 
     expect(allTimeGameTableSource).toMatch(
@@ -1016,7 +1016,7 @@ describe("leaderboard layout contracts", () => {
 
   it("measures five date columns with ResizeObserver and keeps a four-column fallback", () => {
     const allTimePageSource = pageSource.slice(
-      pageSource.indexOf("export function AllTimeLeaderboardPage"),
+      pageSource.indexOf("export function MultiDayLeaderboardPage"),
     );
 
     expect(allTimePageSource).toMatch(/useRef<HTMLDivElement>\(null\)/);
@@ -1032,10 +1032,10 @@ describe("leaderboard layout contracts", () => {
   it("renders one shared date-window control and passes its dates to both tables", () => {
     const allTimeGameTableSource = pageSource.slice(
       pageSource.indexOf("function AllTimeGameTable"),
-      pageSource.indexOf("export function AllTimeLeaderboardPage"),
+      pageSource.indexOf("export function MultiDayLeaderboardPage"),
     );
     const allTimePageSource = pageSource.slice(
-      pageSource.indexOf("export function AllTimeLeaderboardPage"),
+      pageSource.indexOf("export function MultiDayLeaderboardPage"),
     );
 
     expect(allTimePageSource).toMatch(
@@ -1055,7 +1055,7 @@ describe("leaderboard layout contracts", () => {
 
   it("uses the daily date-strip treatment for the shared all-time selector", () => {
     const allTimePageSource = pageSource.slice(
-      pageSource.indexOf("export function AllTimeLeaderboardPage"),
+      pageSource.indexOf("export function MultiDayLeaderboardPage"),
     );
 
     expect(allTimePageSource).toMatch(
@@ -1079,7 +1079,7 @@ describe("leaderboard layout contracts", () => {
 
   it("allows only the all-time date range label to wrap inside the shared strip", () => {
     const allTimePageSource = pageSource.slice(
-      pageSource.indexOf("export function AllTimeLeaderboardPage"),
+      pageSource.indexOf("export function MultiDayLeaderboardPage"),
     );
 
     expect(allTimePageSource).toMatch(
@@ -1103,7 +1103,7 @@ describe("leaderboard layout contracts", () => {
     );
     const allTimeGameTableSource = pageSource.slice(
       pageSource.indexOf("function AllTimeGameTable"),
-      pageSource.indexOf("export function AllTimeLeaderboardPage"),
+      pageSource.indexOf("export function MultiDayLeaderboardPage"),
     );
 
     expect(allTimePlayerHeadingSource).toMatch(
@@ -1369,5 +1369,138 @@ describe("leaderboard layout contracts", () => {
     expect(popoverPanel).not.toMatch(/width:\s*max-content;/);
     expect(popoverPanel).not.toMatch(/min-width:/);
     expect(styles).not.toMatch(/\.daily-table[^{}]*daily-info-popover/);
+  });
+});
+
+interface StatsPageModule {
+  LeaderboardViewSwitch?: ElementType;
+  MultiDayLeaderboardPage?: ElementType;
+  AllTimeLeaderboardPage?: ElementType;
+  StatsBoardPage?: ElementType;
+  getDailyView?: (search: string) => "single" | "multi";
+}
+
+describe("single/multiple day view switch and stats board", () => {
+  const mod = leaderboardPageModule as unknown as StatsPageModule;
+
+  it("selects the multiple-day view only for view=multi", () => {
+    expect(mod.getDailyView?.("?view=multi")).toBe("multi");
+    expect(mod.getDailyView?.("?view=single")).toBe("single");
+    expect(mod.getDailyView?.("?view=bogus")).toBe("single");
+    expect(mod.getDailyView?.("")).toBe("single");
+  });
+
+  it("renders the segmented control as stable links with the active view marked", () => {
+    const single = renderStatic(mod.LeaderboardViewSwitch, { view: "single" });
+    const multi = renderStatic(mod.LeaderboardViewSwitch, { view: "multi" });
+    for (const markup of [single, multi]) {
+      expect(markup).toContain('href="/daily"');
+      expect(markup).toContain('href="/daily?view=multi"');
+      expect(markup).toContain("Single Day");
+      expect(markup).toContain("Multiple Days");
+    }
+    expect(single).toMatch(/aria-current="page"[^>]*>Single Day|Single Day<\/a>/);
+    expect(single.match(/aria-current="page"/g)).toHaveLength(1);
+    expect(multi.match(/aria-current="page"/g)).toHaveLength(1);
+    expect(multi.indexOf('aria-current="page"')).toBeGreaterThan(multi.indexOf("Single Day"));
+  });
+
+  it("retitles the former all-time page as the Multiple Day Leaderboard", async () => {
+    const page = mod.MultiDayLeaderboardPage;
+    expect(page).toBeTypeOf("function");
+    expect(mod.AllTimeLeaderboardPage).toBe(page);
+    const fetchState = installAllTimeFetch();
+    const { container, root } = await renderInteractive(createElement(page as ElementType));
+    try {
+      await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+      expect(container.textContent).toContain("Multiple Day Leaderboard");
+      expect(container.textContent).not.toContain("All-time");
+      expect(fetchState.requests).toEqual(["/api/leaderboards/all-time"]);
+    } finally {
+      await act(async () => root.unmount());
+      fetchState.restore();
+    }
+  });
+
+  it("renders the stats board from the stats endpoint with its definitions", async () => {
+    const original = globalThis.fetch;
+    const requests: string[] = [];
+    globalThis.fetch = (async (input: unknown) => {
+      requests.push(String(input));
+      return {
+        headers: { get: () => "application/json" },
+        ok: true,
+        json: async () => ({
+          status: "ok",
+          as_of_date: "2026-10-24",
+          players: [
+            {
+              id: "ada",
+              display_name: "Ada",
+              rank: 1,
+              total_points: 1234,
+              average_per_day: 411.33,
+              average_per_game: 617,
+              current_streak: 3,
+              longest_streak: 5,
+              days_played: 3,
+              games_played: 2,
+              first_day: "2026-10-22",
+              last_day: "2026-10-24",
+              best_day: { date: "2026-10-24", points: 900 },
+            },
+            {
+              id: "bo",
+              display_name: "Bo",
+              rank: null,
+              total_points: 0,
+              average_per_day: null,
+              average_per_game: null,
+              current_streak: 0,
+              longest_streak: 0,
+              days_played: 0,
+              games_played: 0,
+              first_day: null,
+              last_day: null,
+              best_day: null,
+            },
+          ],
+        }),
+      } as unknown as Response;
+    }) as typeof fetch;
+    const { container, root } = await renderInteractive(
+      createElement(mod.StatsBoardPage as ElementType),
+    );
+    try {
+      await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+      const text = container.textContent;
+      expect(requests).toEqual(["/api/leaderboards/stats"]);
+      for (const heading of [
+        "Points",
+        "Avg / day",
+        "Avg / game",
+        "Streak",
+        "Best streak",
+        "Days played",
+        "Best day",
+      ])
+        expect(text).toContain(heading);
+      expect(text).toContain("Ada");
+      expect(text).toContain("1,234");
+      expect(text).toContain("411.3");
+      expect(text).toContain("Days before a player's first submission never count against them");
+      expect(text).toContain("Oct 24");
+    } finally {
+      await act(async () => root.unmount());
+      globalThis.fetch = original;
+    }
   });
 });

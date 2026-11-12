@@ -20,7 +20,9 @@ import type {
   DailyPlayerReadModel,
   DailyRoundReadModel,
   LeaderboardMovement,
+  StatsBoardReadModel,
 } from "../../shared/leaderboard";
+import { computePlayerStats, rankStats, type StatsScoreRow } from "../../shared/stats";
 import type { GameKey } from "../../shared/types";
 import { ApiError } from "./http";
 import type { AppEnv } from "./runtime";
@@ -434,4 +436,42 @@ export async function readAllTimeLeaderboard(
   }
 
   return { status: "ok", as_of_date: effectiveAsOfDate, games: resultGames };
+}
+
+/** Cross-game per-player stats board; public score-only data, no round details. */
+export async function readStatsBoard(
+  env: AppEnv,
+  asOfDate: string | undefined = undefined,
+  now = new Date(),
+): Promise<StatsBoardReadModel> {
+  const effectiveAsOfDate = asOfDate ?? latestWorldwideDay(now);
+  assertCalendarDay(effectiveAsOfDate);
+  const [players, scoreRows] = await Promise.all([
+    activePlayers(env),
+    env.DB.prepare(
+      `SELECT s.player_id, d.game_date, s.final_score
+       FROM submissions s
+       JOIN players p ON p.id = s.player_id AND p.active = 1
+       JOIN games g ON g.id = s.game_id AND g.active = 1 AND g.key IN ('krillion', 'maptap')
+       JOIN game_days d ON d.id = s.game_day_id AND d.game_id = s.game_id
+       WHERE d.game_date <= ?
+       ORDER BY d.game_date, s.player_id`,
+    )
+      .bind(effectiveAsOfDate)
+      .all<StatsScoreRow>(),
+  ]);
+  const stats = computePlayerStats(
+    scoreRows.results,
+    effectiveAsOfDate,
+    players.map((player) => player.id),
+  );
+  const names = Object.fromEntries(players.map((player) => [player.id, player.display_name]));
+  return {
+    status: "ok",
+    as_of_date: effectiveAsOfDate,
+    players: rankStats(Object.values(stats), names).map(({ player_id: _id, ...player }) => {
+      void _id;
+      return player;
+    }),
+  };
 }
