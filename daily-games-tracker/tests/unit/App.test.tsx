@@ -1105,7 +1105,7 @@ describe("Phase 10 user route shell", () => {
   it("serves the public Multiple Days view without the Daily sign-in gate", () => {
     expect(getPage("/daily")).toBe("daily");
     expect(getPage("/all-time")).toBe("all-time");
-    expect(appSource).toContain("getDailyView(window.location.search)");
+    expect(appSource).toContain("getDailyView(window.location.search, window.location.pathname)");
     expect(appSource).toContain("StatsBoardPage");
     expect(appSource).toContain("MultiDayLeaderboardPage");
   });

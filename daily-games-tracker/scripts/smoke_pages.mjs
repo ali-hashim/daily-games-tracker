@@ -99,11 +99,15 @@ try {
   const multiApi = await fetch(`${origin}/api/leaderboards/all-time`);
   assert.equal(multiApi.status, 200);
   assert.equal(multiApi.headers.get("Cache-Control"), "no-store");
-  for (const path of ["/all-time/", "/daily?view=multi"]) {
+  for (const path of ["/all-time/", "/daily/multi"]) {
     const shell = await fetch(`${origin}${path}`);
     assert.equal(shell.status, 200, `${path} must serve the app shell`);
     assert.match(await shell.text(), /Winstitute of Higher Thinking/);
   }
+
+  const legacyMulti = await fetch(`${origin}/daily?view=multi`, { redirect: "manual" });
+  assert.equal(legacyMulti.status, 308);
+  assert.equal(new URL(legacyMulti.headers.get("Location"), origin).pathname, "/daily/multi");
 
   const admin = await fetch(`${origin}/api/admin/players`);
   assert.ok([403, 503].includes(admin.status), "Anonymous admin access must fail closed");

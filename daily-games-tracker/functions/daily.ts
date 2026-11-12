@@ -6,8 +6,14 @@ import { pacificDay } from "../shared/day";
 export const onRequest: PagesFunction<AppEnv, string, AppData> = async ({ request, next }) => {
   const url = new URL(request.url);
   if (url.pathname !== "/daily") return next();
-  // The Multiple Days view has a stable query URL and is rendered by the SPA.
-  if (url.searchParams.get("view") === "multi") return next();
+  // The Multiple Days view lives at /daily/multi. Falling through for the legacy query form
+  // would make Pages rewrite /daily to /index.html and 308 to "/", losing the route.
+  if (url.searchParams.get("view") === "multi") {
+    return new Response(null, {
+      status: 308,
+      headers: { Location: "/daily/multi", "Cache-Control": "no-store" },
+    });
+  }
 
   const date = url.searchParams.has("date") ? parseDailyDate(request.url) : pacificDay();
   return new Response(null, {

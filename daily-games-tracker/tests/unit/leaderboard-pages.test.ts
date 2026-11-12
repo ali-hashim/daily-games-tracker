@@ -1377,7 +1377,7 @@ interface StatsPageModule {
   MultiDayLeaderboardPage?: ElementType;
   AllTimeLeaderboardPage?: ElementType;
   StatsBoardPage?: ElementType;
-  getDailyView?: (search: string) => "single" | "multi";
+  getDailyView?: (search: string, pathname?: string) => "single" | "multi";
 }
 
 describe("single/multiple day view switch and stats board", () => {
@@ -1388,6 +1388,9 @@ describe("single/multiple day view switch and stats board", () => {
     expect(mod.getDailyView?.("?view=single")).toBe("single");
     expect(mod.getDailyView?.("?view=bogus")).toBe("single");
     expect(mod.getDailyView?.("")).toBe("single");
+    expect(mod.getDailyView?.("", "/daily/multi")).toBe("multi");
+    expect(mod.getDailyView?.("", "/daily/multi/")).toBe("multi");
+    expect(mod.getDailyView?.("", "/daily/2026-11-12")).toBe("single");
   });
 
   it("renders the segmented control as stable links with the active view marked", () => {
@@ -1395,7 +1398,7 @@ describe("single/multiple day view switch and stats board", () => {
     const multi = renderStatic(mod.LeaderboardViewSwitch, { view: "multi" });
     for (const markup of [single, multi]) {
       expect(markup).toContain('href="/daily"');
-      expect(markup).toContain('href="/daily?view=multi"');
+      expect(markup).toContain('href="/daily/multi"');
       expect(markup).toContain("Single Day");
       expect(markup).toContain("Multiple Days");
     }

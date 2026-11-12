@@ -254,7 +254,7 @@ Run the relevant Python/Node Shortcut contract and Phase 9 script suites, includ
 - [ ] Deploy using the reviewed production script against the privately configured Pages project and branch. Record deployment identity only in private operational evidence alongside source identity.
 - [ ] Verify TLS/canonical host, root/User/Daily/All-Time, static assets, service-worker updates, legacy login routes, health/actual schema and games configuration.
 - [ ] Verify anonymous and non-admin admin boundaries on the canonical host and any privately configured alternate origins; no bypass through unique deployments or provider aliases.
-- [ ] Verify headers/no-store/request IDs, 404/405, oversized payload, origin/CSRF rejection, unauthenticated stats/Daily and public score-only Multiple Day view (`/daily?view=multi`) and All-Time stats board.
+- [ ] Verify headers/no-store/request IDs, 404/405, oversized payload, origin/CSRF rejection, unauthenticated stats/Daily and public score-only Multiple Day view (`/daily/multi`) and All-Time stats board.
 - [ ] Prove preview still uses its privately configured preview D1 binding and intended origin/link; production uses its separate private binding. Use harmless authorized synthetic markers or private configuration/database identity evidence, never cross-environment real writes.
 - [ ] Verify preview-issued device/session/invitation state cannot authenticate to production; do not copy secrets to make it work.
 - [ ] Complete the terms-compatibility disposition.

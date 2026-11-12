@@ -507,14 +507,15 @@ export function DailyGameTable({ game, date }: { game: DailyGame; date: string }
 
 export type DailyView = "single" | "multi";
 
-export function getDailyView(search: string): DailyView {
+export function getDailyView(search: string, pathname = "/daily"): DailyView {
+  if (pathname === "/daily/multi" || pathname === "/daily/multi/") return "multi";
   return new URLSearchParams(search).get("view") === "multi" ? "multi" : "single";
 }
 
 export function LeaderboardViewSwitch({ view }: { view: DailyView }) {
   const options = [
     { id: "single", label: "Single Day", href: "/daily" },
-    { id: "multi", label: "Multiple Days", href: "/daily?view=multi" },
+    { id: "multi", label: "Multiple Days", href: "/daily/multi" },
   ] as const;
   return (
     <nav className="view-switch" aria-label="Leaderboard view">

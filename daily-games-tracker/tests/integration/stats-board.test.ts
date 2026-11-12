@@ -167,15 +167,16 @@ describe("stats board", () => {
 });
 
 describe("multi-day browser route", () => {
-  it("delegates /daily?view=multi to the SPA instead of redirecting to a date", async () => {
-    const shell = new Response("shell");
+  it("redirects legacy /daily?view=multi to /daily/multi, which Pages serves as the SPA shell", async () => {
+    // Falling through to the static /daily rewrite makes Pages 308 to "/", losing the route.
     const response = await dailyPage({
       request: new Request("https://wht.test/daily?view=multi"),
-      next: async () => shell,
+      next: async () => new Response("shell"),
       env,
       data: {},
     } as never);
-    expect(response).toBe(shell);
+    expect(response.status).toBe(308);
+    expect(response.headers.get("Location")).toBe("/daily/multi");
   });
 
   it("still redirects plain /daily to a dated page", async () => {

@@ -302,14 +302,16 @@ export default function App() {
         </header>
         <main>
           {page === "home" && <PlayHelpPage games={games} />}
-          {page === "daily" && getDailyView(window.location.search) === "multi" && (
-            <MultiDayLeaderboardPage />
-          )}
-          {page === "daily" && getDailyView(window.location.search) !== "multi" && (
-            <DeviceLogin redirectWhenSignedOut dailyReturnDate={health?.gameDay}>
-              {() => <DailyLeaderboardPage currentDay={health?.gameDay} />}
-            </DeviceLogin>
-          )}
+          {page === "daily" &&
+            getDailyView(window.location.search, window.location.pathname) === "multi" && (
+              <MultiDayLeaderboardPage />
+            )}
+          {page === "daily" &&
+            getDailyView(window.location.search, window.location.pathname) !== "multi" && (
+              <DeviceLogin redirectWhenSignedOut dailyReturnDate={health?.gameDay}>
+                {() => <DailyLeaderboardPage currentDay={health?.gameDay} />}
+              </DeviceLogin>
+            )}
           {page === "user" && <DeviceLogin>{(auth) => <UserPage {...auth} />}</DeviceLogin>}
           {page === "all-time" && <StatsBoardPage />}
           {page === "admin" && <AdminPage />}
