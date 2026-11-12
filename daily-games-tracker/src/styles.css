@@ -1515,13 +1515,65 @@ h1 {
   background: #d2f5ad;
   color: #14261b;
 }
+/* Same fixed, no-horizontal-scroll layout as the multi-day table: fits a 393px iPhone. */
+.stats-board + .stats-board {
+  margin-top: 16px;
+}
+.stats-board-scroll {
+  max-height: none;
+  overflow-x: visible;
+  overflow-y: visible;
+  padding: 0 17px 17px;
+  touch-action: pan-y;
+}
+.stats-table {
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+}
 .stats-table th,
 .stats-table td {
+  min-width: 0;
+  padding: 8px 3px;
+  overflow-wrap: normal;
   white-space: nowrap;
-  text-align: right;
 }
-.stats-table th:first-child {
+.stats-table td {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+.stats-table thead th {
+  height: auto;
+  min-height: 0;
+  padding: 6px 2px;
+  color: #b8cdbc;
+  font-size: 9px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  white-space: normal;
+}
+.stats-table .player-heading-column,
+.stats-table .player-row-heading {
+  width: 28%;
+  min-width: 0;
   text-align: left;
+}
+.stats-table .player-row-heading .player-rank {
+  display: block;
+  font-size: 10px;
+}
+.stats-player-name {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+.stats-best-date {
+  display: block;
+  color: #879e8e;
+  font-size: 9px;
 }
 .stats-help ul {
   margin: 8px 0 0;

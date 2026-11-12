@@ -146,6 +146,46 @@ describe("stats board", () => {
     expect(JSON.stringify(board)).not.toMatch(/SECRET_|prompt|answer|gone/i);
   });
 
+  it("adds a per-game board with the same stats, each computed only from that game", async () => {
+    await addPlayer("alex", "Alex");
+    await addPlayer("sam", "Sam");
+    await save("alex", "krillion", "2026-10-21", 100, [100, 0, 0, 0, 0, 0, 0], "97");
+    await save("alex", "maptap", "2026-10-21", 500, [100, 100, 100, 100, 100]);
+    await save("alex", "maptap", "2026-10-23", 300, [60, 60, 60, 60, 60]);
+    await save("sam", "maptap", "2026-10-23", 900, [100, 100, 100, 100, 100]);
+
+    const board = await readStatsBoard(env, "2026-10-23");
+    expect(board.games.map((game) => [game.key, game.display_name, game.icon])).toEqual([
+      ["krillion", "Krillion", "🦐"],
+      ["maptap", "MapTap", "🌎"],
+    ]);
+    const [krillion, maptap] = board.games;
+    expect(krillion.players.map((p) => [p.display_name, p.rank, p.total_points])).toEqual([
+      ["Alex", 1, 100],
+      ["Sam", null, 0],
+    ]);
+    // Krillion first played Oct 21; Oct 22 (closed) is a missed day for avg/day only.
+    expect(krillion.players[0]).toMatchObject({
+      days_played: 1,
+      games_played: 1,
+      average_per_day: 50,
+      average_per_game: 100,
+      best_day: { date: "2026-10-21", points: 100 },
+    });
+    expect(maptap.players.map((p) => [p.display_name, p.rank, p.total_points])).toEqual([
+      ["Sam", 1, 900],
+      ["Alex", 2, 800],
+    ]);
+    expect(maptap.players.find((p) => p.id === "alex")).toMatchObject({
+      days_played: 2,
+      average_per_day: 266.67,
+      average_per_game: 400,
+      best_day: { date: "2026-10-21", points: 500 },
+    });
+    // Sam's first MapTap day is Oct 23, so earlier days do not dilute the average.
+    expect(maptap.players.find((p) => p.id === "sam")).toMatchObject({ average_per_day: 900 });
+  });
+
   it("defaults to the latest worldwide day", async () => {
     await addPlayer("alex", "Alex");
     await save("alex", "maptap", "2026-10-24", 5, [1, 1, 1, 1, 1]);

@@ -439,7 +439,7 @@ export async function readAllTimeLeaderboard(
   return { status: "ok", as_of_date: effectiveAsOfDate, games: resultGames };
 }
 
-/** Cross-game per-player stats board; public score-only data, no round details. */
+/** Per-player stats, combined and per game; public score-only data, no round details. */
 export async function readStatsBoard(
   env: AppEnv,
   asOfDate: string | undefined = undefined,
@@ -447,10 +447,11 @@ export async function readStatsBoard(
 ): Promise<StatsBoardReadModel> {
   const effectiveAsOfDate = asOfDate ?? latestWorldwideDay(now);
   assertCalendarDay(effectiveAsOfDate);
-  const [players, scoreRows] = await Promise.all([
+  const [games, players, scoreRows] = await Promise.all([
+    activeGames(env),
     activePlayers(env),
     env.DB.prepare(
-      `SELECT s.player_id, d.game_date, s.final_score
+      `SELECT s.player_id, g.key AS game_key, d.game_date, s.final_score
        FROM submissions s
        JOIN players p ON p.id = s.player_id AND p.active = 1
        JOIN games g ON g.id = s.game_id AND g.active = 1 AND g.key IN ('krillion', 'maptap')
@@ -459,21 +460,28 @@ export async function readStatsBoard(
        ORDER BY d.game_date, s.player_id`,
     )
       .bind(effectiveAsOfDate)
-      .all<StatsScoreRow>(),
+      .all<StatsScoreRow & { game_key: GameKey }>(),
   ]);
-  const stats = computePlayerStats(
-    scoreRows.results,
-    effectiveAsOfDate,
-    players.map((player) => player.id),
-    latestClosedWorldwideDay(now),
-  );
+  const playerIds = players.map((player) => player.id);
   const names = Object.fromEntries(players.map((player) => [player.id, player.display_name]));
+  const lastClosedDay = latestClosedWorldwideDay(now);
+  const board = (rows: readonly StatsScoreRow[]) =>
+    rankStats(
+      Object.values(computePlayerStats(rows, effectiveAsOfDate, playerIds, lastClosedDay)),
+      names,
+    ).map(({ player_id: _id, ...player }) => {
+      void _id;
+      return player;
+    });
   return {
     status: "ok",
     as_of_date: effectiveAsOfDate,
-    players: rankStats(Object.values(stats), names).map(({ player_id: _id, ...player }) => {
-      void _id;
-      return player;
-    }),
+    players: board(scoreRows.results),
+    games: games.map((game) => ({
+      key: game.key,
+      display_name: game.display_name,
+      icon: GAMES[game.key].icon,
+      players: board(scoreRows.results.filter((row) => row.game_key === game.key)),
+    })),
   };
 }

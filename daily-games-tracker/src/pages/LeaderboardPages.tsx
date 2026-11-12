@@ -962,10 +962,18 @@ interface StatsPlayer {
   best_day: { date: string; points: number } | null;
 }
 
+interface StatsGame {
+  key: string;
+  display_name: string;
+  icon: string;
+  players: StatsPlayer[];
+}
+
 interface StatsResponse {
   status: "ok";
   as_of_date: string;
   players: StatsPlayer[];
+  games?: StatsGame[];
 }
 
 function compactDateLabel(iso: string): string {
@@ -976,8 +984,112 @@ function compactDateLabel(iso: string): string {
   }).format(new Date(`${iso}T12:00:00Z`));
 }
 
+/** Averages: whole numbers from 100 up (they are large and narrow columns), one decimal below. */
 function formatStat(value: number | null): string {
-  return value === null ? "—" : value.toFixed(1).replace(/\.0$/, "");
+  if (value === null) return "—";
+  if (Math.abs(value) >= 100) return Math.round(value).toLocaleString("en-US");
+  return value.toFixed(1).replace(/\.0$/, "");
+}
+
+function StatsTable({
+  id,
+  title,
+  subtitle,
+  icon,
+  gameKey,
+  players,
+}: {
+  id: string;
+  title: string;
+  subtitle: string;
+  icon?: string;
+  gameKey?: string;
+  players: StatsPlayer[];
+}) {
+  return (
+    <section className="leaderboard-card live-leaderboard stats-board" aria-labelledby={id}>
+      <div className="leaderboard-card-heading">
+        {icon && gameKey && (
+          <div className={`game-badge ${gameKey}`} aria-hidden="true">
+            {icon}
+          </div>
+        )}
+        <div className="flex-1">
+          <h2 id={id} className="game-title">
+            {title}
+          </h2>
+          <p className="subtle">{subtitle}</p>
+        </div>
+        <span className="pill public">Public</span>
+      </div>
+      <div className="leaderboard-scroll stats-board-scroll" aria-label={`${title} stats table`}>
+        <table className="leaderboard-table stats-table">
+          <caption className="sr-only">{title} player stats</caption>
+          <thead>
+            <tr>
+              <th className="sticky-column player-column player-heading-column" scope="col">
+                Player
+              </th>
+              <th scope="col">Points</th>
+              <th scope="col">
+                Avg
+                <wbr />
+                /day
+              </th>
+              <th scope="col">
+                Avg
+                <wbr />
+                /game
+              </th>
+              <th scope="col">Days</th>
+              <th scope="col">
+                Best
+                <wbr /> day
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {players.length ? (
+              players.map((player) => (
+                <tr key={player.id}>
+                  <th className="sticky-column player-column player-row-heading" scope="row">
+                    <span className="player-rank">
+                      {player.rank === null ? "—" : `#${player.rank}`}
+                    </span>
+                    <strong className="stats-player-name" title={player.display_name}>
+                      {player.display_name}
+                    </strong>
+                  </th>
+                  <td>{formatScore(player.days_played ? player.total_points : null)}</td>
+                  <td>{formatStat(player.average_per_day)}</td>
+                  <td>{formatStat(player.average_per_game)}</td>
+                  <td>{player.days_played || "—"}</td>
+                  <td>
+                    {player.best_day ? (
+                      <>
+                        {formatScore(player.best_day.points)}
+                        <small className="stats-best-date">
+                          {compactDateLabel(player.best_day.date)}
+                        </small>
+                      </>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td className="cell-muted" colSpan={6}>
+                  No active players or results yet
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
 }
 
 export function StatsBoardPage() {
@@ -1000,6 +1112,7 @@ export function StatsBoardPage() {
 
   if (error) return <ErrorNotice error={error} />;
   if (!result) return <LoadingState label="Loading all-time stats…" />;
+  const through = `through ${compactDateLabel(result.as_of_date)}`;
 
   return (
     <>
@@ -1010,103 +1123,49 @@ export function StatsBoardPage() {
         All-Time <span className="accent-italic">Stats</span>
       </h1>
       <p className="page-intro">Every game counts, across every game you play.</p>
-      <section className="leaderboard-card live-leaderboard" aria-labelledby="stats-board">
-        <div className="leaderboard-card-heading">
-          <div className="flex-1">
-            <h2 id="stats-board" className="game-title">
-              Player stats
-            </h2>
-            <p className="subtle">
-              All games combined · through {compactDateLabel(result.as_of_date)}
-            </p>
-          </div>
-          <span className="pill public">Public</span>
-        </div>
-        <div
-          className="leaderboard-scroll stats-board-scroll"
-          tabIndex={0}
-          aria-label="All-time player stats table"
-        >
-          <table className="leaderboard-table stats-table">
-            <caption className="sr-only">All-time player stats</caption>
-            <thead>
-              <tr>
-                <th className="sticky-column player-column player-heading-column" scope="col">
-                  Player
-                </th>
-                <th scope="col">Points</th>
-                <th scope="col">Avg / day</th>
-                <th scope="col">Avg / game</th>
-                <th scope="col">Streak</th>
-                <th scope="col">Best streak</th>
-                <th scope="col">Days played</th>
-                <th scope="col">Best day</th>
-              </tr>
-            </thead>
-            <tbody>
-              {result.players.length ? (
-                result.players.map((player) => (
-                  <tr key={player.id}>
-                    <th className="sticky-column player-column player-row-heading" scope="row">
-                      <div className="player-heading">
-                        <span className="player-rank">
-                          {player.rank === null ? "—" : `#${player.rank}`}
-                        </span>
-                        <strong>{player.display_name}</strong>
-                      </div>
-                    </th>
-                    <td>{formatScore(player.days_played ? player.total_points : null)}</td>
-                    <td>{formatStat(player.average_per_day)}</td>
-                    <td>{formatStat(player.average_per_game)}</td>
-                    <td>{player.days_played ? player.current_streak : "—"}</td>
-                    <td>{player.days_played ? player.longest_streak : "—"}</td>
-                    <td>{player.days_played || "—"}</td>
-                    <td>
-                      {player.best_day
-                        ? `${formatScore(player.best_day.points)} · ${compactDateLabel(player.best_day.date)}`
-                        : "—"}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td className="cell-muted" colSpan={8}>
-                    No active players or results yet
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-        <div className="table-note stats-help">
-          <p>
-            <strong>How these are measured.</strong> A day counts as played when you save at least
-            one game for that challenge date. Points add up every game you submit, ranked by total
-            points.
-          </p>
-          <ul>
-            <li>
-              <strong>Avg / day:</strong> total points divided by the calendar days from your first
-              submission to the latest day that is closed for submissions. Days before a player's
-              first submission never count against them; days you skipped after starting count as
-              zero.
-            </li>
-            <li>
-              <strong>Avg / game:</strong> total points divided by games submitted. Days you did not
-              play are left out, not counted as zeros.
-            </li>
-            <li>
-              <strong>Streak:</strong> consecutive days played. A day that can still be submitted
-              somewhere in the world, including today, never breaks your streak or counts as a zero;
-              a missed day counts once its submission window has closed. Best streak is your longest
-              run ever.
-            </li>
-            <li>
-              <strong>Best day:</strong> your highest combined score on a single day.
-            </li>
-          </ul>
-        </div>
-      </section>
+      <StatsTable
+        id="stats-board"
+        title="All games"
+        subtitle={`Krillion and MapTap combined · ${through}`}
+        players={result.players}
+      />
+      {(result.games ?? []).map((game) => (
+        <StatsTable
+          key={game.key}
+          id={`stats-board-${game.key}`}
+          title={game.display_name}
+          subtitle={`${game.display_name} only · ${through}`}
+          icon={game.icon}
+          gameKey={game.key}
+          players={game.players}
+        />
+      ))}
+      <div className="table-note stats-help">
+        <p>
+          <strong>How these are measured.</strong> A day counts as played when you save at least one
+          game for that challenge date. Points add up every game you submit, ranked by total points.
+          Each game&apos;s table uses only that game&apos;s results.
+        </p>
+        <ul>
+          <li>
+            <strong>Avg/day:</strong> total points divided by the calendar days from your first
+            submission to the latest day that is closed for submissions. Days before a player&apos;s
+            first submission never count against them; days you skipped after starting count as
+            zero. A day that can still be submitted somewhere in the world, including today, never
+            counts as a zero.
+          </li>
+          <li>
+            <strong>Avg/game:</strong> total points divided by games submitted. Days you did not
+            play are left out, not counted as zeros.
+          </li>
+          <li>
+            <strong>Days:</strong> days played.
+          </li>
+          <li>
+            <strong>Best day:</strong> your highest score on a single day, with its date.
+          </li>
+        </ul>
+      </div>
     </>
   );
 }

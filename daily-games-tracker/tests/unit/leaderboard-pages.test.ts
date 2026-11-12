@@ -1429,9 +1429,39 @@ describe("single/multiple day view switch and stats board", () => {
     }
   });
 
-  it("renders the stats board from the stats endpoint with its definitions", async () => {
+  it("renders the combined and per-game stats boards to fit a phone, without streak columns", async () => {
     const original = globalThis.fetch;
     const requests: string[] = [];
+    const ada = {
+      id: "ada",
+      display_name: "Ada",
+      rank: 1,
+      total_points: 1234,
+      average_per_day: 411.33,
+      average_per_game: 617,
+      current_streak: 3,
+      longest_streak: 5,
+      days_played: 3,
+      games_played: 2,
+      first_day: "2026-10-22",
+      last_day: "2026-10-24",
+      best_day: { date: "2026-10-24", points: 900 },
+    };
+    const bo = {
+      id: "bo",
+      display_name: "Bo",
+      rank: null,
+      total_points: 0,
+      average_per_day: null,
+      average_per_game: null,
+      current_streak: 0,
+      longest_streak: 0,
+      days_played: 0,
+      games_played: 0,
+      first_day: null,
+      last_day: null,
+      best_day: null,
+    };
     globalThis.fetch = (async (input: unknown) => {
       requests.push(String(input));
       return {
@@ -1440,36 +1470,22 @@ describe("single/multiple day view switch and stats board", () => {
         json: async () => ({
           status: "ok",
           as_of_date: "2026-10-24",
-          players: [
+          players: [ada, bo],
+          games: [
             {
-              id: "ada",
-              display_name: "Ada",
-              rank: 1,
-              total_points: 1234,
-              average_per_day: 411.33,
-              average_per_game: 617,
-              current_streak: 3,
-              longest_streak: 5,
-              days_played: 3,
-              games_played: 2,
-              first_day: "2026-10-22",
-              last_day: "2026-10-24",
-              best_day: { date: "2026-10-24", points: 900 },
+              key: "krillion",
+              display_name: "Krillion",
+              icon: "🦐",
+              players: [
+                { ...ada, total_points: 321, best_day: { date: "2026-10-23", points: 300 } },
+                bo,
+              ],
             },
             {
-              id: "bo",
-              display_name: "Bo",
-              rank: null,
-              total_points: 0,
-              average_per_day: null,
-              average_per_game: null,
-              current_streak: 0,
-              longest_streak: 0,
-              days_played: 0,
-              games_played: 0,
-              first_day: null,
-              last_day: null,
-              best_day: null,
+              key: "maptap",
+              display_name: "MapTap",
+              icon: "🌎",
+              players: [{ ...ada, total_points: 913 }, bo],
             },
           ],
         }),
@@ -1484,26 +1500,38 @@ describe("single/multiple day view switch and stats board", () => {
         await Promise.resolve();
         await Promise.resolve();
       });
-      const text = container.textContent;
+      const text = container.textContent ?? "";
       expect(requests).toEqual(["/api/leaderboards/stats"]);
-      for (const heading of [
-        "Points",
-        "Avg / day",
-        "Avg / game",
-        "Streak",
-        "Best streak",
-        "Days played",
-        "Best day",
-      ])
-        expect(text).toContain(heading);
-      expect(text).toContain("Ada");
+      const tables = [...container.querySelectorAll("table.stats-table")];
+      expect(tables).toHaveLength(3);
+      expect([...container.querySelectorAll("h2")].map((h) => h.textContent)).toEqual([
+        "All games",
+        "Krillion",
+        "MapTap",
+      ]);
+      for (const table of tables) {
+        const headings = [...(table.querySelector("thead")?.querySelectorAll("th") ?? [])].map(
+          (th) => th.textContent,
+        );
+        expect(headings).toEqual(["Player", "Points", "Avg/day", "Avg/game", "Days", "Best day"]);
+      }
+      expect(text).not.toMatch(/streak/i);
       expect(text).toContain("1,234");
-      expect(text).toContain("411.3");
+      expect(text).toContain("321");
+      expect(text).toContain("913");
+      expect(text).toContain("411");
+      expect(text).not.toContain("411.3");
       expect(text).toContain("Days before a player's first submission never count against them");
       expect(text).toContain("Oct 24");
     } finally {
       await act(async () => root.unmount());
       globalThis.fetch = original;
     }
+  });
+
+  it("lays the stats table out like the multi-day table so it fits a phone width", () => {
+    const css = readFileSync(new URL("../../src/styles.css", import.meta.url), "utf8");
+    expect(css).toMatch(/\.stats-table \{[^}]*width: 100%;[^}]*table-layout: fixed;/);
+    expect(css).toMatch(/\.stats-board-scroll \{[^}]*overflow-x: visible;/);
   });
 });

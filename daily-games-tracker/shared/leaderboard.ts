@@ -100,8 +100,18 @@ export interface StatsBoardPlayerReadModel {
   best_day: { date: string; points: number } | null;
 }
 
+export interface StatsBoardGameReadModel {
+  key: GameKey;
+  display_name: string;
+  icon: string;
+  players: StatsBoardPlayerReadModel[];
+}
+
 export interface StatsBoardReadModel {
   status: "ok";
   as_of_date: string;
+  /** All active games combined. */
   players: StatsBoardPlayerReadModel[];
+  /** The same stats computed separately for each active game. */
+  games: StatsBoardGameReadModel[];
 }
