@@ -79,6 +79,14 @@ export function latestWorldwideDay(now = new Date()): string {
   return now >= new Date(`${utcDay}T10:00:00.000Z`) ? nextCalendarDay(utcDay) : utcDay;
 }
 
+/** Latest challenge date whose worldwide window (ending 12:00Z the next UTC day) has closed. */
+export function latestClosedWorldwideDay(now = new Date()): string {
+  if (Number.isNaN(now.getTime())) throw new RangeError("Invalid current time");
+  const utcDay = formatCalendarDay(now);
+  const yesterday = previousCalendarDay(utcDay);
+  return now >= new Date(`${utcDay}T12:00:00.000Z`) ? yesterday : previousCalendarDay(yesterday);
+}
+
 export function resolveOpenCalendarDate(month: number, day: number, now: Date): string | null {
   if (!isValidMonthDay(month, day) || Number.isNaN(now.getTime())) return null;
   const currentYear = now.getUTCFullYear();

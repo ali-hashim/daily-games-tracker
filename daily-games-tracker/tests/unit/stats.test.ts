@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { latestWorldwideDay } from "../../shared/day";
+import { latestClosedWorldwideDay, latestWorldwideDay } from "../../shared/day";
 import { computePlayerStats, rankStats, type StatsScoreRow } from "../../shared/stats";
 
 const row = (player_id: string, game_date: string, final_score: number): StatsScoreRow => ({
@@ -134,15 +134,49 @@ describe("computePlayerStats", () => {
   });
 
   it("uses the worldwide as-of day, which can be a calendar day ahead of Pacific", () => {
-    const asOf = latestWorldwideDay(new Date("2026-11-10T10:00:00.000Z"));
+    const now = new Date("2026-11-10T10:00:00.000Z");
+    const asOf = latestWorldwideDay(now);
     expect(asOf).toBe("2026-11-11");
     const rows = [row("a", "2026-11-09", 1), row("a", "2026-11-10", 1)];
     // 11-11 is already open somewhere but unplayed: streak stays alive
-    expect(computePlayerStats(rows, asOf, ["a"]).a.current_streak).toBe(2);
     expect(
-      computePlayerStats(rows, latestWorldwideDay(new Date("2026-11-12T10:00:00.000Z")), ["a"]).a
+      computePlayerStats(rows, asOf, ["a"], latestClosedWorldwideDay(now)).a.current_streak,
+    ).toBe(2);
+  });
+
+  it("does not charge the Pacific day still being played after the 10:00Z worldwide rollover", () => {
+    // 02:00 PT on Nov 12: worldwide day is Nov 13, Pacific players are on Nov 12, and
+    // Nov 11 remains open in UTC-12 until 12:00Z. Only days whose window closed count.
+    const now = new Date("2026-11-12T10:00:00.000Z");
+    expect(latestWorldwideDay(now)).toBe("2026-11-13");
+    expect(latestClosedWorldwideDay(now)).toBe("2026-11-10");
+    const rows = [row("a", "2026-11-10", 6), row("a", "2026-11-11", 6)];
+    const stats = computePlayerStats(
+      rows,
+      latestWorldwideDay(now),
+      ["a"],
+      latestClosedWorldwideDay(now),
+    ).a;
+    expect(stats.current_streak).toBe(2);
+    expect(stats.average_per_day).toBe(6);
+    // Late in the Pacific evening (06:00Z Nov 13 = 22:00 PT Nov 12) Nov 12 is still open.
+    const late = new Date("2026-11-13T06:00:00.000Z");
+    expect(latestClosedWorldwideDay(late)).toBe("2026-11-11");
+    expect(
+      computePlayerStats(rows, latestWorldwideDay(late), ["a"], latestClosedWorldwideDay(late)).a
         .current_streak,
-    ).toBe(0);
+    ).toBe(2);
+    // Once Nov 12's worldwide window closes (12:00Z Nov 13) the missed day breaks the streak.
+    const closed = new Date("2026-11-13T12:00:00.000Z");
+    expect(latestClosedWorldwideDay(closed)).toBe("2026-11-12");
+    const after = computePlayerStats(
+      rows,
+      latestWorldwideDay(closed),
+      ["a"],
+      latestClosedWorldwideDay(closed),
+    ).a;
+    expect(after.current_streak).toBe(0);
+    expect(after.average_per_day).toBe(4); // 12 points over Nov 10-12
   });
 });
 

@@ -1086,17 +1086,19 @@ export function StatsBoardPage() {
           <ul>
             <li>
               <strong>Avg / day:</strong> total points divided by the calendar days from your first
-              submission to today. Days before a player's first submission never count against them;
-              days you skipped after starting count as zero.
+              submission to the latest day that is closed for submissions. Days before a player's
+              first submission never count against them; days you skipped after starting count as
+              zero.
             </li>
             <li>
               <strong>Avg / game:</strong> total points divided by games submitted. Days you did not
               play are left out, not counted as zeros.
             </li>
             <li>
-              <strong>Streak:</strong> consecutive days played. Today's challenge is still open
-              worldwide, so not having played it yet keeps your streak alive; it resets after a full
-              day is missed. Best streak is your longest run ever.
+              <strong>Streak:</strong> consecutive days played. A day that can still be submitted
+              somewhere in the world, including today, never breaks your streak or counts as a zero;
+              a missed day counts once its submission window has closed. Best streak is your longest
+              run ever.
             </li>
             <li>
               <strong>Best day:</strong> your highest combined score on a single day.

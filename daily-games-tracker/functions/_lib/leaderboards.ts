@@ -1,5 +1,6 @@
 import {
   isWorldwideWindowOpen,
+  latestClosedWorldwideDay,
   latestWorldwideDay,
   pacificDay,
   previousCalendarDay,
@@ -464,6 +465,7 @@ export async function readStatsBoard(
     scoreRows.results,
     effectiveAsOfDate,
     players.map((player) => player.id),
+    latestClosedWorldwideDay(now),
   );
   const names = Object.fromEntries(players.map((player) => [player.id, player.display_name]));
   return {

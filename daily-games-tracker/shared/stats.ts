@@ -11,10 +11,11 @@ import { rankPlayers } from "./rank";
  * - Average per day = total points / calendar days from the player's FIRST
  *   played day through the end of the measured span. Days before the first
  *   submission are never counted. Skipped days after it count as zero points.
- * - The measured span ends on the as-of day (latest worldwide challenge day)
- *   if it was played, otherwise the day before it. The as-of day is still open
- *   somewhere in the world, so leaving it unplayed neither breaks a streak nor
- *   costs a zero day.
+ * - The measured span ends on the latest day whose worldwide submission window
+ *   has closed, or on the player's last played day if that is later. A day
+ *   that can still be submitted somewhere in the world (up to three at once,
+ *   including the Pacific day being played) is never charged as a zero day
+ *   and never breaks a streak.
  * - Streaks are runs of consecutive played dates. The current streak is alive
  *   only if it reaches the end of the measured span; otherwise it is 0.
  */
@@ -55,8 +56,10 @@ export function computePlayerStats(
   rows: readonly StatsScoreRow[],
   asOfDate: string,
   playerIds: readonly string[],
+  lastClosedDay: string = previousCalendarDay(asOfDate),
 ): Record<string, PlayerStats> {
-  const spanEndIfUnplayed = previousCalendarDay(asOfDate);
+  const dayBeforeAsOf = previousCalendarDay(asOfDate);
+  const spanEndIfUnplayed = lastClosedDay < dayBeforeAsOf ? lastClosedDay : dayBeforeAsOf;
   const byPlayer = new Map<string, { games: number; days: Map<string, number> }>();
   for (const id of playerIds) byPlayer.set(id, { games: 0, days: new Map() });
 
@@ -104,7 +107,7 @@ export function computePlayerStats(
 
     const first = dates[0];
     const last = dates[dates.length - 1];
-    const spanEnd = last === asOfDate ? asOfDate : spanEndIfUnplayed;
+    const spanEnd = last > spanEndIfUnplayed ? last : spanEndIfUnplayed;
     const spanDays = Math.max(1, inclusiveDayCount(first, spanEnd));
     result[id] = {
       player_id: id,
