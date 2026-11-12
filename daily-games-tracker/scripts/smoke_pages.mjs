@@ -57,7 +57,7 @@ try {
   const healthJson = await health.json();
   assert.equal(health.status, 200);
   assert.equal(healthJson.status, "ok");
-  assert.equal(healthJson.schemaVersion, 3);
+  assert.equal(healthJson.schemaVersion, 4);
   assert.equal(healthJson.request_id, health.headers.get("X-Request-ID"));
   assert.equal(health.headers.get("Cache-Control"), "no-store");
 
@@ -65,7 +65,7 @@ try {
   const gamesJson = await games.json();
   assert.deepEqual(
     gamesJson.games.map((game) => game.id),
-    ["krillion", "maptap"],
+    ["krillion", "maptap", "farflung"],
   );
   assert.ok(gamesJson.request_id);
 

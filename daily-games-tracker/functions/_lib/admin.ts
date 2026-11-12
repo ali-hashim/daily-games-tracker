@@ -1,7 +1,10 @@
-import { PARSER_VERSIONS } from "../../shared/game-config";
+import { GAME_ORDER, PARSER_VERSIONS } from "../../shared/game-config";
 import type { GameKey } from "../../shared/types";
 import { ApiError } from "./http";
 import type { AppEnv } from "./runtime";
+
+/** Games whose rounds carry a prompt and a player answer (Krillion, Farflung). */
+const hasPrompts = (key: GameKey): boolean => key === "krillion" || key === "farflung";
 
 export const ADMIN_REASON_MAX_LENGTH = 500;
 const ADMIN_TEXT_MAX_LENGTH = 1_000;
@@ -481,7 +484,7 @@ function roundFromRow(row: AdminSubmissionQueryRow): AdminRound {
     raw_score: row.raw_score!,
     original_emoji: row.original_emoji,
   };
-  if (row.game_key === "krillion") round.prompt = row.prompt;
+  if (hasPrompts(row.game_key)) round.prompt = row.prompt;
   return round;
 }
 
@@ -516,7 +519,7 @@ async function findSubmission(env: AppEnv, id: string): Promise<SubmissionRecord
 }
 
 async function findGame(env: AppEnv, key: GameKey): Promise<GameConfig> {
-  if (key !== "krillion" && key !== "maptap") throw invalidResult();
+  if (!(GAME_ORDER as readonly string[]).includes(key)) throw invalidResult();
   const game = await env.DB.prepare(
     "SELECT id, key, round_count, config_json FROM games WHERE id = ? AND active = 1",
   )
@@ -541,9 +544,9 @@ function validateResult(
     throw invalidResult();
   if (!Array.isArray(inputRounds) || inputRounds.length !== game.round_count) throw invalidResult();
   const config = JSON.parse(game.config_json) as GameConfigJson;
-  const allowedScores = game.key === "krillion" ? configuredNumbers(config.allowedScores) : null;
+  const allowedScores = hasPrompts(game.key) ? configuredNumbers(config.allowedScores) : null;
   const weights = game.key === "maptap" ? configuredNumbers(config.weights) : null;
-  if (game.key === "krillion" && !allowedScores) throw invalidResult();
+  if (hasPrompts(game.key) && !allowedScores) throw invalidResult();
   if (game.key === "maptap" && (!weights || weights.length !== game.round_count))
     throw invalidResult();
   const rounds = inputRounds.map((input, index) =>
@@ -595,16 +598,15 @@ function normalizeRound(
   const round = input as unknown as Record<string, unknown>;
   if (!Number.isSafeInteger(round.round_number) || round.round_number !== expectedNumber)
     throw invalidResult();
-  const prompt =
-    game === "krillion"
-      ? optionalText(round.prompt, "prompt")
-      : existing
-        ? existing.prompt
-        : optionalText(round.prompt, "prompt");
+  const prompt = hasPrompts(game)
+    ? optionalText(round.prompt, "prompt")
+    : existing
+      ? existing.prompt
+      : optionalText(round.prompt, "prompt");
   const answer = existing ? existing.answer : optionalText(round.answer, "answer");
   const originalEmoji = optionalText(round.original_emoji, "original_emoji", 64);
   if (game === "maptap" && (prompt !== null || answer !== null)) throw invalidResult();
-  if (game === "krillion" && prompt === null) throw invalidResult();
+  if (hasPrompts(game) && prompt === null) throw invalidResult();
   return {
     id: typeof round.id === "string" ? round.id : "",
     round_number: expectedNumber,
@@ -815,7 +817,7 @@ function toAdminSubmission(record: SubmissionRecord): AdminSubmission {
       round_number,
       raw_score,
       original_emoji,
-      ...(record.game_key === "krillion" ? { prompt } : {}),
+      ...(hasPrompts(record.game_key) ? { prompt } : {}),
     })),
   };
 }

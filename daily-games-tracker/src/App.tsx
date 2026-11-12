@@ -12,7 +12,7 @@ import {
 } from "./pages/LeaderboardPages";
 
 type Page = "home" | "daily" | "all-time" | "admin" | "register" | "user";
-type GameId = "krillion" | "maptap";
+type GameId = "krillion" | "maptap" | "farflung";
 interface Game {
   id: GameId;
   title: string;
@@ -29,6 +29,7 @@ interface Health {
 const suggestedGames: Game[] = [
   { id: "krillion", title: "Krillion", icon: "🦐", rounds: 7, scoringStyle: "emoji_levels" },
   { id: "maptap", title: "MapTap", icon: "🌎", rounds: 5, scoringStyle: "weighted_numbers" },
+  { id: "farflung", title: "Farflung", icon: "🧭", rounds: 5, scoringStyle: "tier_levels" },
 ];
 
 function PacificDate({ iso }: { iso?: string }) {
@@ -160,6 +161,7 @@ function PlayHelpPage({ games }: { games: Game[] }) {
   const gameUrls: Record<GameId, string> = {
     krillion: "https://krillion.io/",
     maptap: "https://www.maptap.gg/",
+    farflung: "https://farflung.game/",
   };
 
   return (
@@ -208,6 +210,10 @@ function PlayHelpPage({ games }: { games: Game[] }) {
         </li>
         <li>
           <strong>MapTap:</strong> in the game, tap Share your score.
+        </li>
+        <li>
+          <strong>Farflung:</strong> finish the expedition in Safari, then tap Safari&apos;s Share
+          button on the completed page.
         </li>
         <li>
           Choose <strong>Upload to WHT</strong>, then submit your score.

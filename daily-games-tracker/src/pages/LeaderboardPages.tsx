@@ -5,11 +5,15 @@ import {
   createAllTimeDateWindow,
   type AllTimeWindowSize,
 } from "../lib/all-time-window";
-import { KRILLION_SCORE_EMOJI } from "../../shared/game-config";
+import {
+  FARFLUNG_TIERS,
+  KRILLION_SCORE_EMOJI,
+  farflungTierForScore,
+} from "../../shared/game-config";
 
 void React;
 
-type GameKey = "krillion" | "maptap";
+type GameKey = "krillion" | "maptap" | "farflung";
 
 interface DailyRound {
   round_number: number;
@@ -205,6 +209,9 @@ function formatAverage(average: number | null): string {
   return average.toFixed(1).replace(/\.0$/, "");
 }
 
+/** Games with per-round prompts and answers shown in tap-to-open popovers. */
+const hasAnswerPopovers = (key: GameKey): boolean => key === "krillion" || key === "farflung";
+
 export function krillionRoundEmoji(rawScore: number, originalEmoji: string | null): string {
   return KRILLION_SCORE_EMOJI[rawScore] ?? originalEmoji ?? "—";
 }
@@ -299,15 +306,15 @@ function dailyCell(
   const round = player.rounds.find((item) => item.round_number === roundNumber);
   if (!round) return <span className="cell-muted">—</span>;
 
-  if (game.key === "krillion") {
-    const emoji = krillionRoundEmoji(round.raw_score, round.original_emoji);
-    const popoverId = `daily-krillion-answer-${player.id}-${roundNumber}`;
+  if (hasAnswerPopovers(game.key)) {
+    const tier = game.key === "farflung" ? farflungTierForScore(round.raw_score) : null;
+    const popoverId = `daily-${game.key}-answer-${player.id}-${roundNumber}`;
     const open = openPopover === popoverId;
     return (
       <button
         type="button"
-        className="round-result krillion-result"
-        aria-label={`${player.display_name} R${roundNumber} score: ${round.raw_score}`}
+        className={`round-result ${game.key}-result`}
+        aria-label={`${player.display_name} R${roundNumber} score: ${round.raw_score}${tier ? ` (${tier.name})` : ""}`}
         aria-expanded={open}
         aria-controls={popoverId}
         aria-describedby={open ? popoverId : undefined}
@@ -315,7 +322,18 @@ function dailyCell(
       >
         <strong>{round.raw_score}</strong>
         <span className="round-meta">
-          <span aria-hidden="true">{emoji}</span>
+          {game.key === "farflung" ? (
+            <span
+              className={`farflung-tier tier-${(tier?.name ?? "unknown").toLowerCase()}`}
+              aria-hidden="true"
+            >
+              {tier?.short ?? "—"}
+            </span>
+          ) : (
+            <span aria-hidden="true">
+              {krillionRoundEmoji(round.raw_score, round.original_emoji)}
+            </span>
+          )}
         </span>
       </button>
     );
@@ -353,6 +371,19 @@ function InfoPopover({ id, label, open, onToggle }: InfoPopoverProps) {
   );
 }
 
+function FarflungTierKey() {
+  return (
+    <p className="table-note farflung-tier-key">
+      {FARFLUNG_TIERS.map((tier) => (
+        <span key={tier.short}>
+          <span className={`farflung-tier tier-${tier.name.toLowerCase()}`}>{tier.short}</span>{" "}
+          {tier.name} {tier.points}
+        </span>
+      ))}
+    </p>
+  );
+}
+
 export function DailyGameTable({ game, date }: { game: DailyGame; date: string }) {
   const [openPopover, setOpenPopover] = useState<string | null>(null);
   const players = game.players ?? [];
@@ -364,7 +395,7 @@ export function DailyGameTable({ game, date }: { game: DailyGame; date: string }
   const togglePopover = (popoverId: string) =>
     setOpenPopover((current) => (current === popoverId ? null : popoverId));
   const roundPopoverPrefix = `daily-${game.key}-round-`;
-  const answerPopoverPrefix = "daily-krillion-answer-";
+  const answerPopoverPrefix = `daily-${game.key}-answer-`;
   const openRoundNumber = openPopover?.startsWith(roundPopoverPrefix)
     ? Number(openPopover.slice(roundPopoverPrefix.length))
     : null;
@@ -373,7 +404,7 @@ export function DailyGameTable({ game, date }: { game: DailyGame; date: string }
         .flatMap((player) => player.rounds.map((round) => ({ player, round })))
         .find(
           ({ player, round }) =>
-            `daily-krillion-answer-${player.id}-${round.round_number}` === openPopover,
+            `${answerPopoverPrefix}${player.id}-${round.round_number}` === openPopover,
         ) ?? null)
     : null;
   const openPopoverContent =
@@ -386,6 +417,9 @@ export function DailyGameTable({ game, date }: { game: DailyGame; date: string }
       <>
         <strong>{`${openAnswer.player.display_name}'s R${openAnswer.round.round_number} Answer:`}</strong>{" "}
         {openAnswer.round.answer ?? "No answer"}
+        {game.key === "farflung" && farflungTierForScore(openAnswer.round.raw_score)
+          ? ` (${farflungTierForScore(openAnswer.round.raw_score)!.name}, ${openAnswer.round.raw_score} km)`
+          : ""}
       </>
     ) : null;
 
@@ -414,7 +448,9 @@ export function DailyGameTable({ game, date }: { game: DailyGame; date: string }
           <p className="subtle">
             {game.key === "krillion" && game.external_puzzle_key
               ? `Puzzle #${game.external_puzzle_key} · ${game.round_count} rounds`
-              : `${game.round_count} rounds · Daily results`}
+              : game.key === "farflung" && game.external_puzzle_key
+                ? `Expedition #${game.external_puzzle_key} · ${game.round_count} rounds`
+                : `${game.round_count} rounds · Daily results`}
           </p>
         </div>
         <span className="pill live">{game.locked ? "Locked" : "Unlocked"}</span>
@@ -457,7 +493,7 @@ export function DailyGameTable({ game, date }: { game: DailyGame; date: string }
                   const prompt = roundPrompt(roundNumber);
                   return (
                     <th key={roundNumber} scope="col" className="round-heading round-column">
-                      {game.key === "krillion" ? (
+                      {hasAnswerPopovers(game.key) ? (
                         <InfoPopover
                           id={popoverId}
                           label={`R${roundNumber}`}
@@ -482,14 +518,14 @@ export function DailyGameTable({ game, date }: { game: DailyGame; date: string }
                     <PlayerHeading player={player} kind="daily" />
                   </th>
                   {roundNumbers.map((roundNumber) => {
-                    const hasKrillionResult =
-                      game.key === "krillion" &&
+                    const hasAnswerResult =
+                      hasAnswerPopovers(game.key) &&
                       player.daily_score !== null &&
                       player.rounds.some((round) => round.round_number === roundNumber);
                     return (
                       <td
                         key={roundNumber}
-                        className={hasKrillionResult ? "krillion-result-cell" : undefined}
+                        className={hasAnswerResult ? `${game.key}-result-cell` : undefined}
                       >
                         {dailyCell(game, player, roundNumber, openPopover, togglePopover)}
                       </td>
@@ -499,6 +535,7 @@ export function DailyGameTable({ game, date }: { game: DailyGame; date: string }
               ))}
             </tbody>
           </table>
+          {game.key === "farflung" && <FarflungTierKey />}
         </div>
       )}
     </section>
@@ -777,9 +814,8 @@ export function AllTimeGameTable({ game, visibleDates, allTimeScrollRef }: AllTi
                       aria-label={`View ${dateLabel(day.date)} daily results`}
                     >
                       <span>{allTimeDateLabel(day.date)}</span>
-                      {game.key === "krillion" && day.external_puzzle_key && (
-                        <small>#{day.external_puzzle_key}</small>
-                      )}
+                      {(game.key === "krillion" || game.key === "farflung") &&
+                        day.external_puzzle_key && <small>#{day.external_puzzle_key}</small>}
                     </a>
                   </th>
                 ))
@@ -1126,7 +1162,7 @@ export function StatsBoardPage() {
       <StatsTable
         id="stats-board"
         title="All games"
-        subtitle={`Krillion and MapTap combined · ${through}`}
+        subtitle={`${(result.games ?? []).map((game) => game.display_name).join(", ") || "Every game"} combined · ${through}`}
         players={result.players}
       />
       {(result.games ?? []).map((game) => (

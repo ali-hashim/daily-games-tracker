@@ -78,6 +78,7 @@ try {
   ]);
   assert.match(seedCheck.stdout, /krillion/);
   assert.match(seedCheck.stdout, /maptap/);
+  assert.match(seedCheck.stdout, /farflung/);
 
   runWrangler([
     "d1",
@@ -120,7 +121,7 @@ try {
     { expectFailure: true },
   );
 
-  console.log("PASS: current D1 schema (v3), seeds, foreign keys, and uniqueness constraints");
+  console.log("PASS: current D1 schema (v4), seeds, foreign keys, and uniqueness constraints");
 } finally {
   await rm(state, { recursive: true, force: true });
 }

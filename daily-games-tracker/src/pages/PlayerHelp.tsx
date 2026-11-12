@@ -53,6 +53,10 @@ export default function PlayerHelp() {
             src="/images/player-help/maptap-share.jpg"
             alt="MapTap Share your score button highlighted below the finished game"
           />
+          <p>
+            For Farflung, finish the expedition, then tap Safari&apos;s Share button on the
+            completed page. Your score is the total distance from the five answers.
+          </p>
           <p>Choose Upload to WHT and submit your score.</p>
           <p>After submission, your daily leaderboard text is copied for you.</p>
         </div>

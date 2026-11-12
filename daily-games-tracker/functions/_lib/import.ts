@@ -1,6 +1,6 @@
 import { parseCapture } from "../../parsers";
 import { ParserError } from "../../parsers/errors";
-import { GAMES, KRILLION_SCORE_EMOJI } from "../../shared/game-config";
+import { GAMES, KRILLION_SCORE_EMOJI, farflungTierForScore } from "../../shared/game-config";
 import type { CaptureInput, NormalizedGameResult } from "../../shared/types";
 import {
   authenticateDeviceWithShortcutPolicy,
@@ -33,9 +33,14 @@ export function confirmationText(player: string, r: NormalizedGameResult): strin
           (round) =>
             `${round.roundNumber}. ${round.answer ?? "—"} — ${KRILLION_SCORE_EMOJI[round.rawScore]} ${round.rawScore}`,
         )
-      : r.rounds.map(
-          (round) => `${round.roundNumber}. ${round.rawScore}${round.originalEmoji ?? ""}`,
-        );
+      : r.gameKey === "farflung"
+        ? r.rounds.map(
+            (round) =>
+              `${round.roundNumber}. ${round.answer ?? "—"} — ${farflungTierForScore(round.rawScore)?.name ?? "?"} ${round.rawScore}`,
+          )
+        : r.rounds.map(
+            (round) => `${round.roundNumber}. ${round.rawScore}${round.originalEmoji ?? ""}`,
+          );
   return `${GAMES[r.gameKey].displayName} — ${r.gameDate}\nPuzzle: ${r.externalPuzzleKey}\nPlayer: ${player}\n${lines.join("\n")}\nTotal: ${r.finalScore}\n\nValidation passed. Submit results?`;
 }
 

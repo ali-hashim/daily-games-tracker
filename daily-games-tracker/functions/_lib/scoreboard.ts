@@ -1,4 +1,10 @@
-import { GAMES, KRILLION_SCORE_EMOJI } from "../../shared/game-config";
+import {
+  GAME_KEYS_SQL,
+  GAME_ORDER,
+  GAMES,
+  KRILLION_SCORE_EMOJI,
+  farflungTierForScore,
+} from "../../shared/game-config";
 import { movement, rankPlayers } from "../../shared/rank";
 import type { GameKey } from "../../shared/types";
 import type { AppEnv } from "./runtime";
@@ -69,7 +75,7 @@ export async function submissionScoreboard(
     LEFT JOIN game_days d ON d.game_id = g.id AND d.game_date = ?
     LEFT JOIN submissions s ON s.player_id = p.id AND s.game_day_id = d.id AND s.game_id = g.id
     LEFT JOIN round_results r ON r.submission_id = s.id
-    WHERE p.active = 1 AND g.active = 1 AND g.key IN ('krillion','maptap')
+    WHERE p.active = 1 AND g.active = 1 AND g.key IN (${GAME_KEYS_SQL})
   `,
   )
     .bind(date, date, date, date)
@@ -99,7 +105,7 @@ export async function submissionScoreboard(
   }
   const sections: string[] = [];
   let dailyRank: number | null = null;
-  for (const gameKey of ["krillion", "maptap"] as const) {
+  for (const gameKey of GAME_ORDER) {
     const players = games.get(gameKey);
     if (!players) continue;
     const values = [...players.values()];
@@ -135,6 +141,11 @@ export async function submissionScoreboard(
         const score = p.rounds.get(i + 1);
         if (score === undefined) throw new Error("Scoreboard round set incomplete");
         if (gameKey === "maptap") return String(score);
+        if (gameKey === "farflung") {
+          const tier = farflungTierForScore(score);
+          if (!tier) throw new Error("Scoreboard score unsupported");
+          return `${tier.short} ${score}`;
+        }
         const emoji = KRILLION_SCORE_EMOJI[score];
         if (!emoji) throw new Error("Scoreboard score unsupported");
         return emoji;
@@ -143,7 +154,7 @@ export async function submissionScoreboard(
     });
     const gameDate = new Date(`${date}T12:00:00Z`);
     const detail =
-      gameKey === "krillion"
+      gameKey === "krillion" || gameKey === "farflung"
         ? `#${puzzles.get(gameKey) ?? "—"}`
         : gameDates.format(gameDate).toUpperCase();
     sections.push(

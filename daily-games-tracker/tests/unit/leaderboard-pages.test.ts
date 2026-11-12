@@ -925,18 +925,18 @@ describe("leaderboard layout contracts", () => {
     expect(dailyGameTableSource.slice(scrollIndex)).not.toContain("daily-info-popover-panel");
   });
 
-  it("renders Krillion results as score-and-emoji buttons with accessible popover controls", () => {
+  it("renders Krillion and Farflung results as score buttons with accessible popover controls", () => {
     expect(pageSource).toMatch(
-      /<button[\s\S]*?type="button"[\s\S]*?className="round-result krillion-result"[\s\S]*?aria-label=\{`\$\{player\.display_name\} R\$\{roundNumber\} score: \$\{round\.raw_score\}`\}[\s\S]*?aria-expanded=\{open\}[\s\S]*?aria-controls=\{popoverId\}/,
+      /<button[\s\S]*?type="button"[\s\S]*?className=\{`round-result \$\{game\.key\}-result`\}[\s\S]*?aria-label=\{`\$\{player\.display_name\} R\$\{roundNumber\} score: \$\{round\.raw_score\}[\s\S]*?aria-expanded=\{open\}[\s\S]*?aria-controls=\{popoverId\}/,
     );
     expect(pageSource).toMatch(
-      /<strong>\{round\.raw_score\}<\/strong>[\s\S]*?<span aria-hidden="true">\{emoji\}<\/span>/,
+      /<strong>\{round\.raw_score\}<\/strong>[\s\S]*?<span aria-hidden="true">\s*\{krillionRoundEmoji\(round\.raw_score, round\.original_emoji\)\}\s*<\/span>/,
     );
     expect(pageSource).not.toMatch(/<a[^>]*className="round-result krillion-result"/);
   });
 
   it("keeps answer and question popover content while removing scoring content", () => {
-    expect(pageSource).toMatch(/daily-krillion-answer-/);
+    expect(pageSource).toMatch(/daily-\$\{game\.key\}-answer-/);
     expect(pageSource).toMatch(
       /\{`\$\{openAnswer\.player\.display_name\}'s R\$\{openAnswer\.round\.round_number\} Answer:`\}/,
     );
@@ -957,7 +957,7 @@ describe("leaderboard layout contracts", () => {
 
   it("keeps MapTap prompts in their existing inline header content", () => {
     expect(pageSource).toMatch(
-      /game\.key === "krillion" \?[\s\S]*?<InfoPopover[\s\S]*?:\s*\([\s\S]*?<span>R\{roundNumber\}<\/span>[\s\S]*?prompt && <small>\{prompt\}<\/small>/,
+      /hasAnswerPopovers\(game\.key\) \?[\s\S]*?<InfoPopover[\s\S]*?:\s*\([\s\S]*?<span>R\{roundNumber\}<\/span>[\s\S]*?prompt && <small>\{prompt\}<\/small>/,
     );
   });
 
@@ -1131,7 +1131,9 @@ describe("leaderboard layout contracts", () => {
     expect(pageSource).toMatch(
       /<a[^>]*href=\{`\/daily\/\$\{day\.date\}`\}[^>]*>\s*<span>\{allTimeDateLabel\(day\.date\)\}<\/span>/,
     );
-    expect(pageSource).toMatch(/game\.key === "krillion" && day\.external_puzzle_key/);
+    expect(pageSource).toMatch(
+      /\(game\.key === "krillion" \|\| game\.key === "farflung"\) &&\s*day\.external_puzzle_key/,
+    );
     expect(pageSource).toContain("<small>#{day.external_puzzle_key}</small>");
     expect(pageSource).toMatch(
       /shortDateLabel\(dateWindow\.dates\[dateWindow\.dates\.length - 1\]\)/,
@@ -1344,10 +1346,10 @@ describe("leaderboard layout contracts", () => {
 
   it("removes padding only from populated Krillion cells and fills their hit target", () => {
     expect(pageSource).toMatch(
-      /const hasKrillionResult =\s*game\.key === "krillion" &&\s*player\.daily_score !== null &&\s*player\.rounds\.some\(\(round\) => round\.round_number === roundNumber\);/,
+      /const hasAnswerResult =\s*hasAnswerPopovers\(game\.key\) &&\s*player\.daily_score !== null &&\s*player\.rounds\.some\(\(round\) => round\.round_number === roundNumber\);/,
     );
     expect(pageSource).toMatch(
-      /<td[\s\S]*?key=\{roundNumber\}[\s\S]*?className=\{hasKrillionResult \? "krillion-result-cell" : undefined\}[\s\S]*?>/,
+      /<td[\s\S]*?key=\{roundNumber\}[\s\S]*?className=\{hasAnswerResult \? `\$\{game\.key\}-result-cell` : undefined\}[\s\S]*?>/,
     );
 
     const krillionCell = cssBlock(".krillion-daily-leaderboard .daily-table .krillion-result-cell");

@@ -6,6 +6,9 @@ import {
   previousCalendarDay,
 } from "../../shared/day";
 import {
+  FARFLUNG_PLACEMENT_BADGES,
+  GAME_KEYS_SQL,
+  GAME_ORDER_SQL,
   GAMES,
   KRILLION_PLACEMENT_BADGES,
   MAPTAP_PLACEMENT_BADGES,
@@ -106,8 +109,8 @@ async function activeGames(env: AppEnv): Promise<GameRow[]> {
   const { results } = await env.DB.prepare(
     `SELECT id, key, display_name, round_count, config_json
      FROM games
-     WHERE active = 1 AND key IN ('krillion', 'maptap')
-     ORDER BY CASE key WHEN 'krillion' THEN 0 WHEN 'maptap' THEN 1 ELSE 2 END`,
+     WHERE active = 1 AND key IN (${GAME_KEYS_SQL})
+     ORDER BY ${GAME_ORDER_SQL("key")}`,
   ).all<GameRow>();
   return results;
 }
@@ -131,7 +134,12 @@ function placementBadge(
   if (rank === null) return gameKey === "krillion" ? "⬛" : "—";
   if (currentDay && gameKey === "krillion" && score === 0) return "⬛";
 
-  const badges = gameKey === "krillion" ? KRILLION_PLACEMENT_BADGES : MAPTAP_PLACEMENT_BADGES;
+  const badges: readonly string[] =
+    gameKey === "krillion"
+      ? KRILLION_PLACEMENT_BADGES
+      : gameKey === "farflung"
+        ? FARFLUNG_PLACEMENT_BADGES
+        : MAPTAP_PLACEMENT_BADGES;
   return badges[Math.min(rank - 1, badges.length - 1)];
 }
 
@@ -174,8 +182,8 @@ export async function playerSubmissionGameOnDate(
      JOIN game_days d ON d.id = s.game_day_id AND d.game_id = s.game_id
      JOIN games g ON g.id = s.game_id
      WHERE s.player_id = ? AND d.game_date = ?
-       AND g.active = 1 AND g.key IN ('krillion', 'maptap')
-     ORDER BY CASE g.key WHEN 'krillion' THEN 0 WHEN 'maptap' THEN 1 ELSE 2 END
+       AND g.active = 1 AND g.key IN (${GAME_KEYS_SQL})
+     ORDER BY ${GAME_ORDER_SQL("g.key")}
      LIMIT 1`,
   )
     .bind(playerId, date)
@@ -454,7 +462,7 @@ export async function readStatsBoard(
       `SELECT s.player_id, g.key AS game_key, d.game_date, s.final_score
        FROM submissions s
        JOIN players p ON p.id = s.player_id AND p.active = 1
-       JOIN games g ON g.id = s.game_id AND g.active = 1 AND g.key IN ('krillion', 'maptap')
+       JOIN games g ON g.id = s.game_id AND g.active = 1 AND g.key IN (${GAME_KEYS_SQL})
        JOIN game_days d ON d.id = s.game_day_id AND d.game_id = s.game_id
        WHERE d.game_date <= ?
        ORDER BY d.game_date, s.player_id`,

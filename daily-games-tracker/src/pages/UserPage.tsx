@@ -4,7 +4,7 @@ import type { AuthenticatedRenderProps } from "./DeviceLogin";
 import PlayerHelp from "./PlayerHelp";
 
 export interface UserStatsGame {
-  key: "krillion" | "maptap";
+  key: "krillion" | "maptap" | "farflung";
   display_name: string;
   icon: string;
   total: number;

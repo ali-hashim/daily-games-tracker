@@ -1,4 +1,8 @@
-import { KRILLION_DATE_ANCHOR, KRILLION_SUPPORTED_PUZZLE_RANGE } from "./game-config";
+import {
+  FARFLUNG_DATE_ANCHOR,
+  KRILLION_DATE_ANCHOR,
+  KRILLION_SUPPORTED_PUZZLE_RANGE,
+} from "./game-config";
 
 const pacificCalendar = new Intl.DateTimeFormat("en-US", {
   timeZone: "America/Los_Angeles",
@@ -107,5 +111,18 @@ export function krillionDateForPuzzle(puzzleNumber: number): string | null {
     return null;
   const date = parseCalendarDay(KRILLION_DATE_ANCHOR.gameDate);
   date.setUTCDate(date.getUTCDate() + puzzleNumber - KRILLION_DATE_ANCHOR.puzzleNumber);
+  return Number.isNaN(date.getTime()) ? null : formatCalendarDay(date);
+}
+
+/** One Farflung expedition per day with no skips, anchored on a known expedition date. */
+export function farflungDateForExpedition(expeditionNumber: number): string | null {
+  if (
+    !Number.isSafeInteger(expeditionNumber) ||
+    expeditionNumber < 1 ||
+    expeditionNumber > 1_000_000
+  )
+    return null;
+  const date = parseCalendarDay(FARFLUNG_DATE_ANCHOR.gameDate);
+  date.setUTCDate(date.getUTCDate() + expeditionNumber - FARFLUNG_DATE_ANCHOR.expeditionNumber);
   return Number.isNaN(date.getTime()) ? null : formatCalendarDay(date);
 }

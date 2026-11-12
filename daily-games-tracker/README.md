@@ -1,6 +1,6 @@
 # Winstitute of Higher Thinking
 
-An invitation-only, iPhone-first tracker for Krillion and MapTap. Players submit completed results through one universal Apple Shortcut; Pages Functions validate the capture before saving it to Cloudflare D1.
+An invitation-only, iPhone-first tracker for Krillion, MapTap and Farflung. Players submit completed results through one universal Apple Shortcut; Pages Functions validate the capture before saving it to Cloudflare D1.
 
 The `/user` page provides the signed-in player view, while `/daily` shows the Single Day leaderboard and, via `/daily/multi`, the public Multiple Day Leaderboard (the former all-time table, API `/api/leaderboards/all-time`), and `/all-time` is the public All-Time Stats board (API `/api/leaderboards/stats`: one table for all games combined and one per game, each with points, average per day since first submission, average per game played, days played and best day; the API also returns current and longest streaks, which are not shown so the tables fit a phone width; definitions in `shared/stats.ts`). Existing privacy and ranking rules are unchanged. The source tree includes the server, client, migrations, service worker, credential-free Shortcut source, and synthetic fixtures used by the automated checks.
 

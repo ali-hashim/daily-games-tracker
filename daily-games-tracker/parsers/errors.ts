@@ -6,6 +6,8 @@ export const PARSER_MESSAGES = {
     'Oops! For Krillion, use the Safari browser’s Share Website menu on the completed results page, then choose Upload to WHT. Do NOT use the "SHARE..." button inside the Krillion website. We need all seven answers and scores.',
   INCOMPLETE_MAPTAP_SHARE:
     'Oops! For MapTap, use the blue "Share your score" button inside the MapTap website, then choose Upload to WHT. Do NOT use the Safari browser’s Share Website menu. We need all five round scores.',
+  INCOMPLETE_FARFLUNG_SHARE:
+    "Oops! For Farflung, use the Safari browser’s Share Website menu on the completed expedition page, then choose Upload to WHT. We need all five answers and distances.",
   GAME_NOT_COMPLETE: "Finish the game, then share the completed result.",
   ROUND_COUNT_MISMATCH:
     "The expected rounds are missing, repeated, or out of order. Share the completed game again.",

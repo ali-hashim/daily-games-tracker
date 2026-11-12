@@ -158,8 +158,10 @@ describe("stats board", () => {
     expect(board.games.map((game) => [game.key, game.display_name, game.icon])).toEqual([
       ["krillion", "Krillion", "🦐"],
       ["maptap", "MapTap", "🌎"],
+      ["farflung", "Farflung", "🧭"],
     ]);
-    const [krillion, maptap] = board.games;
+    const [krillion, maptap, farflung] = board.games;
+    expect(farflung.players.every((p) => p.rank === null && p.total_points === 0)).toBe(true);
     expect(krillion.players.map((p) => [p.display_name, p.rank, p.total_points])).toEqual([
       ["Alex", 1, 100],
       ["Sam", null, 0],

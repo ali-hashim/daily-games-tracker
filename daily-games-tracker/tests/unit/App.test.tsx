@@ -1526,7 +1526,7 @@ describe("Task 9 approved UI addendum", () => {
     expect(scriptingText).not.toMatch(/\b(?:rebuild|sign(?:ing)?|change the Shortcut)\b/i);
   });
 
-  it("keeps Play focused on the two Upload to WHT share paths", async () => {
+  it("keeps Play focused on the Upload to WHT share paths", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async (input: RequestInfo | URL) => {
@@ -1550,6 +1550,7 @@ describe("Task 9 approved UI addendum", () => {
     expect(paths?.map((step) => step.textContent)).toEqual([
       "Krillion: finish the game in Safari, then tap Share on its completed results page.",
       "MapTap: in the game, tap Share your score.",
+      "Farflung: finish the expedition in Safari, then tap Safari's Share button on the completed page.",
       "Choose Upload to WHT, then submit your score.",
     ]);
     const fallback = rendered.container.querySelector(".missing-share-action-help");

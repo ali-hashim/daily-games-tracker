@@ -1,9 +1,11 @@
+import { GAME_KEYS_SQL, GAME_ORDER_SQL } from "../../shared/game-config";
+import type { GameKey } from "../../shared/types";
 import { ApiError, apiJson, requireMethod } from "../_lib/http";
 import type { AppData, AppEnv } from "../_lib/runtime";
 
 interface GameRow {
   id: string;
-  key: "krillion" | "maptap";
+  key: GameKey;
   display_name: string;
   round_count: number;
   config_json: string;
@@ -13,7 +15,8 @@ export const onRequest: PagesFunction<AppEnv, string, AppData> = async ({ reques
   requireMethod(request, ["GET"]);
   try {
     const { results } = await env.DB.prepare(
-      "SELECT id, key, display_name, round_count, config_json FROM games WHERE active = 1 ORDER BY display_name",
+      `SELECT id, key, display_name, round_count, config_json FROM games
+       WHERE active = 1 AND key IN (${GAME_KEYS_SQL}) ORDER BY ${GAME_ORDER_SQL("key")}`,
     ).all<GameRow>();
     return apiJson(data.requestId, {
       games: results.map((row) => ({
@@ -21,7 +24,12 @@ export const onRequest: PagesFunction<AppEnv, string, AppData> = async ({ reques
         title: row.display_name,
         icon: (JSON.parse(row.config_json) as { icon: string }).icon,
         rounds: row.round_count,
-        scoringStyle: row.key === "krillion" ? "emoji_levels" : "weighted_numbers",
+        scoringStyle:
+          row.key === "krillion"
+            ? "emoji_levels"
+            : row.key === "farflung"
+              ? "tier_levels"
+              : "weighted_numbers",
       })),
     });
   } catch (error) {

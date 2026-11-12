@@ -3,6 +3,9 @@ import { apiRequest, copyText } from "../lib/api";
 import { GAMES } from "../../shared/game-config";
 import type { GameKey } from "../../shared/types";
 
+/** Games whose rounds carry a prompt and a player answer. */
+const hasPrompts = (key: GameKey): boolean => key === "krillion" || key === "farflung";
+
 interface Player {
   id: string;
   display_name: string;
@@ -55,7 +58,7 @@ interface Submission {
   id: string;
   player_id: string;
   display_name: string;
-  game_key: "krillion" | "maptap";
+  game_key: GameKey;
   game_date: string;
   external_puzzle_key: string;
   final_score: number;
@@ -93,7 +96,7 @@ function backfillRoundTemplate(gameKey: GameKey): string {
       round_number: index + 1,
       raw_score: 0,
       original_emoji: null,
-      ...(gameKey === "krillion" ? { prompt: "", answer: null } : {}),
+      ...(hasPrompts(gameKey) ? { prompt: "", answer: null } : {}),
     })),
     null,
     2,
@@ -127,13 +130,13 @@ function parseBackfillRounds(value: string, gameKey: GameKey): unknown[] {
     );
   }
   if (
-    gameKey === "krillion" &&
+    hasPrompts(gameKey) &&
     parsed.some((round) => {
       const prompt = (round as Record<string, unknown>).prompt;
       return typeof prompt !== "string" || !prompt.trim();
     })
   ) {
-    throw new Error("Each Krillion round must include a non-empty prompt.");
+    throw new Error(`Each ${GAMES[gameKey].displayName} round must include a non-empty prompt.`);
   }
   return parsed;
 }
@@ -166,7 +169,7 @@ export default function AdminPage({ initialData = emptyDashboard }: AdminPagePro
   const [roundScores, setRoundScores] = React.useState<Record<string, number[]>>({});
   const [backfill, setBackfill] = React.useState({
     player_id: "",
-    game_key: "maptap" as "krillion" | "maptap",
+    game_key: "maptap" as GameKey,
     game_date: "",
     external_puzzle_key: "",
     final_score: "",
@@ -249,8 +252,10 @@ export default function AdminPage({ initialData = emptyDashboard }: AdminPagePro
       return;
     }
     const prompts = editablePrompts(submission);
-    if (submission.game_key === "krillion" && prompts.some((prompt) => !prompt.trim())) {
-      setError("Enter a non-empty prompt for every Krillion round.");
+    if (hasPrompts(submission.game_key) && prompts.some((prompt) => !prompt.trim())) {
+      setError(
+        `Enter a non-empty prompt for every ${GAMES[submission.game_key].displayName} round.`,
+      );
       return;
     }
     if (!window.confirm(`Correct ${submission.display_name}'s ${submission.game_key} result?`))
@@ -264,7 +269,7 @@ export default function AdminPage({ initialData = emptyDashboard }: AdminPagePro
             round_number: round.round_number,
             raw_score: editableScores(submission)[index],
             original_emoji: round.original_emoji,
-            ...(submission.game_key === "krillion" ? { prompt: prompts[index].trim() } : {}),
+            ...(hasPrompts(submission.game_key) ? { prompt: prompts[index].trim() } : {}),
           })),
           reason,
         }),
@@ -561,6 +566,7 @@ export default function AdminPage({ initialData = emptyDashboard }: AdminPagePro
           >
             <option value="maptap">MapTap</option>
             <option value="krillion">Krillion</option>
+            <option value="farflung">Farflung</option>
           </select>
           <label htmlFor="backfill-date">Game date (America/Los_Angeles)</label>
           <input
@@ -607,9 +613,10 @@ export default function AdminPage({ initialData = emptyDashboard }: AdminPagePro
           <p id="backfill-rounds-help" className="muted-note">
             Enter a JSON array with exactly {GAMES[backfill.game_key].roundCount} objects. Each
             object must include sequential <code>round_number</code> values starting at 1 and a
-            numeric <code>raw_score</code>; <code>original_emoji</code> is optional. Krillion also
-            requires a non-empty <code>prompt</code> for every round; <code>answer</code> is
-            optional. A matching {GAMES[backfill.game_key].displayName} template is prefilled.
+            numeric <code>raw_score</code>; <code>original_emoji</code> is optional. Krillion and
+            Farflung also requires a non-empty <code>prompt</code> for every round;{" "}
+            <code>answer</code> is optional. A matching {GAMES[backfill.game_key].displayName}{" "}
+            template is prefilled.
           </p>
           <textarea
             id="backfill-rounds"
@@ -694,7 +701,7 @@ export default function AdminPage({ initialData = emptyDashboard }: AdminPagePro
                           }
                         />
                       </label>
-                      {submission.game_key === "krillion" && (
+                      {hasPrompts(submission.game_key) && (
                         <label htmlFor={`correction-prompt-${submission.id}-${round.round_number}`}>
                           Round {round.round_number} prompt
                           <textarea

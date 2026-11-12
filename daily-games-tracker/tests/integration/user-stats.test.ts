@@ -178,6 +178,15 @@ describe("authenticated personal stats", () => {
         average: 820,
         rank: 1,
       },
+      {
+        key: "farflung",
+        display_name: "Farflung",
+        icon: "🧭",
+        total: 0,
+        games_played: 0,
+        average: null,
+        rank: null,
+      },
     ]);
     expect(JSON.stringify(body)).not.toMatch(
       /SECRET_PROMPT|SECRET_ANSWER|SECRET_EMOJI|round_number|device_code|challenge/i,
@@ -200,6 +209,13 @@ describe("authenticated personal stats", () => {
       }),
       expect.objectContaining({
         key: "maptap",
+        total: 0,
+        games_played: 0,
+        average: null,
+        rank: null,
+      }),
+      expect.objectContaining({
+        key: "farflung",
         total: 0,
         games_played: 0,
         average: null,

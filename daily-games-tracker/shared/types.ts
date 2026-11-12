@@ -1,4 +1,4 @@
-export type GameKey = "krillion" | "maptap";
+export type GameKey = "krillion" | "maptap" | "farflung";
 
 export type CaptureSchema = "dgt.capture.v1";
 

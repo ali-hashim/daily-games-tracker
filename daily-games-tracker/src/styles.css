@@ -334,6 +334,9 @@ h1 {
 .game-badge.maptap {
   background: #223c3e;
 }
+.game-badge.farflung {
+  background: #2d3a24;
+}
 .game-info {
   display: flex;
   flex-direction: column;
@@ -1581,4 +1584,93 @@ h1 {
 }
 .stats-help li {
   margin-bottom: 6px;
+}
+
+/* Farflung daily cells reuse the compact Krillion layout. */
+.farflung-daily-leaderboard .daily-table thead th {
+  min-height: 0;
+  padding: 6px 5px;
+}
+.farflung-daily-leaderboard .daily-table .farflung-result-cell {
+  position: relative;
+  padding: 0;
+}
+.farflung-daily-leaderboard .daily-table .farflung-result {
+  position: absolute;
+  inset: 0;
+  appearance: none;
+  max-width: 100%;
+  min-width: 0;
+  padding: 8px 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+.farflung-daily-leaderboard .daily-table .player-heading {
+  min-width: 0;
+  min-height: 0;
+  gap: 2px;
+}
+.farflung-daily-leaderboard .daily-table .player-heading strong {
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  overflow-wrap: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.farflung-daily-leaderboard .daily-table .round-result {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+.farflung-daily-leaderboard .daily-table .farflung-result strong {
+  font-size: 12px;
+  line-height: 1;
+  overflow-wrap: normal;
+  white-space: nowrap;
+}
+.farflung-daily-leaderboard .daily-table .round-meta {
+  display: block;
+  max-width: 100%;
+  flex: 0 0 auto;
+  overflow-wrap: normal;
+  white-space: nowrap;
+}
+
+/* Farflung tier labels under the round score; colours follow rarity. */
+.farflung-tier {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+.farflung-tier.tier-farflung {
+  color: #f6d365;
+}
+.farflung-tier.tier-elusive {
+  color: #e7a6ff;
+}
+.farflung-tier.tier-rare {
+  color: #8fd3ff;
+}
+.farflung-tier.tier-uncommon {
+  color: #a8e6a3;
+}
+.farflung-tier.tier-common {
+  color: #c7d2c9;
+}
+.farflung-tier.tier-miss {
+  color: #7d8f82;
+}
+.farflung-tier-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin: 10px 0 0;
+  font-size: 10px;
 }
