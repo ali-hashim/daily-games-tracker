@@ -35,9 +35,48 @@ function roundBlock(lines: string[]): NormalizedRoundResult {
   return { roundNumber, prompt: lines[1], answer: answer === "—" ? null : answer, rawScore };
 }
 
+const TOGGLE = /^[+\u2212\u2013-]$/u;
+const SCORE_SHAPE = /^(0|[1-9]\d{0,2})$/;
+
+// Split the catch section into exactly seven rows, anchored on a round number followed by a
+// "NAME ..." prompt and closed by the first "+" / "−" toggle that follows a score line.
+// Anything between rows (advisory notices, expanded answer lists with filter chips and
+// "+85" entries) is ignored, but any further round anchor that is not the next expected
+// round, or any round after the seventh, is rejected.
+function splitRows<T>(
+  items: T[],
+  text: (item: T) => string,
+  isPrompt: (item: T) => boolean,
+): T[][] {
+  const isAnchor = (i: number) =>
+    i + 1 < items.length && /^\d+$/.test(text(items[i])) && isPrompt(items[i + 1]);
+  const rows: T[][] = [];
+  let i = 0;
+  while (i < items.length) {
+    if (!isAnchor(i)) {
+      i++;
+      continue;
+    }
+    if (rows.length >= 7 || Number(text(items[i])) !== rows.length + 1)
+      fail("ROUND_COUNT_MISMATCH");
+    let j = i + 2;
+    while (
+      j < items.length &&
+      !(TOGGLE.test(text(items[j])) && SCORE_SHAPE.test(text(items[j - 1]))) &&
+      !isAnchor(j)
+    )
+      j++;
+    if (j >= items.length || isAnchor(j)) fail("ROUND_COUNT_MISMATCH");
+    rows.push(items.slice(i, j));
+    i = j + 1;
+  }
+  if (rows.length !== 7) fail("ROUND_COUNT_MISMATCH");
+  return rows;
+}
+
 // Leaf-node layout observed in the real iPhone Dive #98 capture. Parent direct text
 // for the popularity note precedes its numeric child, so do not concatenate nodes
-// and pretend they reproduce visible_text. Bind fields inside each '+' row instead.
+// and pretend they reproduce visible_text. Bind fields inside each toggle row instead.
 function leafRounds(nodes: SafariVisibleNode[]): NormalizedRoundResult[] | null {
   const upper = (value: string) => value.trim().toUpperCase();
   const start = nodes.findIndex(
@@ -57,11 +96,7 @@ function leafRounds(nodes: SafariVisibleNode[]): NormalizedRoundResult[] | null 
   if (upper(section.shift()?.text ?? "") !== "TAP A ROUND FOR EVERY ANSWER")
     fail("PARSER_UNSUPPORTED");
   const rounds: NormalizedRoundResult[] = [];
-  let rowStart = 0;
-  for (let index = 0; index < section.length; index++) {
-    if (section[index].text.trim() !== "+") continue;
-    const row = section.slice(rowStart, index);
-    rowStart = index + 1;
+  for (const row of splitRows(section, (node) => node.text.trim(), hasPromptHint)) {
     if (
       row.length < 4 ||
       !hasPromptHint(row[1]) ||
@@ -87,31 +122,15 @@ function leafRounds(nodes: SafariVisibleNode[]): NormalizedRoundResult[] | null 
       ]),
     );
   }
-  if (
-    rowStart !== section.length ||
-    rounds.length !== 7 ||
-    rounds.some((round, index) => round.roundNumber !== index + 1)
-  )
-    fail("ROUND_COUNT_MISMATCH");
   return rounds;
 }
 
 function parseSection(lines: string[]): NormalizedRoundResult[] {
-  const rounds: NormalizedRoundResult[] = [];
-  let start = 0;
-  for (let i = 0; i < lines.length; i++) {
-    if (lines[i] === "+") {
-      rounds.push(roundBlock(lines.slice(start, i)));
-      start = i + 1;
-    }
-  }
-  if (
-    start !== lines.length ||
-    rounds.length !== 7 ||
-    rounds.some((round, index) => round.roundNumber !== index + 1)
-  )
-    fail("ROUND_COUNT_MISMATCH");
-  return rounds;
+  return splitRows(
+    lines,
+    (line) => line,
+    (line) => /^NAME\s/i.test(line),
+  ).map(roundBlock);
 }
 
 export function parseKrillion(capture: SafariWebpageCapture, now: Date): NormalizedGameResult {
